@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Botanical palette */
+  --color-forest: #1A4230;
+  --color-canopy: #245A3F;
+  --color-fern: #2D7A4F;
+  --color-sprout: #6BB87A;
+  --color-leaf: #A8D5A2;
+  --color-mist: #EFF4EF;
+  --color-parchment: #F8FAF7;
+  --color-ink: #111814;
+  --color-ink-muted: #4A5A4D;
+  --color-border-plant: #C5D4C5;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Typography */
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-fraunces);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #EFF4EF;
+  color: #111814;
+  font-family: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Keyframes ─────────────────────────────────────────────── */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes leaf-drift {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(8px, -14px) rotate(3deg);
+  }
+  66% {
+    transform: translate(-5px, 7px) rotate(-2deg);
+  }
+}
+
+@keyframes bob {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes leaf-drift-b {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(-10px, 6px) rotate(-4deg);
+  }
+  66% {
+    transform: translate(7px, -8px) rotate(2deg);
+  }
+}
+
+/* ── Utility classes ───────────────────────────────────────── */
+
+.animate-fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(197, 212, 197, 0.5) 25%,
+    rgba(168, 195, 168, 0.7) 50%,
+    rgba(197, 212, 197, 0.5) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

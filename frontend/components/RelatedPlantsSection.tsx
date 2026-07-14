@@ -14,6 +14,28 @@ const SECTION_LABELS: Record<string, string> = {
   fruit_color: "Similar fruit color",
 };
 
+const BADGE_STYLES: Record<string, string> = {
+  genus: "text-fern border-leaf/60",
+  family: "text-canopy border-leaf/60",
+  distribution: "text-ink-muted border-border-plant",
+  edible_part: "text-fern border-border-plant",
+  growth_habit: "text-ink-muted border-border-plant",
+  growth_form: "text-ink-muted border-border-plant",
+  fruit_color: "text-fern border-border-plant",
+};
+
+function SkeletonCard() {
+  return (
+    <div className="overflow-hidden rounded-sm border border-border-plant bg-parchment">
+      <div className="aspect-[4/3] shimmer" />
+      <div className="space-y-2 p-4">
+        <div className="h-4 w-3/4 rounded shimmer" />
+        <div className="h-3.5 w-1/2 rounded shimmer" />
+      </div>
+    </div>
+  );
+}
+
 export default function RelatedPlantsSection({
   query,
   basis,
@@ -51,52 +73,66 @@ export default function RelatedPlantsSection({
         setDuration(data.timing?.duration_seconds ?? null);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Failed to load related plants");
+        setError(
+          err instanceof Error ? err.message : "Failed to load related plants"
+        );
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
 
     load();
-
     return () => {
       cancelled = true;
     };
   }, [query, basis]);
 
+  const badgeStyle = BADGE_STYLES[basis] ?? BADGE_STYLES.genus;
+
   return (
-    <section className="rounded-3xl border bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-end justify-between gap-4">
+    <section className="rounded-sm border border-border-plant bg-parchment p-6">
+      <div className="mb-5 flex items-start gap-3">
+        <span
+          className={`mt-0.5 shrink-0 rounded-full border bg-mist px-2.5 py-0.5 font-sans text-xs font-semibold uppercase tracking-wider ${badgeStyle}`}
+        >
+          {basis.replace("_", " ")}
+        </span>
         <div>
-          <h2 className="text-xl font-semibold text-neutral-950">
+          <h2 className="font-display text-xl font-light text-ink">
             {SECTION_LABELS[basis] || basis}
           </h2>
-          <p className="text-sm text-neutral-500">
-            {loading
-              ? "Loading..."
-              : `${plants.length} result${plants.length === 1 ? "" : "s"}`}
-            {cacheHit !== null && <span> · cache {cacheHit ? "hit" : "miss"}</span>}
-            {duration !== null && <span> · {duration}s</span>}
+          <p className="mt-0.5 font-sans text-xs text-ink-muted">
+            {loading ? (
+              "Finding related plants…"
+            ) : (
+              <>
+                {plants.length} species
+                {cacheHit !== null && (
+                  <span> · cache {cacheHit ? "hit" : "miss"}</span>
+                )}
+                {duration !== null && <span> · {duration}s</span>}
+              </>
+            )}
           </p>
         </div>
       </div>
 
       {loading && (
-        <div className="rounded-2xl bg-neutral-50 p-5 text-sm text-neutral-500">
-          Loading related plants...
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-sm border border-red-200 bg-red-50 p-4 font-sans text-sm text-red-700">
           {error}
         </div>
       )}
 
-      {!loading && warnings.length > 0 && plants.length === 0 && (
-        <div className="rounded-2xl bg-neutral-50 p-5 text-sm text-neutral-500">
+      {!loading && !error && warnings.length > 0 && plants.length === 0 && (
+        <div className="rounded-sm border border-border-plant p-4 font-sans text-sm text-ink-muted">
           {warnings.join(" ")}
         </div>
       )}

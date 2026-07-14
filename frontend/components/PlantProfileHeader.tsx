@@ -1,18 +1,9 @@
 import type { PlantProfile } from "@/lib/api";
 
 function formatValue(value: unknown): string {
-  if (value === null || value === undefined || value === "") {
-    return "Unknown";
-  }
-
-  if (Array.isArray(value)) {
-    return value.length ? value.join(", ") : "Unknown";
-  }
-
-  if (typeof value === "boolean") {
-    return value ? "Yes" : "No";
-  }
-
+  if (value === null || value === undefined || value === "") return "Unknown";
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "Unknown";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
   return String(value);
 }
 
@@ -20,9 +11,10 @@ export default function PlantProfileHeader({ plant }: { plant: PlantProfile }) {
   const name = plant.common_name || plant.scientific_name || "Unknown plant";
 
   return (
-    <section className="grid gap-8 md:grid-cols-[360px_1fr]">
-      <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
-        <div className="aspect-square bg-neutral-100">
+    <section className="grid gap-6 md:grid-cols-[380px_1fr]">
+      {/* Specimen image */}
+      <div className="overflow-hidden rounded-sm border border-border-plant bg-parchment">
+        <div className="aspect-square">
           {plant.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -31,31 +23,40 @@ export default function PlantProfileHeader({ plant }: { plant: PlantProfile }) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-neutral-500">
-              No image available
+            <div className="flex h-full items-center justify-center">
+              <span className="font-display italic text-ink-muted opacity-40">
+                No specimen image
+              </span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="rounded-3xl border bg-white p-8 shadow-sm">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-green-700">
-          Plant profile
-        </p>
+      {/* Plant info */}
+      <div className="flex flex-col justify-between rounded-sm border border-border-plant bg-parchment p-8">
+        <div>
+          <p className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.18em] text-fern">
+            Plant profile
+          </p>
 
-        <h1 className="text-4xl font-bold text-neutral-950">{name}</h1>
+          <h1 className="font-display text-5xl font-light leading-tight text-ink">
+            {name}
+          </h1>
 
-        <p className="mt-2 text-xl italic text-neutral-500">
-          {plant.scientific_name || "Scientific name unavailable"}
-        </p>
+          <p className="font-display mt-2 text-xl font-light italic text-ink-muted">
+            {plant.scientific_name || "Scientific name unavailable"}
+          </p>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Info label="Genus" value={plant.genus} />
-          <Info label="Family" value={plant.family} />
-          <Info label="Family common name" value={plant.family_common_name} />
-          <Info label="Edible" value={formatValue(plant.edible)} />
-          <Info label="Edible part" value={formatValue(plant.edible_part)} />
-          <Info label="Duration" value={plant.duration} />
+          <div className="my-7 h-px bg-border-plant" />
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Info label="Genus" value={plant.genus} />
+            <Info label="Family" value={plant.family} />
+            <Info label="Family name" value={plant.family_common_name} />
+            <Info label="Edible" value={formatValue(plant.edible)} />
+            <Info label="Edible part" value={formatValue(plant.edible_part)} />
+            <Info label="Duration" value={plant.duration} />
+          </div>
         </div>
       </div>
     </section>
@@ -64,11 +65,11 @@ export default function PlantProfileHeader({ plant }: { plant: PlantProfile }) {
 
 function Info({ label, value }: { label: string; value: unknown }) {
   return (
-    <div className="rounded-2xl bg-neutral-50 p-4">
-      <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+    <div className="border-l-2 border-border-plant pl-3">
+      <div className="font-sans text-[10px] font-semibold uppercase tracking-widest text-ink-muted">
         {label}
       </div>
-      <div className="mt-1 font-medium text-neutral-900">
+      <div className="mt-0.5 font-sans text-sm font-medium text-ink">
         {formatValue(value)}
       </div>
     </div>

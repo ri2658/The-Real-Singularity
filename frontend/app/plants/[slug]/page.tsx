@@ -11,35 +11,44 @@ export default async function PlantPage({
   const { slug } = await params;
   const data = await getPlantProfile(slug);
   const plant = data.plant;
-
   const query = plant.slug || slug;
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      <div className="mx-auto max-w-6xl px-6 py-8">
-        <Link href="/" className="text-sm font-medium text-green-700 hover:text-green-900">
-          ← Back to search
-        </Link>
-
-        <div className="mt-8">
-          <PlantProfileHeader plant={plant} />
+    <main className="min-h-screen bg-mist">
+      {/* Nav strip */}
+      <div className="border-b border-border-plant bg-parchment">
+        <div className="mx-auto max-w-6xl px-6 py-4">
+          <Link
+            href="/"
+            className="font-sans text-sm font-medium text-fern transition-colors hover:text-canopy"
+          >
+            ← PlantDex
+          </Link>
         </div>
+      </div>
 
-        <div className="mt-10">
-          <div className="mb-5">
-            <p className="text-sm font-semibold uppercase tracking-wide text-green-700">
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <PlantProfileHeader plant={plant} />
+
+        <div className="mt-14">
+          <div className="mb-7">
+            <p className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.18em] text-fern">
               Related discovery
             </p>
-            <h2 className="text-3xl font-bold text-neutral-950">
+            <h2 className="font-display text-4xl font-light text-ink">
               Explore connected plants
             </h2>
-            <p className="mt-2 text-neutral-600">
-              PlantDex compares taxonomy, distribution, and selected traits to
-              surface related or similar plants.
+            <p className="mt-2 font-sans text-sm text-ink-muted">
+              PlantDex traces taxonomy, geography, and traits to surface species
+              related to{" "}
+              <em className="font-display italic">
+                {plant.common_name || plant.scientific_name || "this plant"}
+              </em>
+              .
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-5">
             <RelatedPlantsSection query={query} basis="genus" />
             <RelatedPlantsSection query={query} basis="family" />
             <RelatedPlantsSection query={query} basis="distribution" />
