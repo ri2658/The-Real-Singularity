@@ -179,10 +179,10 @@ export default function ComparePage() {
 
         {!loading && rows.length > 0 && (
           <div className="mt-10 overflow-x-auto rounded-sm border border-border-plant bg-parchment">
-            <table className="min-w-full border-collapse text-left text-sm">
+            <table className="min-w-full table-fixed border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-border-plant">
-                  <th className="sticky left-0 z-10 bg-parchment px-4 py-4 font-sans text-xs font-semibold uppercase tracking-widest text-ink-muted">
+                  <th className="sticky left-0 z-10 w-40 bg-parchment px-4 py-4 font-sans text-xs font-semibold uppercase tracking-widest text-ink-muted">
                     Trait
                   </th>
                   {rows.map((row) => {
@@ -191,18 +191,19 @@ export default function ComparePage() {
                       row.plant?.scientific_name ||
                       row.slug;
                     return (
-                      <th key={row.slug} className="min-w-[14rem] px-4 py-4 align-top">
+                      <th key={row.slug} className="w-56 px-4 py-4 align-top">
                         <div className="space-y-3">
-                          <div className="aspect-[4/3] overflow-hidden rounded-sm border border-border-plant bg-mist">
+                          {/* Fixed box: table cells ignore aspect-ratio and size to intrinsic image dims */}
+                          <div className="relative h-40 w-full overflow-hidden rounded-sm border border-border-plant bg-mist">
                             {row.plant?.image_url ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={row.plant.image_url}
                                 alt={name}
-                                className="h-full w-full object-cover"
+                                className="absolute inset-0 block h-full w-full object-cover"
                               />
                             ) : (
-                              <div className="flex h-full items-center justify-center text-xs italic text-ink-muted">
+                              <div className="absolute inset-0 flex items-center justify-center text-xs italic text-ink-muted">
                                 No image
                               </div>
                             )}
@@ -210,11 +211,11 @@ export default function ComparePage() {
                           <div>
                             <Link
                               href={`/plants/${row.slug}`}
-                              className="font-display text-lg font-semibold text-ink hover:text-fern"
+                              className="font-display line-clamp-2 text-lg font-semibold text-ink hover:text-fern"
                             >
                               {name}
                             </Link>
-                            <p className="font-display text-sm italic text-ink-muted">
+                            <p className="font-display line-clamp-2 text-sm italic text-ink-muted">
                               {row.plant?.scientific_name || "—"}
                             </p>
                           </div>

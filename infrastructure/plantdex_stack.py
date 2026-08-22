@@ -69,7 +69,7 @@ class PlantDexStack(Stack):
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="lambda_handlers.similar_plants_handler.lambda_handler",
             code=lambda_.Code.from_asset(str(src_path)),
-            timeout=Duration.seconds(30),
+            timeout=Duration.seconds(60),
             memory_size=512,
             environment={
                 "TREFLE_SECRET_NAME": "plantdex/trefle-token",
@@ -88,7 +88,11 @@ class PlantDexStack(Stack):
             "PlantDexHttpApi",
             cors_preflight=CorsPreflightOptions(
                 allow_origins=["*"],
-                allow_methods=[CorsHttpMethod.GET, CorsHttpMethod.OPTIONS],
+                allow_methods=[
+                    CorsHttpMethod.GET,
+                    CorsHttpMethod.POST,
+                    CorsHttpMethod.OPTIONS,
+                ],
                 allow_headers=["Content-Type"],
             ),
         )
@@ -117,6 +121,20 @@ class PlantDexStack(Stack):
         api.add_routes(
             path="/plants/{slug}",
             methods=[HttpMethod.GET],
+            integration=integration,
+        )
+
+        # POST /plants/{slug}/report  (proxy to Trefle species report)
+        api.add_routes(
+            path="/plants/{slug}/report",
+            methods=[HttpMethod.POST],
+            integration=integration,
+        )
+
+        # POST /plants/{slug}/corrections  (proxy to Trefle species corrections)
+        api.add_routes(
+            path="/plants/{slug}/corrections",
+            methods=[HttpMethod.POST],
             integration=integration,
         )
 

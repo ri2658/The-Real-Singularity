@@ -121,11 +121,31 @@ export default function PlantProfileHeader({ plant }: { plant: PlantProfile }) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Info label="Genus" value={plant.genus} />
             <Info label="Family" value={plant.family} />
-            <Info label="Family name" value={plant.family_common_name} />
             <Info label="Edible" value={formatValue(plant.edible)} />
-            <Info label="Edible part" value={formatValue(plant.edible_part)} />
-            <Info label="Duration" value={plant.duration} />
+            <Info
+              label="Growth habit"
+              value={
+                plant.specifications &&
+                typeof plant.specifications === "object"
+                  ? (plant.specifications as Record<string, unknown>).growth_habit
+                  : null
+              }
+            />
+            <Info
+              label="Growth form"
+              value={
+                plant.specifications &&
+                typeof plant.specifications === "object"
+                  ? (plant.specifications as Record<string, unknown>).growth_form
+                  : null
+              }
+            />
+            <Info label="Vegetable" value={formatValue(plant.vegetable)} />
           </div>
+
+          <p className="mt-6 text-sm text-ink-muted">
+            Full taxonomy, traits, growth data, and native range map are below.
+          </p>
         </div>
       </div>
     </section>

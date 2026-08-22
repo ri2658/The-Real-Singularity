@@ -1,5 +1,7 @@
 import Link from "next/link";
 import PlantProfileHeader from "@/components/PlantProfileHeader";
+import PlantProfileDetails from "@/components/PlantProfileDetails";
+import PlantDataFeedback from "@/components/PlantDataFeedback";
 import RelatedPlantsSection from "@/components/RelatedPlantsSection";
 import { getPlantProfile } from "@/lib/api";
 
@@ -27,8 +29,9 @@ export default async function PlantPage({
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 py-10">
+      <div className="mx-auto max-w-6xl px-6 py-10 pb-8">
         <PlantProfileHeader plant={plant} />
+        <PlantProfileDetails plant={plant} />
 
         <div className="mt-14">
           <div className="mb-7">
@@ -57,6 +60,8 @@ export default async function PlantPage({
             <RelatedPlantsSection query={query} basis="fruit_color" />
           </div>
         </div>
+
+        <PlantDataFeedback plant={plant} />
       </div>
     </main>
   );

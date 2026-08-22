@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import urllib.parse
 from typing import Any, Dict, Optional
 
 import boto3
@@ -52,10 +53,35 @@ def make_response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Allow-Methods": "GET,OPTIONS",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
         },
         "body": json.dumps(body),
     }
+
+
+def get_http_method(event: Dict[str, Any]) -> str:
+    http = ((event.get("requestContext") or {}).get("http") or {})
+    return str(http.get("method") or event.get("httpMethod") or "GET").upper()
+
+
+def parse_json_body(event: Dict[str, Any]) -> Dict[str, Any]:
+    raw = event.get("body")
+    if raw is None or raw == "":
+        return {}
+
+    if event.get("isBase64Encoded"):
+        import base64
+
+        raw = base64.b64decode(raw).decode("utf-8", errors="replace")
+
+    if isinstance(raw, dict):
+        return raw
+
+    try:
+        parsed = json.loads(raw)
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
 
 
 def log_step(label: str, start_time: float, level: int = logging.INFO) -> None:
@@ -652,6 +678,204 @@ def handle_similar(event: Dict[str, Any]) -> Dict[str, Any]:
     return make_response(200, result)
 
 
+ALLOWED_CORRECTION_FIELDS = {
+    "scientific_name",
+    "common_name",
+    "author",
+    "bibliography",
+    "observations",
+    "duration",
+    "edible_part",
+    "vegetable",
+    "flower_color",
+    "flower_conspicuous",
+    "foliage_color",
+    "foliage_texture",
+    "fruit_color",
+    "fruit_conspicuous",
+    "growth_form",
+    "growth_habit",
+    "growth_rate",
+    "ligneous_type",
+    "toxicity",
+    "light",
+    "atmospheric_humidity",
+    "ph_minimum",
+    "ph_maximum",
+    "soil_nutriments",
+    "soil_salinity",
+    "average_height_value",
+    "average_height_unit",
+    "maximum_height_value",
+    "maximum_height_unit",
+    "minimum_temperature_deg_c",
+    "maximum_temperature_deg_c",
+}
+
+
+def resolve_species_id(slug: str, body: Dict[str, Any]) -> str:
+    """Prefer an explicit species_id from the client; otherwise use path slug."""
+    species_id = body.get("species_id") or body.get("species_slug") or slug
+    return str(species_id).strip()
+
+
+def handle_species_report(event: Dict[str, Any]) -> Dict[str, Any]:
+    path_params = event.get("pathParameters") or {}
+    slug = path_params.get("slug")
+    body = parse_json_body(event)
+
+    if not slug:
+        return make_response(400, {"error": "Missing plant slug in path."})
+
+    notes = str(body.get("notes") or "").strip()
+    if not notes:
+        return make_response(
+            400,
+            {
+                "error": "Please include notes describing the error.",
+                "example": {"notes": "The maximum height looks incorrect."},
+            },
+        )
+
+    if len(notes) > 2000:
+        return make_response(400, {"error": "Notes must be 2000 characters or fewer."})
+
+    species_id = resolve_species_id(slug, body)
+    client = get_client()
+    payload = {"notes": notes}
+
+    logger.info("Submitting Trefle species report species_id=%s", species_id)
+    result = client.post(
+        f"/species/{urllib.parse.quote(species_id)}/report",
+        payload,
+    )
+
+    if result.get("error"):
+        status = int(result.get("status") or 502)
+        return make_response(
+            status if 400 <= status < 600 else 502,
+            {
+                "error": "Trefle rejected the report.",
+                "message": result.get("message"),
+                "details": result.get("details"),
+            },
+        )
+
+    return make_response(
+        200,
+        {
+            "ok": True,
+            "type": "report",
+            "species_id": species_id,
+            "trefle": result.get("data") or result,
+        },
+    )
+
+
+def handle_species_correction(event: Dict[str, Any]) -> Dict[str, Any]:
+    path_params = event.get("pathParameters") or {}
+    slug = path_params.get("slug")
+    body = parse_json_body(event)
+
+    if not slug:
+        return make_response(400, {"error": "Missing plant slug in path."})
+
+    notes = str(body.get("notes") or "").strip()
+    source_type = str(body.get("source_type") or "").strip()
+    source_reference = str(body.get("source_reference") or "").strip()
+    correction = body.get("correction")
+
+    if source_type not in {"external", "user_observation", "publication"}:
+        return make_response(
+            400,
+            {
+                "error": "source_type must be one of: external, user_observation, publication",
+            },
+        )
+
+    if not source_reference:
+        return make_response(
+            400,
+            {"error": "source_reference is required (URL, citation, or observation note)."},
+        )
+
+    if not isinstance(correction, dict) or not correction:
+        return make_response(
+            400,
+            {
+                "error": "correction must be a non-empty object of field → value pairs.",
+                "example": {
+                    "notes": "Height should be higher",
+                    "source_type": "external",
+                    "source_reference": "https://example.org/source",
+                    "correction": {"maximum_height_value": 6800, "maximum_height_unit": "cm"},
+                },
+            },
+        )
+
+    cleaned: Dict[str, Any] = {}
+    for key, value in correction.items():
+        field = str(key).strip()
+        if field not in ALLOWED_CORRECTION_FIELDS:
+            return make_response(
+                400,
+                {
+                    "error": f"Unsupported correction field: {field}",
+                    "allowed_fields": sorted(ALLOWED_CORRECTION_FIELDS),
+                },
+            )
+        if value is None or (isinstance(value, str) and not value.strip()):
+            continue
+        cleaned[field] = value
+
+    if not cleaned:
+        return make_response(400, {"error": "Provide at least one non-empty correction field."})
+
+    if notes and len(notes) > 2000:
+        return make_response(400, {"error": "Notes must be 2000 characters or fewer."})
+
+    species_id = resolve_species_id(slug, body)
+    client = get_client()
+    payload = {
+        "source_type": source_type,
+        "source_reference": source_reference,
+        "correction": cleaned,
+    }
+    if notes:
+        payload["notes"] = notes
+
+    logger.info(
+        "Submitting Trefle species correction species_id=%s fields=%s",
+        species_id,
+        sorted(cleaned.keys()),
+    )
+    result = client.post(
+        f"/corrections/species/{urllib.parse.quote(species_id)}",
+        payload,
+    )
+
+    if result.get("error"):
+        status = int(result.get("status") or 502)
+        return make_response(
+            status if 400 <= status < 600 else 502,
+            {
+                "error": "Trefle rejected the correction.",
+                "message": result.get("message"),
+                "details": result.get("details"),
+            },
+        )
+
+    return make_response(
+        200,
+        {
+            "ok": True,
+            "type": "correction",
+            "species_id": species_id,
+            "trefle": result.get("data") or result,
+        },
+    )
+
+
 # -----------------------------
 # Lambda entry point
 # -----------------------------
@@ -668,36 +892,63 @@ def lambda_handler(event, context):
 
     try:
         raw_path = event.get("rawPath", "")
-        route_key = event.get("routeKey", "")
+        method = get_http_method(event)
 
-        logger.info("Routing request request_id=%s raw_path=%s route_key=%s", request_id, raw_path, route_key)
+        logger.info(
+            "Routing request request_id=%s method=%s raw_path=%s",
+            request_id,
+            method,
+            raw_path,
+        )
 
-        if raw_path == "/search":
+        if method == "OPTIONS":
+            return make_response(200, {"ok": True})
+
+        if raw_path == "/search" and method == "GET":
             response = handle_search(event)
             log_step("lambda /search completed", start)
             return response
 
-        if raw_path.startswith("/plants/"):
-            response = handle_plant_profile(event)
-            log_step("lambda /plants/{slug} completed", start)
-            return response
-
-        if raw_path == "/similar":
+        if raw_path == "/similar" and method == "GET":
             response = handle_similar(event)
             log_step("lambda /similar completed", start)
             return response
 
-        logger.warning("Route not found request_id=%s raw_path=%s route_key=%s", request_id, raw_path, route_key)
+        # More specific plant sub-routes before generic profile GET
+        if raw_path.endswith("/report") and method == "POST" and raw_path.startswith("/plants/"):
+            response = handle_species_report(event)
+            log_step("lambda /plants/{slug}/report completed", start)
+            return response
+
+        if raw_path.endswith("/corrections") and method == "POST" and raw_path.startswith("/plants/"):
+            response = handle_species_correction(event)
+            log_step("lambda /plants/{slug}/corrections completed", start)
+            return response
+
+        if raw_path.startswith("/plants/") and method == "GET":
+            response = handle_plant_profile(event)
+            log_step("lambda /plants/{slug} completed", start)
+            return response
+
+        logger.warning(
+            "Route not found request_id=%s method=%s raw_path=%s",
+            request_id,
+            method,
+            raw_path,
+        )
 
         return make_response(
             404,
             {
                 "error": "Route not found.",
                 "path": raw_path,
+                "method": method,
                 "supported_routes": [
                     "GET /search",
                     "GET /plants/{slug}",
                     "GET /similar",
+                    "POST /plants/{slug}/report",
+                    "POST /plants/{slug}/corrections",
                 ],
             },
         )

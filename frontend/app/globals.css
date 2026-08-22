@@ -22,6 +22,8 @@ body {
   background: #EFF4EF;
   color: #111814;
   font-family: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Reserved by CompareTray when plants are selected so content isn't covered */
+  padding-bottom: var(--compare-tray-pad, 0px);
 }
 
 /* ── Keyframes ─────────────────────────────────────────────── */

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   COMPARE_MAX,
   COMPARE_MIN,
@@ -13,6 +13,7 @@ import {
 
 export default function CompareTray() {
   const [plants, setPlants] = useState<ComparePlantRef[]>([]);
+  const trayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function sync() {
@@ -28,12 +29,45 @@ export default function CompareTray() {
     };
   }, []);
 
+  useEffect(() => {
+    const root = document.documentElement;
+
+    function clearPad() {
+      root.style.setProperty("--compare-tray-pad", "0px");
+    }
+
+    if (plants.length === 0) {
+      clearPad();
+      return clearPad;
+    }
+
+    function measure() {
+      const height = trayRef.current?.offsetHeight ?? 0;
+      // Extra breathing room so last sections aren't flush against the tray
+      root.style.setProperty("--compare-tray-pad", `${height + 24}px`);
+    }
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    if (trayRef.current) observer.observe(trayRef.current);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      clearPad();
+    };
+  }, [plants.length]);
+
   if (plants.length === 0) return null;
 
   const ready = plants.length >= COMPARE_MIN;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border-plant bg-parchment/95 backdrop-blur-md">
+    <div
+      ref={trayRef}
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border-plant bg-parchment/95 backdrop-blur-md"
+    >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
           <p className="font-sans text-xs font-semibold uppercase tracking-[0.16em] text-fern">
