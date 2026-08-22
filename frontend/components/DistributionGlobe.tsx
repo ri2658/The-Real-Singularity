@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
-import { resolvePlaces, type GeoPoint } from "@/lib/geo";
+import { resolvePlaces, type GeoPoint, NATIVE_COLOR, INTRODUCED_COLOR } from "@/lib/geo";
 
 type Marker = GeoPoint & {
   size: number;
   color: string;
+  kind: "native" | "introduced";
 };
 
 /** Closed ring of points at latitude 0 for a dashed equator path */
@@ -21,10 +22,12 @@ const EQUATOR_PATH = [
 ];
 
 export default function DistributionGlobe({
-  places,
-  label = "Native range",
+  nativePlaces,
+  introducedPlaces = [],
+  label = "Distribution globe",
 }: {
-  places: string[];
+  nativePlaces: string[];
+  introducedPlaces?: string[];
   label?: string;
 }) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
@@ -33,7 +36,15 @@ export default function DistributionGlobe({
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [unresolved, setUnresolved] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const placesKey = useMemo(() => places.join("|"), [places]);
+
+  const placesKey = useMemo(
+    () =>
+      JSON.stringify({
+        native: nativePlaces,
+        introduced: introducedPlaces,
+      }),
+    [nativePlaces, introducedPlaces]
+  );
 
   useEffect(() => {
     const el = containerRef.current;
@@ -53,10 +64,13 @@ export default function DistributionGlobe({
 
   useEffect(() => {
     let cancelled = false;
-    const names = placesKey ? placesKey.split("|") : [];
+    const parsed = JSON.parse(placesKey) as {
+      native: string[];
+      introduced: string[];
+    };
 
     async function load() {
-      if (!names.length) {
+      if (!parsed.native.length && !parsed.introduced.length) {
         setMarkers([]);
         setUnresolved([]);
         setLoading(false);
@@ -64,17 +78,35 @@ export default function DistributionGlobe({
       }
 
       setLoading(true);
-      const { points, unresolved: missed } = await resolvePlaces(names);
+
+      const [nativeRes, introducedRes] = await Promise.all([
+        parsed.native.length
+          ? resolvePlaces(parsed.native)
+          : Promise.resolve({ points: [] as GeoPoint[], unresolved: [] as string[] }),
+        parsed.introduced.length
+          ? resolvePlaces(parsed.introduced)
+          : Promise.resolve({ points: [] as GeoPoint[], unresolved: [] as string[] }),
+      ]);
+
       if (cancelled) return;
 
-      setMarkers(
-        points.map((p) => ({
+      const next: Marker[] = [
+        ...nativeRes.points.map((p) => ({
           ...p,
           size: 0.45,
-          color: "#6BB87A",
-        }))
-      );
-      setUnresolved(missed);
+          color: NATIVE_COLOR,
+          kind: "native" as const,
+        })),
+        ...introducedRes.points.map((p) => ({
+          ...p,
+          size: 0.4,
+          color: INTRODUCED_COLOR,
+          kind: "introduced" as const,
+        })),
+      ];
+
+      setMarkers(next);
+      setUnresolved([...nativeRes.unresolved, ...introducedRes.unresolved]);
       setLoading(false);
     }
 
@@ -101,7 +133,7 @@ export default function DistributionGlobe({
     }
   }, [markers]);
 
-  if (!places.length) {
+  if (!nativePlaces.length && !introducedPlaces.length) {
     return (
       <div className="rounded-sm border border-border-plant bg-mist p-8 text-center text-sm text-ink-muted">
         No distribution data available for the globe.
@@ -109,19 +141,31 @@ export default function DistributionGlobe({
     );
   }
 
+  const nativeCount = markers.filter((m) => m.kind === "native").length;
+  const introducedCount = markers.filter((m) => m.kind === "introduced").length;
+
   return (
     <div className="overflow-hidden rounded-sm border border-border-plant bg-[#0b1a12]">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
         <p className="font-sans text-xs font-semibold uppercase tracking-[0.16em] text-leaf">
           {label}
         </p>
-        <p className="text-xs text-white/50">
-          {loading
-            ? "Locating regions…"
-            : `${markers.length} mapped${
-                unresolved.length ? ` · ${unresolved.length} unmapped` : ""
-              }`}
-        </p>
+        <div className="flex items-center gap-3 text-xs text-white/50">
+          <span className="inline-flex items-center gap-1.5">
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ backgroundColor: NATIVE_COLOR }}
+            />
+            Native {loading ? "…" : nativeCount}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ backgroundColor: INTRODUCED_COLOR }}
+            />
+            Introduced {loading ? "…" : introducedCount}
+          </span>
+        </div>
       </div>
 
       <div ref={containerRef} className="relative w-full">
@@ -130,7 +174,7 @@ export default function DistributionGlobe({
             className="flex items-center justify-center text-sm text-white/60"
             style={{ height: size.height }}
           >
-            Geocoding native range…
+            Geocoding distribution…
           </div>
         ) : markers.length > 0 ? (
           <Globe
@@ -146,7 +190,10 @@ export default function DistributionGlobe({
             pointAltitude={0.01}
             pointRadius="size"
             pointColor="color"
-            pointLabel={(d) => (d as Marker).name}
+            pointLabel={(d) => {
+              const m = d as Marker;
+              return `${m.name} (${m.kind})`;
+            }}
             pathsData={EQUATOR_PATH}
             pathPoints="coords"
             pathPointLng={(p) => (p as [number, number])[0]}
@@ -178,3 +225,4 @@ export default function DistributionGlobe({
     </div>
   );
 }
+

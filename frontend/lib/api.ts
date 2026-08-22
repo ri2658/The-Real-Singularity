@@ -30,6 +30,7 @@ export type SearchResponse = {
   count: number;
   results: PlantCard[];
   warnings: string[];
+  has_more?: boolean;
   cache?: {
     hit: boolean;
     cache_key: string;

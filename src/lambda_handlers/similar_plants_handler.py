@@ -113,6 +113,10 @@ def clamp_max_results(value: Any, default: int = 10, upper_bound: int = 25) -> i
     return max(1, min(parsed, upper_bound))
 
 
+SEARCH_MAX_RESULTS_CAP = 100
+SIMILAR_MAX_RESULTS_CAP = 25
+
+
 def get_request_id(context: Any) -> Optional[str]:
     """
     Return the AWS Lambda request ID when available.
@@ -398,7 +402,11 @@ def handle_search(event: Dict[str, Any]) -> Dict[str, Any]:
     query_params = event.get("queryStringParameters") or {}
 
     query = query_params.get("query") or query_params.get("q")
-    max_results = clamp_max_results(query_params.get("max_results", 10), default=10, upper_bound=25)
+    max_results = clamp_max_results(
+        query_params.get("max_results", 12),
+        default=12,
+        upper_bound=SEARCH_MAX_RESULTS_CAP,
+    )
     image_only = parse_bool(query_params.get("image_only"), default=False)
 
     logger.info(
@@ -414,7 +422,7 @@ def handle_search(event: Dict[str, Any]) -> Dict[str, Any]:
             400,
             {
                 "error": "Missing required query parameter: query",
-                "example": "/search?query=blueberry&max_results=10&image_only=true",
+                "example": "/search?query=blueberry&max_results=24&image_only=true",
             },
         )
 
@@ -429,27 +437,62 @@ def handle_search(event: Dict[str, Any]) -> Dict[str, Any]:
     client = get_client()
     log_step("search client created", start)
 
-    payload = client.get(
-        "/plants/search",
-        {
-            "q": query.strip(),
-        },
-    )
-    log_step("search Trefle API request completed", start)
-
-    data = payload.get("data") or []
-
     results = []
-    for plant in data:
-        if len(results) >= max_results:
+    page = 1
+    has_more = False
+
+    # Trefle search returns ~20 plants per page; keep paging until we fill the
+    # requested window or run out of pages.
+    while len(results) < max_results:
+        payload = client.get(
+            "/plants/search",
+            {
+                "q": query.strip(),
+                "page": page,
+            },
+        )
+        log_step(f"search Trefle page {page} completed", start)
+
+        if payload.get("error"):
+            logger.warning(
+                "Trefle search page failed page=%s message=%s",
+                page,
+                payload.get("message"),
+            )
             break
 
-        card = normalize_plant_card(plant)
+        data = payload.get("data") or []
+        if not isinstance(data, list) or not data:
+            break
 
-        if image_only and not card.get("image_url"):
-            continue
+        for plant in data:
+            if len(results) >= max_results:
+                has_more = True
+                break
 
-        results.append(card)
+            card = normalize_plant_card(plant)
+
+            if image_only and not card.get("image_url"):
+                continue
+
+            results.append(card)
+
+        links = payload.get("links") or {}
+        if len(results) >= max_results:
+            # More requested than this window if Trefle still has a next page or
+            # we stopped mid-page with leftover filtered candidates.
+            has_more = bool(links.get("next")) or has_more
+            break
+
+        if not links.get("next"):
+            has_more = False
+            break
+
+        page += 1
+        # Safety: avoid runaway pagination on pathological responses.
+        if page > 20:
+            has_more = True
+            break
 
     body = {
         "query": query,
@@ -457,10 +500,16 @@ def handle_search(event: Dict[str, Any]) -> Dict[str, Any]:
         "image_only": image_only,
         "count": len(results),
         "results": results,
+        "has_more": has_more,
         "warnings": [] if results else ["No search results found."],
     }
 
-    logger.info("Search response built query=%s count=%s", query, len(results))
+    logger.info(
+        "Search response built query=%s count=%s has_more=%s",
+        query,
+        len(results),
+        has_more,
+    )
 
     add_cache_metadata(body, False, cache_key)
     set_cached_response(cache_key, body)
@@ -532,7 +581,11 @@ def handle_similar(event: Dict[str, Any]) -> Dict[str, Any]:
 
     query = query_params.get("query")
     basis = query_params.get("basis", "genus").strip().lower()
-    max_results = clamp_max_results(query_params.get("max_results", 10), default=10, upper_bound=25)
+    max_results = clamp_max_results(
+        query_params.get("max_results", 10),
+        default=10,
+        upper_bound=SIMILAR_MAX_RESULTS_CAP,
+    )
     image_only = parse_bool(query_params.get("image_only"), default=False)
 
     logger.info(
