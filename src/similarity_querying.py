@@ -1,5 +1,7 @@
 import os
+import json
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -56,6 +58,52 @@ class TrefleClient:
         try:
             with urllib.request.urlopen(url, timeout=20) as response:
                 return json_loads_safe(response.read().decode("utf-8"))
+        except Exception as e:
+            return {
+                "data": None,
+                "error": True,
+                "message": str(e),
+                "url": url,
+            }
+
+    def post(
+        self,
+        path: str,
+        body: Dict[str, Any],
+        params: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Make a POST request to the Trefle API with a JSON body.
+        """
+        params = dict(params or {})
+        params["token"] = self.token
+
+        query = urllib.parse.urlencode(params, doseq=True)
+        url = f"{self.base_url}{path}?{query}"
+        payload = json.dumps(body).encode("utf-8")
+        request = urllib.request.Request(
+            url,
+            data=payload,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                parsed = json_loads_safe(response.read().decode("utf-8"))
+                parsed["_http_status"] = getattr(response, "status", 200)
+                return parsed
+        except urllib.error.HTTPError as e:
+            raw = e.read().decode("utf-8", errors="replace")
+            parsed = json_loads_safe(raw) if raw.strip().startswith("{") else {"message": raw}
+            return {
+                "data": None,
+                "error": True,
+                "message": parsed.get("message") or parsed.get("error") or raw or str(e),
+                "details": parsed,
+                "status": e.code,
+                "url": url,
+            }
         except Exception as e:
             return {
                 "data": None,
@@ -744,46 +792,10 @@ def get_similar_by_filter(
     This is a generic helper function used by the more specific similarity
     functions below. It queries the `/plants` endpoint with a Trefle-style
     filter parameter, such as `filter[growth_habit]` or `filter[fruit_color]`.
-
-    Args:
-        client:
-            API client instance with a `paginated_get` method.
-        plant_id_or_query:
-            Original plant ID, slug, or user search query.
-        filter_field:
-            API filter field to use, such as `"edible_part"`,
-            `"growth_habit"`, `"growth_form"`, or `"fruit_color"`.
-        source_value:
-            Value from the source plant used for filtering.
-        basis:
-            Human-readable name for the similarity basis.
-        max_results:
-            Maximum number of similar plants to return.
-        image_only:
-            If True, only return plants with images.
-        exclude_ids:
-            Optional set of plant IDs or identities to exclude.
-
-    Returns:
-        dict:
-            Standardized similarity response containing basis, query,
-            filter field, filter value, count, results, and warnings.
-
-    Example:
-        result = get_similar_by_filter(
-            client=client,
-            plant_id_or_query="tomato",
-            filter_field="fruit_color",
-            source_value="red",
-            basis="fruit_color",
-            max_results=10,
-            image_only=True,
-            exclude_ids={12345},
-        )
-
-        print(result["count"])
-        print(result["results"])
     """
+    if isinstance(source_value, list):
+        source_value = ",".join(str(v) for v in source_value if v)
+
     if not source_value:
         return empty_result(basis, f"No source value found for {filter_field}.")
 
@@ -1030,6 +1042,10 @@ def get_similar_by_fruit_color(
 
     fruit = ((plant.get("main_species") or {}).get("fruit_or_seed") or {})
     fruit_color = fruit.get("color")
+
+    # Trefle often returns color as a list, e.g. ["red", "orange"]
+    if isinstance(fruit_color, list):
+        fruit_color = ",".join(str(c) for c in fruit_color if c)
 
     return get_similar_by_filter(
         client,

@@ -16,3 +16,5 @@ cdk.out/
 # Virtual environments anywhere in repo
 **/.venv/
 **/venv/
+# CDK deploy outputs
+infrastructure/cdk-outputs.json
