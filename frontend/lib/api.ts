@@ -1,7 +1,9 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_PLANTDEX_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("Missing NEXT_PUBLIC_PLANTDEX_API_URL");
+function getApiBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_PLANTDEX_API_URL;
+  if (!url) {
+    throw new Error("Missing NEXT_PUBLIC_PLANTDEX_API_URL");
+  }
+  return url.replace(/\/$/, "");
 }
 
 export type PlantCard = {
@@ -107,7 +109,7 @@ export async function searchPlants({
     image_only: String(imageOnly),
   });
 
-  const res = await fetch(`${API_BASE_URL}/search?${params.toString()}`, {
+  const res = await fetch(`${getApiBaseUrl()}/search?${params.toString()}`, {
     cache: "no-store",
   });
 
@@ -121,7 +123,7 @@ export async function searchPlants({
 export async function getPlantProfile(
   slug: string
 ): Promise<PlantProfileResponse> {
-  const res = await fetch(`${API_BASE_URL}/plants/${encodeURIComponent(slug)}`, {
+  const res = await fetch(`${getApiBaseUrl()}/plants/${encodeURIComponent(slug)}`, {
     cache: "no-store",
   });
 
@@ -151,7 +153,7 @@ export async function reportPlantError({
   notes: string;
 }): Promise<TrefleFeedbackResponse> {
   const res = await fetch(
-    `${API_BASE_URL}/plants/${encodeURIComponent(slug)}/report`,
+    `${getApiBaseUrl()}/plants/${encodeURIComponent(slug)}/report`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -187,7 +189,7 @@ export async function submitPlantCorrection({
   correction: Record<string, string | number | boolean>;
 }): Promise<TrefleFeedbackResponse> {
   const res = await fetch(
-    `${API_BASE_URL}/plants/${encodeURIComponent(slug)}/corrections`,
+    `${getApiBaseUrl()}/plants/${encodeURIComponent(slug)}/corrections`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -229,7 +231,7 @@ export async function getSimilarPlants({
   });
 
   return withSimilarConcurrency(async () => {
-    const url = `${API_BASE_URL}/similar?${params.toString()}`;
+    const url = `${getApiBaseUrl()}/similar?${params.toString()}`;
     // Profile pages fire many /similar calls at once; 503 is usually API Gateway
     // timing out an overloaded Lambda. Retry once after a short backoff.
     const attempts = 2;
