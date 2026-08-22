@@ -12,6 +12,8 @@
   --color-ink: #111814;
   --color-ink-muted: #4A5A4D;
   --color-border-plant: #C5D4C5;
+  --color-ai-panel: #E4EEE6;
+  --color-ai-border: #B4C9B8;
 
   /* Typography */
   --font-sans: var(--font-dm-sans);

@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import PlantCard from "@/components/PlantCard";
+import AiSummaryCard from "@/components/AiSummaryCard";
 import { searchPlants, type PlantCard as PlantCardType } from "@/lib/api";
+import { fetchSearchSummary } from "@/lib/ai";
 
 function SkeletonCard() {
   return (
@@ -274,9 +276,14 @@ export default function HomePage() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [cacheHit, setCacheHit] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [searchId, setSearchId] = useState(0);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
+  const SEARCH_PAGE_SIZE = 12;
 
   useEffect(() => {
     function onMove(e: MouseEvent) {
@@ -292,26 +299,71 @@ export default function HomePage() {
   async function handleSearch(nextQuery: string) {
     setQuery(nextQuery);
     setLoading(true);
+    setLoadingMore(false);
     setError("");
     setWarnings([]);
     setCacheHit(null);
+    setHasMore(false);
     setSearched(true);
 
     try {
       const data = await searchPlants({
         query: nextQuery,
-        maxResults: 12,
+        maxResults: SEARCH_PAGE_SIZE,
         imageOnly: false,
       });
 
       setPlants(data.results || []);
       setWarnings(data.warnings || []);
       setCacheHit(data.cache?.hit ?? null);
+      setHasMore(
+        data.has_more !== undefined
+          ? Boolean(data.has_more)
+          : (data.results?.length || 0) >= SEARCH_PAGE_SIZE
+      );
+      setSearchId((id) => id + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed");
       setPlants([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleLoadMore() {
+    if (!query || loadingMore || loading) return;
+
+    setLoadingMore(true);
+    setError("");
+
+    try {
+      const nextLimit = Math.min(plants.length + SEARCH_PAGE_SIZE, 100);
+      const data = await searchPlants({
+        query,
+        maxResults: nextLimit,
+        imageOnly: false,
+      });
+
+      const nextPlants = data.results || [];
+      setPlants(nextPlants);
+      setWarnings(data.warnings || []);
+      setCacheHit(data.cache?.hit ?? null);
+
+      // Prefer API has_more when present (new Lambda). Fall back to "did we
+      // fill the requested window?" for older deployments.
+      if (data.has_more !== undefined) {
+        setHasMore(Boolean(data.has_more) && nextPlants.length < 100);
+      } else {
+        const grew = nextPlants.length > plants.length;
+        setHasMore(
+          grew && nextPlants.length >= nextLimit && nextPlants.length < 100
+        );
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load more results");
+    } finally {
+      setLoadingMore(false);
     }
   }
 
@@ -423,17 +475,64 @@ export default function HomePage() {
                 )}
 
                 {plants.length > 0 && (
-                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {plants.map((plant, i) => (
-                      <div
-                        key={plant.slug || plant.id || plant.scientific_name}
-                        className="animate-fade-up"
-                        style={{ animationDelay: `${i * 35}ms` }}
-                      >
-                        <PlantCard plant={plant} />
-                      </div>
-                    ))}
+                  <div className="mb-8">
+                    <AiSummaryCard
+                      title="AI overview of these results"
+                      subtitle={`Shared traits, taxonomy, and ranges for “${query}”`}
+                      loadKey={`search:${query}:${searchId}`}
+                      loader={() =>
+                        fetchSearchSummary({
+                          query,
+                          results: plants,
+                        })
+                      }
+                    />
                   </div>
+                )}
+
+                {plants.length > 0 && (
+                  <>
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {plants.map((plant, i) => (
+                        <div
+                          key={plant.slug || plant.id || plant.scientific_name}
+                          className="animate-fade-up"
+                          style={{ animationDelay: `${i * 35}ms` }}
+                        >
+                          <PlantCard plant={plant} />
+                        </div>
+                      ))}
+                    </div>
+
+                    {hasMore ? (
+                      <div className="mt-10 flex flex-col items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleLoadMore}
+                          disabled={loadingMore}
+                          className="rounded-sm border border-border-plant bg-parchment px-6 py-3 font-sans text-sm font-semibold text-fern transition-colors hover:border-fern hover:bg-white disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {loadingMore ? "Loading more…" : "Load more species"}
+                        </button>
+                        <p className="font-sans text-xs text-ink-muted">
+                          Showing {plants.length}
+                          {plants.length >= 100 ? " (app cap)" : ""} · up to{" "}
+                          {SEARCH_PAGE_SIZE} more per click
+                        </p>
+                      </div>
+                    ) : (
+                      plants.length > 0 && (
+                        <p className="mt-10 text-center font-sans text-xs text-ink-muted">
+                          Showing all {plants.length} species returned for this
+                          search
+                          {plants.length >= 100
+                            ? " (hit the 100-result cap)"
+                            : ""}
+                          .
+                        </p>
+                      )
+                    )}
+                  </>
                 )}
 
                 {plants.length === 0 && query && (

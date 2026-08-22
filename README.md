@@ -15,12 +15,13 @@ See [`DesignDoc.md`](./DesignDoc.md) for product scope and architecture.
 
 ```bash
 cd frontend
-cp .env.example .env.local   # set NEXT_PUBLIC_PLANTDEX_API_URL
+cp .env.example .env.local
+# set NEXT_PUBLIC_PLANTDEX_API_URL and OPENAI_API_KEY (server-only)
 npm install
 npm run dev
 ```
 
-Deploy to Vercel from `frontend/` with the same env var set in the Vercel project.
+Deploy to Vercel from the repo with **Root Directory** `frontend`, production branch `main`, and env vars `NEXT_PUBLIC_PLANTDEX_API_URL` + `OPENAI_API_KEY` set for Production/Preview.
 
 ## Backend
 

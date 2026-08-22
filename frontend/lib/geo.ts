@@ -1,5 +1,8 @@
 /** Resolve Trefle distribution place names to lat/lng via Photon (OSM). */
 
+export const NATIVE_COLOR = "#6BB87A";
+export const INTRODUCED_COLOR = "#E8A54B";
+
 export type GeoPoint = {
   name: string;
   lat: number;

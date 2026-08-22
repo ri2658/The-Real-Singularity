@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PlantProfileHeader from "@/components/PlantProfileHeader";
+import PlantAiSummary from "@/components/PlantAiSummary";
 import PlantProfileDetails from "@/components/PlantProfileDetails";
 import PlantDataFeedback from "@/components/PlantDataFeedback";
 import RelatedPlantsSection from "@/components/RelatedPlantsSection";
@@ -31,6 +32,7 @@ export default async function PlantPage({
 
       <div className="mx-auto max-w-6xl px-6 py-10 pb-8">
         <PlantProfileHeader plant={plant} />
+        <PlantAiSummary plant={plant} />
         <PlantProfileDetails plant={plant} />
 
         <div className="mt-14">

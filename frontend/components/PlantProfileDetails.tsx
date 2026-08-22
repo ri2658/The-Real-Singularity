@@ -3,7 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { PlantProfile } from "@/lib/api";
-import { extractDistributionNames } from "@/lib/geo";
+import { extractDistributionNames, INTRODUCED_COLOR, NATIVE_COLOR } from "@/lib/geo";
 
 const DistributionGlobe = dynamic(() => import("./DistributionGlobe"), {
   ssr: false,
@@ -247,19 +247,33 @@ export default function PlantProfileDetails({ plant }: { plant: PlantProfile }) 
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-5">
             <div>
-              <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-widest text-ink-muted">
+              <p className="mb-2 flex items-center gap-2 font-sans text-[10px] font-semibold uppercase tracking-widest text-ink-muted">
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: NATIVE_COLOR }}
+                  aria-hidden
+                />
                 Native
               </p>
               <ChipList items={nativeFallback} initialVisible={12} />
             </div>
             <div>
-              <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-widest text-ink-muted">
+              <p className="mb-2 flex items-center gap-2 font-sans text-[10px] font-semibold uppercase tracking-widest text-ink-muted">
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: INTRODUCED_COLOR }}
+                  aria-hidden
+                />
                 Introduced
               </p>
               <ChipList items={introducedFallback} initialVisible={12} />
             </div>
           </div>
-          <DistributionGlobe places={nativeFallback} label="Native range globe" />
+          <DistributionGlobe
+            nativePlaces={nativeFallback}
+            introducedPlaces={introducedFallback}
+            label="Native & introduced range"
+          />
         </div>
       </Section>
     </div>
