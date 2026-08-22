@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import PlantCard from "@/components/PlantCard";
 import { searchPlants, type PlantCard as PlantCardType } from "@/lib/api";
@@ -315,10 +316,21 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen">
+    <main className={`flex min-h-screen flex-col ${searched ? "bg-mist" : "bg-forest"}`}>
       {/* ── Hero ────────────────────────────────────────────── */}
-      <section className="relative flex min-h-[56vh] flex-col items-center justify-center overflow-hidden bg-forest px-6 py-16 text-center">
+      <section
+        className={`relative flex flex-col items-center justify-center overflow-hidden bg-forest px-6 py-16 text-center ${
+          searched ? "min-h-[56vh]" : "min-h-screen"
+        }`}
+      >
         <HeroBackground mx={mouse.x} my={mouse.y} />
+
+        <Link
+          href="/about"
+          className="absolute right-5 top-5 z-20 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-white/70 backdrop-blur-sm transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+        >
+          How it&apos;s built
+        </Link>
 
         <div className="relative z-10 flex max-w-3xl flex-col items-center">
           <p className="mb-5 font-sans text-xs font-semibold uppercase tracking-[0.22em] text-sprout">
@@ -356,75 +368,89 @@ export default function HomePage() {
       </section>
 
       {/* ── Results ─────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-6 pb-20 pt-10">
-        {error && (
-          <div className="mb-6 rounded-sm border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+      {searched && (
+        <section className="w-full flex-1 bg-mist">
+          <div className="mx-auto max-w-6xl px-6 pb-20 pt-10">
+            {error && (
+              <div className="mb-6 rounded-sm border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
-        {warnings.length > 0 && (
-          <div className="mb-6 rounded-sm border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            {warnings.join(" ")}
-          </div>
-        )}
+            {warnings.length > 0 && (
+              <div className="mb-6 rounded-sm border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                {warnings.join(" ")}
+              </div>
+            )}
 
-        {loading && (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        )}
-
-        {!loading && searched && !error && (
-          <>
-            {query && (
-              <div className="mb-7 flex items-baseline justify-between gap-4">
-                <div>
-                  <h2 className="font-display text-3xl font-light text-ink">
-                    Results for{" "}
-                    <em className="italic text-fern">"{query}"</em>
-                  </h2>
-                  <p className="mt-1 flex items-center gap-2 text-sm text-ink-muted">
-                    <span>{plants.length} species found</span>
-                    {cacheHit !== null && (
-                      <span className="rounded-full border border-border-plant bg-mist px-2 py-0.5 text-xs font-medium">
-                        cache {cacheHit ? "hit" : "miss"}
-                      </span>
-                    )}
+            {loading && (
+              <div>
+                <div className="mb-7 rounded-sm border border-border-plant bg-parchment px-5 py-4">
+                  <p className="font-display text-xl font-light text-ink">
+                    Searching the index…
                   </p>
+                  <p className="mt-1 text-sm text-ink-muted">
+                    Results will appear here in a moment.
+                  </p>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
                 </div>
               </div>
             )}
 
-            {plants.length > 0 && (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {plants.map((plant, i) => (
-                  <div
-                    key={plant.slug || plant.id || plant.scientific_name}
-                    className="animate-fade-up"
-                    style={{ animationDelay: `${i * 35}ms` }}
-                  >
-                    <PlantCard plant={plant} />
+            {!loading && !error && (
+              <>
+                {query && (
+                  <div className="mb-7 flex items-baseline justify-between gap-4">
+                    <div>
+                      <h2 className="font-display text-3xl font-light text-ink">
+                        Results for{" "}
+                        <em className="italic text-fern">"{query}"</em>
+                      </h2>
+                      <p className="mt-1 flex items-center gap-2 text-sm text-ink-muted">
+                        <span>{plants.length} species found</span>
+                        {cacheHit !== null && (
+                          <span className="rounded-full border border-border-plant bg-parchment px-2 py-0.5 text-xs font-medium">
+                            cache {cacheHit ? "hit" : "miss"}
+                          </span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
+                )}
 
-            {plants.length === 0 && query && (
-              <div className="rounded-sm border border-border-plant bg-parchment p-12 text-center">
-                <p className="font-display text-2xl font-light italic text-ink-muted">
-                  No specimens found for "{query}"
-                </p>
-                <p className="mt-2 text-sm text-ink-muted">
-                  Try a different common or scientific name.
-                </p>
-              </div>
+                {plants.length > 0 && (
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {plants.map((plant, i) => (
+                      <div
+                        key={plant.slug || plant.id || plant.scientific_name}
+                        className="animate-fade-up"
+                        style={{ animationDelay: `${i * 35}ms` }}
+                      >
+                        <PlantCard plant={plant} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {plants.length === 0 && query && (
+                  <div className="rounded-sm border border-border-plant bg-parchment p-12 text-center">
+                    <p className="font-display text-2xl font-light italic text-ink-muted">
+                      No specimens found for "{query}"
+                    </p>
+                    <p className="mt-2 text-sm text-ink-muted">
+                      Try a different common or scientific name.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </section>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

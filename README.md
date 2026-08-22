@@ -1,22 +1,32 @@
-# ds3-example-project
+# PlantDex
 
-Scaffolded data science project structure.
+Plant discovery UI over the [Trefle](https://trefle.io) API — search, profiles, related plants, compare, and native-range visualization. No user accounts or personal collections.
+
+See [`DesignDoc.md`](./DesignDoc.md) for product scope and architecture.
 
 ## Structure
 
-- `notebooks/` - exploratory notebooks
-- `src/` - python package source
-- `data/` - raw and processed datasets
-- `models/` - saved models
-- `results/` - experiment outputs and figures
-- `tests/` - unit and integration tests
+- `frontend/` — Next.js app (Vercel)
+- `src/` — Python Lambda handlers + Trefle similarity helpers
+- `infrastructure/` — AWS CDK (API Gateway, Lambda, DynamoDB, Secrets Manager)
+- `notebooks/` / `tests/` — exploration and notebooks
 
-## Quick start
-
-Create a virtual environment and install dependencies:
+## Frontend
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+cd frontend
+cp .env.example .env.local   # set NEXT_PUBLIC_PLANTDEX_API_URL
+npm install
+npm run dev
+```
+
+Deploy to Vercel from `frontend/` with the same env var set in the Vercel project.
+
+## Backend
+
+```bash
+aws sso login --profile plantdex
+cd infrastructure
+source .venv/bin/activate
+AWS_PROFILE=plantdex cdk deploy
 ```
