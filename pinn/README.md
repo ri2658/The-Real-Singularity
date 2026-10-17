@@ -9,6 +9,32 @@ Refactor of the tutorial notebooks into importable modules (week 3, task C1).
 | `losses.py` | `compute_losses(model, pts, nu)` -> `{"pde", "ic", "bc"}`; `total_loss(losses, weights)` |
 | `reference.py` | `burgers_exact`, `make_reference`, `save_reference`, `load_reference`, `rel_l2_grid` |
 | `train.py` | `TrainConfig`, `train(cfg, ref)` -> `(model, history, cfg_dict)` |
+| `runlog.py` | `RunLogger`, `load_run`, `load_checkpoint`, `list_checkpoints` |
+
+## Run logging
+
+Set `run_name` (or use `scripts/run.py --name ...`) and every run is saved to `runs/<name>/`:
+
+```
+config.json        settings used (nu, depth, width, steps, seed, ...)
+history.json       every log_every steps: step, phase, loss_total, loss_pde, loss_ic, loss_bc, rel_l2
+ckpt_000500.pt     model weights every ckpt_every steps
+final.pt           final weights
+summary.json       final loss, final rel_l2, wall time
+```
+
+```bash
+python scripts/run.py --name sample_adam500 --adam-steps 500
+```
+
+```python
+from pinn.runlog import load_run, load_checkpoint
+config, history = load_run("runs/sample_adam500")
+steps = [h["step"] for h in history]; loss = [h["loss_total"] for h in history]
+model = load_checkpoint("runs/sample_adam500", step=300)  # or step=None for final
+```
+
+history.json is rewritten after every entry, so it can be read while a run is in progress.
 
 ## Quick start (run from the repo root)
 
