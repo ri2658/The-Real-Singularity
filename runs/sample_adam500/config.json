@@ -1,0 +1,23 @@
+{
+ "nu": 0.003183098861837907,
+ "depth": 3,
+ "width": 64,
+ "init": "default",
+ "n_ic": 100,
+ "n_bc": 100,
+ "n_col": 2000,
+ "adam_steps": 500,
+ "lr": 0.001,
+ "weights": {
+  "pde": 0.1,
+  "ic": 0.1,
+  "bc": 0.1
+ },
+ "seed": 0,
+ "log_every": 50,
+ "print_every": 500,
+ "device": "cpu",
+ "run_name": "sample_adam500",
+ "runs_dir": "runs",
+ "ckpt_every": 100
+}
