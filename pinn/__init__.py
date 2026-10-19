@@ -16,6 +16,8 @@ from .data import sample_points
 from .losses import compute_losses, total_loss
 from .reference import (
     burgers_exact,
+    burgers_exact_trapz,
+    reference_path,
     make_reference,
     save_reference,
     load_reference,
@@ -29,6 +31,8 @@ __all__ = [
     "compute_losses",
     "total_loss",
     "burgers_exact",
+    "burgers_exact_trapz",
+    "reference_path",
     "make_reference",
     "save_reference",
     "load_reference",
