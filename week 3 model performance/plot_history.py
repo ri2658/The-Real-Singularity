@@ -4,7 +4,7 @@ import json
 import matplotlib.pyplot as plt
 
 
-def plot_history(history_path="history.json", l2_csv=None, out_png="loss_vs_l2_s0.png"):
+def plot_history(history_path="history.json", l2_csv=None, out_png="loss_vs_l2_s0_p1000.png"):
     """
     history_path : list of records with keys step, phase, loss_total, rel_l2, ...
     l2_csv       : optional CSV (iteration,l2) from eval_l2.py. If given, it replaces
@@ -53,5 +53,5 @@ def plot_history(history_path="history.json", l2_csv=None, out_png="loss_vs_l2_s
 
 
 if __name__ == "__main__":
-    plot_history("/Users/yiwenzhao/The-Real-Singularity/runs/lbfgs_8x20_s1/history.json",out_png="loss_vs_l2_s1.png")
+    plot_history("/Users/yiwenzhao/The-Real-Singularity/runs/p1000_8x20_s1/history.json",out_png="loss_vs_l2_s1_p1000.png")
     # plot_history("history.json", l2_csv="l2_history.csv")   # use your own L2 values
