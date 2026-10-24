@@ -1,0 +1,2 @@
+# Run html file
+python3 -m http.server
