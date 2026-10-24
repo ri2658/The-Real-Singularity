@@ -9,9 +9,11 @@ Examples (run from the repo root):
 
 The reference solution for the chosen nu (data/reference/burgers_nu<nu_pi>pi.npz)
 is loaded, or generated if missing, so rel_l2 is logged at every log step.
-Week-4 nu sweep example:
-    python scripts/run.py --name nu0.001_s0 --nu-pi 0.001 --depth 8 --width 20 --init xavier \
-        --n-col 10000 --adam-steps 2000 --lbfgs-steps 15000
+Week-4 nu sweep examples (uniform vs. shock-focused collocation):
+    python scripts/run.py --name nu0.001_vanilla_s0 --nu-pi 0.001 --depth 8 --width 20 --init xavier \
+        --n-col 10000 --adam-steps 2000 --lbfgs-steps 15000 --lbfgs-patience 1000
+    python scripts/run.py --name nu0.001_shock_s0 --nu-pi 0.001 --sampling shock --depth 8 --width 20 \
+        --init xavier --n-col 10000 --adam-steps 2000 --lbfgs-steps 15000 --lbfgs-patience 1000
 """
 
 import argparse
@@ -34,6 +36,12 @@ def parse_args():
     p.add_argument("--width", type=int, default=64)
     p.add_argument("--init", default="default", choices=["default", "xavier"])
     p.add_argument("--n-col", type=int, default=2000)
+    p.add_argument("--sampling", default="uniform", choices=["uniform", "shock"],
+                   help="collocation sampling: uniform, or part of the points near the shock at x = 0")
+    p.add_argument("--shock-frac", type=float, default=0.5,
+                   help="shock sampling: fraction of collocation points placed near x = 0")
+    p.add_argument("--shock-width", type=float, default=0.05,
+                   help="shock sampling: std in x of the points near the shock")
     p.add_argument("--adam-steps", type=int, default=5000)
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--lbfgs-steps", type=int, default=0,
@@ -59,6 +67,7 @@ def main():
 
     cfg = TrainConfig(
         nu=nu, depth=a.depth, width=a.width, init=a.init, n_col=a.n_col,
+        sampling=a.sampling, shock_frac=a.shock_frac, shock_width=a.shock_width,
         adam_steps=a.adam_steps, lr=a.lr, seed=a.seed,
         lbfgs_steps=a.lbfgs_steps, lbfgs_patience=a.lbfgs_patience,
         log_every=a.log_every, ckpt_every=a.ckpt_every, run_name=a.name,
