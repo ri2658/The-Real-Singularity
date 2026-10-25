@@ -45,6 +45,9 @@ class TrainConfig:
     n_ic: int = 100
     n_bc: int = 100
     n_col: int = 2000
+    sampling: str = "uniform"        # "uniform" or "shock" (see pinn/data.py)
+    shock_frac: float = 0.5          # shock sampling: fraction of n_col placed near x = 0
+    shock_width: float = 0.05        # shock sampling: std of those points in x
 
     # optimisation
     adam_steps: int = 5000
@@ -94,7 +97,9 @@ def train(cfg: TrainConfig, ref: dict = None, overwrite: bool = False):
     """Train a PINN with Adam, then optionally L-BFGS. Returns (model, history, cfg_dict)."""
     torch.manual_seed(cfg.seed)
     model = PINN(cfg.depth, cfg.width, cfg.init).to(cfg.device)
-    pts = sample_points(cfg.n_ic, cfg.n_bc, cfg.n_col, seed=cfg.seed, device=cfg.device)
+    pts = sample_points(cfg.n_ic, cfg.n_bc, cfg.n_col, seed=cfg.seed, device=cfg.device,
+                        sampling=cfg.sampling, shock_frac=cfg.shock_frac,
+                        shock_width=cfg.shock_width)
 
     cfg_dict = asdict(cfg)
     logger = None
@@ -181,7 +186,7 @@ def train(cfg: TrainConfig, ref: dict = None, overwrite: bool = False):
             stalled = since_best >= cfg.lbfgs_patience
             is_last = k == cfg.lbfgs_steps or stalled
 
-            if is_last or step % cfg.log_every == 0 or step % cfg.ckpt_every == 0:
+            if is_last or step % cfg.log_every == 0 or (cfg.ckpt_every and step % cfg.ckpt_every == 0):
                 # Fresh losses at the current parameters, only when logging.
                 losses = compute_losses(model, pts, cfg.nu)
                 record(step, "lbfgs", losses, total_loss(losses, cfg.weights), force=is_last)
