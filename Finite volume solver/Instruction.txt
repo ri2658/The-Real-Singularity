@@ -1,2 +1,3 @@
 # Run html file
-python3 -m http.server
+1. in terminal, run: python3 -m http.server
+2. paste http://localhost:8000/Finite%20volume%20solver/race_solver.html to browser
