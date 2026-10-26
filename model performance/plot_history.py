@@ -53,5 +53,5 @@ def plot_history(history_path="history.json", l2_csv=None, out_png="loss_vs_l2_s
 
 
 if __name__ == "__main__":
-    plot_history("/Users/yiwenzhao/The-Real-Singularity/runs/nu0.001_shock_s2/history.json",out_png="loss_vs_l2_nu0.001_shock_s2.png")
+    plot_history("/Users/yiwenzhao/The-Real-Singularity/runs/p1000_8x20_s2_ext2k/history.json",out_png="loss_vs_l2_p1000_8x20_s2_ext2k.png")
     # plot_history("history.json", l2_csv="l2_history.csv")   # use your own L2 values
