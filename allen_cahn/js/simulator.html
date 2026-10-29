@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Allen–Cahn simulator</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --panel: #ffffff; --ink: #0b0b0b; --muted: #6b6a64; --line: #e4e3de;
+    --curve: #2a78d6; --ghost: #b9b7ae; --energy: #eb6834;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  canvas { width: 100%; display: block; }
+  .label { font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+  .controls label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 3px; }
+  .controls select, .controls input[type=number] { width: 100%; padding: 5px 6px; font: inherit;
+         border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .controls input[type=range] { width: 100%; }
+  .row { display: flex; gap: 8px; margin-top: 12px; }
+  button { flex: 1; padding: 7px 10px; font: inherit; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--ink); background: var(--ink); color: #fff; }
+  button.secondary { background: #fff; color: var(--ink); border-color: var(--line); }
+  .stats { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin-top: 14px;
+           font-variant-numeric: tabular-nums; }
+  .stats dt { color: var(--muted); } .stats dd { margin: 0; text-align: right; }
+  .warn { color: #b3261e; font-weight: 600; min-height: 1.4em; margin-top: 8px; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Allen–Cahn simulator</h1>
+  <p class="sub">u<sub>t</sub> = u<sub>xx</sub> + μ(u − u³) on (0, π), u = 0 at both ends, μ = 6, N = 128, forward Euler.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <p class="label">u(x): current curve (blue), starting curve (gray)</p>
+        <canvas id="plotU" height="300"></canvas>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <p class="label">Energy E<sub>h</sub> vs time (must never go up while Δt ≤ h²/2; values above 1 are clipped)</p>
+        <canvas id="plotE" height="160"></canvas>
+      </div>
+    </div>
+
+    <div class="card controls">
+      <label for="start">Starting curve</label>
+      <select id="start">
+        <option value="random">random</option>
+        <option value="hump-like">a · sin(x) (hump-like)</option>
+        <option value="S-like">a · sin(2x) (S-like)</option>
+        <option value="S-push">S-like, then a 1e-8 · sin(x) push at t = 8</option>
+      </select>
+      <label for="amp">Amplitude a</label>
+      <input id="amp" type="number" value="0.5" step="0.1">
+      <label for="seed">Random seed</label>
+      <input id="seed" type="number" value="0" step="1">
+
+      <label for="dt">Δt = <span id="dtVal"></span> × h²/2 (above 1 blows up)</label>
+      <input id="dt" type="range" min="0.1" max="1.1" step="0.01" value="0.8">
+      <label for="speed">Steps per frame: <span id="speedVal"></span></label>
+      <input id="speed" type="range" min="1" max="400" step="1" value="40">
+
+      <div class="row">
+        <button id="play">Play</button>
+        <button id="reset" class="secondary">Reset</button>
+      </div>
+
+      <dl class="stats">
+        <dt>t</dt><dd id="sT"></dd>
+        <dt>steps</dt><dd id="sSteps"></dd>
+        <dt>E<sub>h</sub></dt><dd id="sE"></dd>
+        <dt>max |U|</dt><dd id="sMax"></dd>
+        <dt>residual max|F(U)|</dt><dd id="sRes"></dd>
+      </dl>
+      <div class="warn" id="warn"></div>
+      <p class="note">Table 1 targets: hump E = −2.4036, max|U| = 0.9825; S E = −0.3541, max|U| = 0.6601.
+        Curves from JSON (equilibria, PINN guesses) appear in the list when served from the repo root.</p>
+    </div>
+  </div>
+</main>
+
+<script src="allen_cahn.js"></script>
+<script>
+const AC = AllenCahn;
+const $ = (id) => document.getElementById(id);
+const jsonCurves = {};                     // name -> Float64Array, from data/allen_cahn/*.json
+let sim, startCurve, energyTrace, running = false, pushed = false;
+
+// ---------- curves from JSON files (optional) ----------
+async function loadJsonCurves() {
+  const files = ["equilibria.json", "pinn_guesses.json"];
+  for (const f of files) {
+    try {
+      const res = await fetch(`../../data/allen_cahn/${f}`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const [key, val] of Object.entries(data)) {
+        if (Array.isArray(val) && val.length === AC.AC_DEFAULTS.N - 1 && typeof val[0] === "number") {
+          const name = `${f.replace(".json", "")}: ${key}`;
+          jsonCurves[name] = Float64Array.from(val);
+          const opt = document.createElement("option");
+          opt.value = "json:" + name;
+          opt.textContent = name;
+          $("start").appendChild(opt);
+        }
+      }
+    } catch (e) { /* file not there yet: page still works with the built-in curves */ }
+  }
+}
+
+// ---------- simulation state ----------
+function reset() {
+  const dtFactor = parseFloat($("dt").value) * 0.5;
+  sim = AC.createSimulator({ dtFactor });
+  const kind = $("start").value;
+  const amp = parseFloat($("amp").value);
+  const seed = parseInt($("seed").value, 10) || 0;
+  if (kind.startsWith("json:")) startCurve = Float64Array.from(jsonCurves[kind.slice(5)]);
+  else if (kind === "S-push") startCurve = AC.initialCurve("S-like", sim.x, { amp });
+  else startCurve = AC.initialCurve(kind, sim.x, { amp, seed });
+  sim.set(startCurve);
+  pushed = false;
+  energyTrace = [[0, sim.energy()]];
+  $("warn").textContent = "";
+  draw();
+}
+
+function frame() {
+  if (!running) return;
+  const n = parseInt($("speed").value, 10);
+  for (let k = 0; k < n; k++) {
+    sim.advance(1);
+    if ($("start").value === "S-push" && !pushed && sim.t >= 8) {
+      for (let i = 0; i < sim.U.length; i++) sim.U[i] += 1e-8 * Math.sin(sim.x[i]);
+      pushed = true;
+    }
+  }
+  if (sim.blewUp()) {
+    running = false;
+    $("play").textContent = "Play";
+    $("warn").textContent = "Blew up: Δt is above the stability limit h²/2.";
+  } else {
+    energyTrace.push([sim.t, sim.energy()]);
+  }
+  draw();
+  if (running) requestAnimationFrame(frame);
+}
+
+// ---------- drawing ----------
+function setupCanvas(c) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = c.clientWidth, h = c.height / (c._dpr || 1);
+  c._dpr = dpr;
+  c.width = w * dpr; c.height = h * dpr;
+  const ctx = c.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+function axes(ctx, w, h, pad, yTicks, yMap, xTicks, xMap) {
+  ctx.strokeStyle = "#e4e3de"; ctx.fillStyle = "#6b6a64"; ctx.lineWidth = 1;
+  ctx.font = "11px system-ui, sans-serif";
+  for (const [v, txt] of yTicks) {
+    const y = yMap(v);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(txt, pad.l - 6, y);
+  }
+  xTicks.forEach(([v, txt], i) => {
+    ctx.textAlign = i === xTicks.length - 1 && i > 0 && xMap(v) > w - pad.r - 30 ? "right" : "center";
+    ctx.textBaseline = "top"; ctx.fillText(txt, xMap(v), h - pad.b + 6);
+  });
+}
+
+function line(ctx, xs, ys, xMap, yMap, color, width, dash) {
+  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  for (let i = 0; i < xs.length; i++) {
+    const X = xMap(xs[i]), Y = yMap(ys[i]);
+    i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function withEnds(U) {               // add the boundary zeros for plotting
+  const out = new Float64Array(U.length + 2);
+  out.set(U, 1);
+  return out;
+}
+
+function draw() {
+  const xs = withEnds(sim.x); xs[xs.length - 1] = Math.PI;
+
+  // u(x)
+  {
+    const { ctx, w, h } = setupCanvas($("plotU"));
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 40, r: 10, t: 10, b: 24 };
+    const lim = Math.max(1.1, Math.min(10, AC.maxAbs(startCurve) * 1.1));
+    const xMap = (v) => pad.l + (v / Math.PI) * (w - pad.l - pad.r);
+    const yMap = (v) => pad.t + (1 - (v + lim) / (2 * lim)) * (h - pad.t - pad.b);
+    axes(ctx, w, h, pad, [[-1, "−1"], [0, "0"], [1, "1"]], yMap,
+         [[0, "0"], [Math.PI / 2, "π/2"], [Math.PI, "π"]], xMap);
+    line(ctx, xs, withEnds(startCurve), xMap, yMap, "#b9b7ae", 1.5, [4, 4]);
+    const U = withEnds(sim.U).map((v) => Math.max(-lim, Math.min(lim, v)));
+    line(ctx, xs, U, xMap, yMap, "#2a78d6", 2.5);
+  }
+
+  // energy vs time
+  {
+    const { ctx, w, h } = setupCanvas($("plotE"));
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 78, r: 10, t: 8, b: 22 };
+    const ts = energyTrace.map((p) => p[0]), es = energyTrace.map((p) => p[1]);
+    const tMax = Math.max(1, ts[ts.length - 1]);
+    // Fixed window around the interesting range: random starts begin near E = 400,
+    // which would squash the equilibrium levels into one line. Larger values are clipped.
+    const eMin = -2.7, eMax = 1;
+    const xMap = (v) => pad.l + (v / tMax) * (w - pad.l - pad.r);
+    const yMap = (v) => pad.t + (1 - (v - eMin) / (eMax - eMin)) * (h - pad.t - pad.b);
+    const yT = [[-2.4036, "hump −2.40"], [-0.3541, "S −0.35"], [0, "zero 0"]];
+    axes(ctx, w, h, pad, yT, yMap, [[0, "0"], [tMax, `t = ${tMax.toFixed(1)}`]], xMap);
+    line(ctx, ts, es.map((e) => Math.min(e, eMax)), xMap, yMap, "#eb6834", 2);
+  }
+
+  $("sT").textContent = sim.t.toFixed(3);
+  $("sSteps").textContent = sim.steps.toLocaleString();
+  $("sE").textContent = sim.energy().toFixed(4);
+  $("sMax").textContent = AC.maxAbs(sim.U).toFixed(4);
+  $("sRes").textContent = sim.residual().toExponential(1);
+}
+
+// ---------- controls ----------
+function updateLabels() {
+  $("dtVal").textContent = parseFloat($("dt").value).toFixed(2);
+  $("speedVal").textContent = $("speed").value;
+}
+$("play").onclick = () => {
+  running = !running;
+  $("play").textContent = running ? "Pause" : "Play";
+  if (running) requestAnimationFrame(frame);
+};
+$("reset").onclick = reset;
+for (const id of ["start", "amp", "seed"]) $(id).onchange = reset;
+$("dt").oninput = () => { updateLabels(); sim.setDtFactor(parseFloat($("dt").value) * 0.5); };
+$("speed").oninput = updateLabels;
+window.onresize = draw;
+
+updateLabels();
+reset();
+loadJsonCurves();
+</script>
+</body>
+</html>
