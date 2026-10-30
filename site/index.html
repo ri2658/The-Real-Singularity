@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Real Singularity</title>
+<meta name="description" content="What physics-informed neural networks can and can't do: three myths, tested with interactive demos.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--soon:#8a8f99}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380}}
+:root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 Georgia,"Iowan Old Style",serif}
+main{max-width:820px;margin:0 auto;padding:40px 16px 56px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 10px}
+.lede{color:var(--mut);max-width:60ch;margin:0 0 36px}
+.beat{border-top:1px solid var(--grid);padding:28px 0 8px}
+.num{font:600 .8rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 4px}
+h2{font-size:1.45rem;margin:0 0 10px}
+.myth{font-style:italic;margin:0 0 14px}
+.myth b{font-style:normal;font:600 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-right:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:0 0 16px}
+a.card,div.card{display:block;background:var(--card);border:1px solid var(--grid);border-radius:10px;padding:14px 16px;color:inherit;text-decoration:none}
+a.card:hover,a.card:focus-visible{border-color:var(--accent);outline:none}
+.card h3{font:600 1rem system-ui,sans-serif;margin:0 0 4px}
+.card p{font:.88rem/1.45 system-ui,sans-serif;color:var(--mut);margin:0}
+div.card{border-style:dashed;background:transparent}
+div.card h3{color:var(--soon)}
+.tag{font:600 .7rem system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--soon);margin-left:6px}
+.reality{font-size:.95rem;color:var(--mut);max-width:64ch;margin:0 0 8px}
+.reality b{color:var(--fg);font-weight:600}
+footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.82rem/1.5 system-ui,sans-serif;color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+  <h1>The Real Singularity</h1>
+  <p class="lede">Physics-informed neural networks (PINNs) are often sold as a replacement for classical solvers.
+    We test three popular claims with interactive demos you can run in your browser, and show where each tool actually wins.</p>
+
+  <section class="beat">
+    <p class="num">Beat 1 · Burgers' equation</p>
+    <h2>Shocks, losses and solvers</h2>
+    <p class="myth"><b>Myth</b>"PINNs replace solvers." "Low loss means the right answer." "More compute fixes it."</p>
+    <div class="cards">
+      <a class="card" href="shock/index.html"><h3>How a shock forms</h3><p>Characteristics collide at x = 0 at t* = 1/π. Scrub time and change the viscosity.</p></a>
+      <a class="card" href="race/index.html"><h3>The race</h3><p>A finite-volume solver in JavaScript, timed live and checked against the exact solution.</p></a>
+      <a class="card" href="pinn/index.html"><h3>A PINN in your browser</h3><p>Our trained network (ONNX) evaluates u(x, t) live as you move the sliders.</p></a>
+      <div class="card"><h3>Loss vs. truth<span class="tag">Coming</span></h3><p>Training loss next to the true error, step by step.</p></div>
+    </div>
+    <p class="reality"><b>So far:</b> at ν = 0.01/π the PINN reaches a relative L² error of about 5e-4.
+      At ν = 0.001/π it fails (error ≈ 0.4) even with points concentrated at the shock, while the finite-volume solver
+      gets about 2e-3 in a few dozen milliseconds.</p>
+  </section>
+
+  <section class="beat">
+    <p class="num">Beat 2 · Allen–Cahn</p>
+    <h2>Stable and unstable states</h2>
+    <p class="myth"><b>Myth</b>"PINNs are just worse solvers."</p>
+    <div class="cards">
+      <a class="card" href="allen-cahn/index.html"><h3>Allen–Cahn simulator</h3><p>Forward Euler is gradient descent on an energy: it only ever lands in stable states. Try the hilltop preset.</p></a>
+      <div class="card"><h3>Ball and bowl<span class="tag">Coming</span></h3><p>Stability in one picture: bowls hold the ball, hilltops don't.</p></div>
+      <div class="card"><h3>Correction demo<span class="tag">Coming</span></h3><p>Rough PINN guesses fed to the simulator: one heals, one falls off.</p></div>
+    </div>
+    <p class="reality"><b>So far:</b> the simulator reproduces all five equilibria and their stability rates.
+      A PINN can find the unstable state that simulation never reaches, so each tool wins a different problem.</p>
+  </section>
+
+  <section class="beat">
+    <p class="num">Beat 3 · The ladder</p>
+    <h2>Did AI solve Navier–Stokes?</h2>
+    <p class="myth"><b>Myth</b>"AI solved Navier–Stokes."</p>
+    <div class="cards">
+      <div class="card"><h3>The difficulty ladder<span class="tag">Coming</span></h3><p>Stable blowup, unstable blowup, and a disputed claim, side by side.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    DS3 Projects, UC San Diego, Fall 2026. Charles Cheng, Michelle Zhao, Paarth Nawani, Niko Calabro. Mentor: Ryo Ide.
+  </footer>
+</main>
+</body>
+</html>

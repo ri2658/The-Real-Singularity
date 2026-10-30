@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burgers solver: live finite-volume run</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--ref:#8a93a3;--sol:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ref:#98a2b3;--sol:#fb923c}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Georgia,serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 32px}
+h1{font-size:1.4rem;margin:0 0 4px}
+p{color:var(--mut);margin:0 0 12px}
+canvas{width:100%;aspect-ratio:16/9;display:block;border-bottom:1px solid var(--grid)}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:12px 0;font:.9rem system-ui,sans-serif}
+button,select{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:transparent;color:var(--fg);border-radius:6px;cursor:pointer}
+input[type=range]{flex:1 1 200px;accent-color:var(--sol)}
+#stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-family:system-ui,sans-serif}
+#stats div{border:1px solid var(--grid);border-radius:8px;padding:8px 10px}
+#stats b{display:block;font-size:1.25rem}
+#stats span{color:var(--mut);font-size:.8rem}
+#msg{color:var(--sol);font:.9rem system-ui,sans-serif;white-space:pre-wrap}
+.k{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
+</style>
+</head>
+<body>
+<nav style="max-width:980px;margin:0 auto;padding:12px 16px 0;font:14px system-ui,sans-serif"><a href="../index.html" style="color:inherit;opacity:.7;text-decoration:none">&larr; All demos</a></nav>
+<main>
+<h1>Finite-volume Burgers solver, running live in your browser</h1>
+<p>Pick ν and the number of cells N, then press Run. The solver computes the whole solution on the spot; the curve then replays it in time next to the reference.</p>
+
+<div class="row">
+  <label>ν <select id="nu">
+    <option value="nu0.01pi">0.01/π</option>
+    <option value="nu0.003pi">0.003/π</option>
+    <option value="nu0.001pi">0.001/π</option></select></label>
+  <label>N <select id="N">
+    <option>500</option><option>1000</option><option selected>2000</option><option>4000</option></select></label>
+  <button id="run">Run</button>
+</div>
+
+<canvas id="cv"></canvas>
+<div class="row" style="margin:6px 0">
+  <span><i class="k" style="background:var(--ref)"></i>reference</span>
+  <span><i class="k" style="background:var(--sol)"></i>finite-volume solver</span>
+</div>
+<div class="row">
+  <label>t <input id="ts" type="range" min="0" max="99" value="0"></label>
+  <span id="tl">t = –</span>
+</div>
+
+<div id="stats">
+  <div><b id="s-time">–</b><span>solve time (solver only, no drawing)</span></div>
+  <div><b id="s-err">–</b><span>relative L² vs reference, whole x–t grid</span></div>
+  <div><b id="s-errt">–</b><span>relative L² at the last time</span></div>
+</div>
+<p id="msg"></p>
+</main>
+
+<script src="burgers_fv.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const cache = {};                       // reference files already loaded
+let ref = null, x = null, snaps = null, shown = null, raf = null;
+
+async function loadRef(name) {
+  if (!cache[name]) {
+    const r = await fetch(`../data/reference_json/ref_${name}.json`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    cache[name] = await r.json();
+  }
+  return cache[name];
+}
+
+function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+function draw() {
+  const c = $('cv'), d = devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  c.width = Math.round(w * d); c.height = Math.round(h * d);
+  const g = c.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0);
+  const m = {l: 40, r: 10, t: 10, b: 28};
+  const X = v => m.l + (v + 1) / 2 * (w - m.l - m.r);
+  const Y = v => h - m.b - (v + 1.1) / 2.2 * (h - m.t - m.b);
+  g.strokeStyle = css('--grid'); g.fillStyle = css('--mut'); g.font = '12px system-ui,sans-serif'; g.lineWidth = 1;
+  g.textAlign = 'center';
+  for (const v of [-1, -.5, 0, .5, 1]) { g.beginPath(); g.moveTo(X(v), Y(-1.1)); g.lineTo(X(v), Y(1.1)); g.stroke(); g.fillText(v, X(v), h - 10); }
+  g.textAlign = 'right';
+  for (const v of [-1, -.5, 0, .5, 1]) { g.beginPath(); g.moveTo(X(-1), Y(v)); g.lineTo(X(1), Y(v)); g.stroke(); g.fillText(v, m.l - 6, Y(v) + 4); }
+  if (!ref) return;
+  const ti = +$('ts').value;
+  const line = (xs, us, color, lw) => {
+    g.strokeStyle = color; g.lineWidth = lw; g.beginPath();
+    xs.forEach((xv, i) => i ? g.lineTo(X(xv), Y(us[i])) : g.moveTo(X(xv), Y(us[i]))); g.stroke();
+  };
+  line(ref.x, ref.u[ti], css('--ref'), 3);
+  if (snaps) line(x, snaps[ti], css('--sol'), 1.5);
+  $('tl').textContent = `t = ${ref.t[ti].toFixed(2)}`;
+}
+
+async function run() {
+  $('msg').textContent = ''; cancelAnimationFrame(raf);
+  try { ref = await loadRef($('nu').value); }
+  catch (e) {
+    $('msg').textContent = `Could not load the reference file (${e.message}).\nOpen this page through a local server started in the repo root:\n  python3 -m http.server\nthen visit http://localhost:8000/Finite%20volume%20solver/race_solver.html`;
+    return;
+  }
+  const N = +$('N').value;
+  $('s-time').textContent = '…'; await new Promise(r => setTimeout(r, 30));   // let the page repaint first
+  const t0 = performance.now();
+  const out = solveBurgers(ref.nu, N, ref.t);                                 // the timed part
+  const ms = performance.now() - t0;
+  x = out.x; snaps = out.snaps;
+
+  // Error against the reference (not timed): interpolate solver onto the reference x grid.
+  const nx = ref.x.length, sol = new Float64Array(ref.t.length * nx), refFlat = Float64Array.from(ref.u.flat());
+  snaps.forEach((s, ti) => sol.set(interpToRef(ref.x, x, s), ti * nx));
+  const last = ref.t.length - 1;
+  $('s-time').textContent = ms < 1000 ? `${ms.toFixed(0)} ms` : `${(ms / 1000).toFixed(2)} s`;
+  $('s-err').textContent = relL2(sol, refFlat).toExponential(2);
+  $('s-errt').textContent = relL2(sol.subarray(last * nx), refFlat.subarray(last * nx)).toExponential(2);
+
+  // Replay the solution in time (about 4 seconds).
+  const start = performance.now();
+  const step = () => {
+    const ti = Math.min(last, Math.floor((performance.now() - start) / 40));
+    $('ts').value = ti; draw();
+    if (ti < last) raf = requestAnimationFrame(step);
+  };
+  step();
+}
+
+$('run').onclick = run;
+$('ts').oninput = () => { cancelAnimationFrame(raf); draw(); };
+$('nu').onchange = async () => {       // show the new reference right away, clear old solver output
+  snaps = null; ['s-time', 's-err', 's-errt'].forEach(i => $(i).textContent = '–');
+  try { ref = await loadRef($('nu').value); $('msg').textContent = ''; }
+  catch (e) { ref = null; $('msg').textContent = 'Reference file not loaded. Serve the repo root with: python3 -m http.server\nthen open http://localhost:8000/Finite%20volume%20solver/race_solver.html'; }
+  draw();
+};
+addEventListener('resize', draw);
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change', draw);
+$('nu').onchange();
+</script>
+</body>
+</html>

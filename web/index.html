@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burgers PINN</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #fff;
+    color: #111;
+    font: 15px/1.45 Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 28px 20px 48px; }
+  h1 { margin: 0 0 6px; font-size: 1.15rem; font-weight: 600; }
+  .note { margin: 0 0 16px; color: #222; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.92em; }
+  canvas { width: 100%; height: 380px; display: block; }
+  .caption { margin: 8px 0 18px; font-size: 13px; }
+  .controls { display: grid; gap: 10px; max-width: 520px; }
+  label {
+    display: grid;
+    grid-template-columns: 1rem 1fr 3rem;
+    gap: 10px;
+    align-items: center;
+  }
+  input[type="range"] { width: 100%; accent-color: #1f77b4; }
+  .val { text-align: right; font-variant-numeric: tabular-nums; }
+  #status { margin: 12px 0 0; min-height: 1.2em; color: #b00020; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Viscous Burgers equation</h1>
+  <p class="note">PINN prediction, depth 8 and width 20, trained at ν = 0.01/π. Weights <code>p1000_8x20_s1</code>.</p>
+  <canvas id="plot"></canvas>
+  <p class="caption" id="caption">Loading the model.</p>
+  <div class="controls">
+    <label>x <input id="x" type="range" min="-1" max="1" step="0.01" value="0.25"> <span class="val" id="xval">0.25</span></label>
+    <label>t <input id="t" type="range" min="0" max="1" step="0.01" value="0.50"> <span class="val" id="tval">0.50</span></label>
+  </div>
+  <p id="status"></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/ort.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $("plot");
+let session;
+let latest = null;
+
+async function uAt(xs, t) {
+  const x = new ort.Tensor("float32", Float32Array.from(xs), [xs.length, 1]);
+  const tt = new ort.Tensor("float32", Float32Array.from(xs.map(() => t)), [xs.length, 1]);
+  const out = await session.run({ x, t: tt });
+  return out.u.data;
+}
+
+function draw(xs, us, xMark, uMark) {
+  const dpr = devicePixelRatio || 1;
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  const g = canvas.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const m = { l: 58, r: 16, t: 16, b: 46 };
+  const yMin = -1.2, yMax = 1.2;
+  const w = cssW, h = cssH;
+  const X = x => m.l + ((x + 1) / 2) * (w - m.l - m.r);
+  const Y = u => m.t + ((yMax - u) / (yMax - yMin)) * (h - m.t - m.b);
+  const plotW = w - m.l - m.r;
+  const plotH = h - m.t - m.b;
+
+  g.clearRect(0, 0, w, h);
+  g.fillStyle = "#fff";
+  g.fillRect(m.l, m.t, plotW, plotH);
+
+  g.strokeStyle = "#d0d0d0";
+  g.lineWidth = 1;
+  for (const u of [-1, -0.5, 0, 0.5, 1]) {
+    g.beginPath();
+    g.moveTo(m.l, Y(u));
+    g.lineTo(w - m.r, Y(u));
+    g.stroke();
+  }
+  for (const x of [-0.5, 0, 0.5]) {
+    g.beginPath();
+    g.moveTo(X(x), m.t);
+    g.lineTo(X(x), h - m.b);
+    g.stroke();
+  }
+
+  g.strokeStyle = "#000";
+  g.lineWidth = 1;
+  g.strokeRect(m.l + 0.5, m.t + 0.5, plotW - 1, plotH - 1);
+
+  g.fillStyle = "#111";
+  g.font = "12px Helvetica, Arial, sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "top";
+  for (const x of [-1, -0.5, 0, 0.5, 1]) {
+    const px = X(x);
+    g.beginPath();
+    g.moveTo(px, h - m.b);
+    g.lineTo(px, h - m.b + 5);
+    g.stroke();
+    g.fillText(x.toFixed(1), px, h - m.b + 8);
+  }
+  g.textAlign = "right";
+  g.textBaseline = "middle";
+  for (const u of [-1, -0.5, 0, 0.5, 1]) {
+    const py = Y(u);
+    g.beginPath();
+    g.moveTo(m.l, py);
+    g.lineTo(m.l - 5, py);
+    g.stroke();
+    g.fillText(u.toFixed(1), m.l - 8, py);
+  }
+
+  g.fillStyle = "#000";
+  g.font = "italic 14px Helvetica, Arial, sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "alphabetic";
+  g.fillText("x", m.l + plotW / 2, h - 4);
+  g.save();
+  g.translate(14, m.t + plotH / 2);
+  g.rotate(-Math.PI / 2);
+  g.fillText("u", 0, 0);
+  g.restore();
+
+  g.save();
+  g.beginPath();
+  g.rect(m.l, m.t, plotW, plotH);
+  g.clip();
+  g.strokeStyle = "#1f77b4";
+  g.lineWidth = 1.75;
+  g.lineJoin = "round";
+  g.lineCap = "round";
+  g.beginPath();
+  us.forEach((u, i) => i ? g.lineTo(X(xs[i]), Y(u)) : g.moveTo(X(xs[i]), Y(u)));
+  g.stroke();
+  g.restore();
+
+  const mx = X(xMark);
+  const my = Y(uMark);
+  g.fillStyle = "#1f77b4";
+  g.strokeStyle = "#fff";
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.arc(mx, my, 4, 0, Math.PI * 2);
+  g.fill();
+  g.stroke();
+
+  const lx = w - m.r - 78;
+  const ly = m.t + 10;
+  g.fillStyle = "#fff";
+  g.strokeStyle = "#000";
+  g.lineWidth = 1;
+  g.fillRect(lx, ly, 68, 22);
+  g.strokeRect(lx + 0.5, ly + 0.5, 67, 21);
+  g.strokeStyle = "#1f77b4";
+  g.lineWidth = 1.75;
+  g.beginPath();
+  g.moveTo(lx + 8, ly + 11);
+  g.lineTo(lx + 26, ly + 11);
+  g.stroke();
+  g.fillStyle = "#111";
+  g.font = "12px Helvetica, Arial, sans-serif";
+  g.textAlign = "left";
+  g.textBaseline = "middle";
+  g.fillText("PINN", lx + 32, ly + 11);
+}
+
+async function refresh() {
+  const x = Number($("x").value);
+  const t = Number($("t").value);
+  $("xval").textContent = x.toFixed(2);
+  $("tval").textContent = t.toFixed(2);
+  const xs = Array.from({ length: 121 }, (_, i) => -1 + 2 * i / 120);
+  const one = await uAt([x], t);
+  const us = await uAt(xs, t);
+  const u = one[0];
+  latest = { xs, us, x, u };
+  $("caption").textContent =
+    `u(x, t) at t = ${t.toFixed(2)}. Marker at x = ${x.toFixed(2)}, u = ${u.toFixed(3)}.`;
+  draw(xs, us, x, u);
+}
+
+async function main() {
+  ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/";
+  ort.env.wasm.numThreads = 1;
+  try {
+    session = await ort.InferenceSession.create("./pinn.onnx");
+    $("x").addEventListener("input", refresh);
+    $("t").addEventListener("input", refresh);
+    addEventListener("resize", () => { if (latest) draw(latest.xs, latest.us, latest.x, latest.u); });
+    refresh();
+  } catch (err) {
+    $("caption").textContent = "";
+    $("status").textContent = "Could not load the model: " + err;
+  }
+}
+main();
+</script>
+</body>
+</html>

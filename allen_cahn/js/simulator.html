@@ -101,7 +101,9 @@ async function loadJsonCurves() {
   const files = ["equilibria.json", "pinn_guesses.json"];
   for (const f of files) {
     try {
-      const res = await fetch(`../../data/allen_cahn/${f}`);
+      // site/allen-cahn/ keeps data one level up; allen_cahn/js/ in the repo, two levels up.
+      let res = await fetch(`../data/allen_cahn/${f}`);
+      if (!res.ok) res = await fetch(`../../data/allen_cahn/${f}`);
       if (!res.ok) continue;
       const data = await res.json();
       // Curves sit at the top level ({ hump_guess: [...] }) or, in equilibria.json,
