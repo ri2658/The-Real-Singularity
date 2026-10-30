@@ -3,7 +3,7 @@
  *     node allen_cahn/js/check_ac.js
  *
  * Checks 1-5 need nothing else: they compare against the notes' Table 1 / Table 2.
- * Check 6 runs once Michelle's data/allen_cahn/equilibria.json is on disk.
+ * Checks 6-7 run once Michelle's data/allen_cahn/*.json files are on disk.
  *
  *   1. Energy never increases (random starts), and they end at +hump or -hump.
  *   2. A sin(2x) start stays antisymmetric and settles on the S state.
@@ -12,6 +12,8 @@
  *      leaves for the hump (S is a hilltop).
  *   5. dt = 0.95 * h^2/2 is stable, dt = 1.05 * h^2/2 blows up (learning-rate limit).
  *   6. Starting exactly on each of Michelle's five equilibria, U barely moves.
+ *   7. Michelle's PINN guesses: the hump guess heals into the hump; the S guess
+ *      approaches S, then falls off (preview of the week-6 correction demo).
  */
 const fs = require("fs");
 const path = require("path");
@@ -140,9 +142,11 @@ if (!fs.existsSync(eqPath)) {
   console.log("  SKIP  file not here yet (pull it from origin/michelleZhao when she pushes)");
 } else {
   const eq = JSON.parse(fs.readFileSync(eqPath, "utf8"));
+  // Accept both layouts: { hump: [...] } and Michelle's { states: { hump: { U: [...] } } }.
+  const stateOf = (name) => (eq.states && eq.states[name] ? eq.states[name].U : eq[name]);
   for (const name of ["zero", "hump", "minus_hump", "S", "minus_S"]) {
-    if (!eq[name]) { report(`${name}: present in file`, false); continue; }
-    const U0 = Float64Array.from(eq[name]);
+    if (!stateOf(name)) { report(`${name}: present in file`, false); continue; }
+    const U0 = Float64Array.from(stateOf(name));
     const sim = AC.createSimulator();
     sim.set(U0);
     sim.advanceTo(1);
@@ -150,6 +154,48 @@ if (!fs.existsSync(eqPath)) {
     // Unstable states (S, zero) drift once round-off grows, but only slightly by t = 1.
     report(`${name}: stays put for t = 1`, drift < 1e-8,
       `max drift = ${drift.toExponential(1)}, E = ${AC.energy(U0, mu, h).toFixed(4)}`);
+  }
+  // The same states should match what the simulator itself converged to (checks 1-2).
+  if (stateOf("hump") && stateOf("S")) {
+    const dh = AC.maxAbsDiff(Float64Array.from(stateOf("hump")), hump);
+    const dS = AC.maxAbsDiff(Float64Array.from(stateOf("S")), S);
+    report("Newton states match the simulator's own steady states", dh < 1e-9 && dS < 1e-8,
+      `hump diff = ${dh.toExponential(1)}, S diff = ${dS.toExponential(1)}`);
+  }
+}
+
+// ---------------- Check 7: Michelle's PINN guesses (correction demo preview) ----------------
+console.log("\nCheck 7: PINN guesses (data/allen_cahn/pinn_guesses.json) fed into the simulator");
+const gPath = path.resolve(__dirname, "..", "..", "data", "allen_cahn", "pinn_guesses.json");
+if (!fs.existsSync(gPath)) {
+  console.log("  SKIP  file not here yet");
+} else {
+  const g = JSON.parse(fs.readFileSync(gPath, "utf8"));
+  // Hump guess: should heal into the hump (stable state).
+  {
+    const U0 = Float64Array.from(g.hump_guess);
+    const ref = U0[63] > 0 ? hump : hump.map((v) => -v);
+    const out = AC.simulate(U0, [1, 3]);
+    const d0 = AC.maxAbsDiff(U0, ref), d1 = AC.maxAbsDiff(out.snaps[0], ref), d3 = AC.maxAbsDiff(out.snaps[1], ref);
+    report("hump guess heals into the hump", d3 < 1e-8,
+      `distance to hump: ${d0.toExponential(1)} (t = 0) -> ${d1.toExponential(1)} (t = 1) -> ${d3.toExponential(1)} (t = 3)`);
+  }
+  // S guess: first slides toward S (its stable directions decay), then the one
+  // unstable direction (rate 1.529) takes over and it falls off the hilltop into a hump.
+  {
+    const U0 = Float64Array.from(g.S_guess);
+    const sim = AC.createSimulator();
+    sim.set(U0);
+    let closest = AC.maxAbsDiff(U0, S), tClosest = 0;
+    const sNeg = S.map((v) => -v);
+    for (let k = 1; k <= 400; k++) {
+      sim.advanceTo(0.05 * k);
+      const d = Math.min(AC.maxAbsDiff(sim.U, S), AC.maxAbsDiff(sim.U, sNeg));
+      if (d < closest) { closest = d; tClosest = sim.t; }
+    }
+    report("S guess falls off the hilltop into a hump", close(sim.energy(), TABLE1.hump.energy, 5e-5),
+      `start ${AC.maxAbsDiff(U0, S).toExponential(1)} from S, closest ${closest.toExponential(1)} at t = ${tClosest.toFixed(2)}, ` +
+      `E(t = 20) = ${sim.energy().toFixed(4)}`);
   }
 }
 

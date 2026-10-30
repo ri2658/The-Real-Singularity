@@ -104,8 +104,12 @@ async function loadJsonCurves() {
       const res = await fetch(`../../data/allen_cahn/${f}`);
       if (!res.ok) continue;
       const data = await res.json();
-      for (const [key, val] of Object.entries(data)) {
-        if (Array.isArray(val) && val.length === AC.AC_DEFAULTS.N - 1 && typeof val[0] === "number") {
+      // Curves sit at the top level ({ hump_guess: [...] }) or, in equilibria.json,
+      // under states ({ states: { hump: { U: [...] } } }).
+      const entries = Object.entries(data);
+      if (data.states) for (const [k, v] of Object.entries(data.states)) entries.push([k, v.U]);
+      for (const [key, val] of entries) {
+        if (key !== "x" && Array.isArray(val) && val.length === AC.AC_DEFAULTS.N - 1 && typeof val[0] === "number") {
           const name = `${f.replace(".json", "")}: ${key}`;
           jsonCurves[name] = Float64Array.from(val);
           const opt = document.createElement("option");
