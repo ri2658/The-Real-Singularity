@@ -8,7 +8,7 @@ Loss = mean(r^2) + W_AMP * relu(c - mean(u^2))^2, c = half the exact state's mea
 zero_guess = hump ansatz without the amplitude term (Demo 2d: low loss, wrong answer).
 Network size, points and lr are the task defaults (the notes don't give them); W_AMP is set so the
 guesses match the notes' rough accuracy (Table 2), not to be accurate.
-Writes data/allen_cahn/pinn_guesses.json and allen_cahn/pinn_guesses.png.
+Writes data/allen_cahn/pinn_rough_w1e4_adam2000.json and allen_cahn/pinn_rough_w1e4_adam2000.png.
 """
 import json
 from pathlib import Path
@@ -118,7 +118,7 @@ def main():
         print(f"{name:10s} {err:12.2e} {targets[name]:>8s} {loss:9.2e} {sym:9.1e} "
               f"{res:9.2e} {np.max(np.abs(U)):9.2e}" + ("  (sign flipped)" if flipped else ""))
 
-    path = DATA / "pinn_guesses.json"
+    path = DATA / "pinn_rough_w1e4_adam2000.json"
     path.write_text(json.dumps(out, indent=1))
     print("wrote", path)
 
@@ -131,7 +131,7 @@ def main():
         ax.legend(fontsize=8)
     axes[0].set_ylabel("u")
     fig.tight_layout()
-    png = Path(__file__).resolve().parent / "pinn_guesses.png"
+    png = Path(__file__).resolve().parent / "pinn_rough_w1e4_adam2000.png"
     fig.savefig(png, dpi=120)
     print("wrote", png)
 

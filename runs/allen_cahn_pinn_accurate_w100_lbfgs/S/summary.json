@@ -1,0 +1,7 @@
+{
+ "final_step": 2367,
+ "final_loss_total": 3.7572675637420616e-08,
+ "final_rel_l2": 0.00023005644078687143,
+ "lbfgs_iterations": 367,
+ "stop_reason": "no improvement for 200 iterations"
+}

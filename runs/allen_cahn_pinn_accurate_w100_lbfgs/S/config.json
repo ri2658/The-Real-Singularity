@@ -1,0 +1,38 @@
+{
+ "mu": 6.0,
+ "depth": 2,
+ "width": 20,
+ "activation": "tanh",
+ "dtype": "float32",
+ "seed": 0,
+ "n_col": 200,
+ "amp_weight": 100.0,
+ "amp_c": "0.5 * mean(U_newton128^2)",
+ "loss": "loss_pde + amp_weight * loss_amp, loss_amp = relu(c - mean(u^2))^2 (unweighted)",
+ "adam_steps": 2000,
+ "lr": 0.001,
+ "checkpoints": [
+  100,
+  200,
+  500,
+  1000,
+  2000
+ ],
+ "lbfgs_steps": 15000,
+ "lbfgs_history": 50,
+ "lbfgs_patience": 200,
+ "lbfgs": {
+  "lr": 1.0,
+  "max_iter": 1,
+  "max_eval": 25,
+  "tolerance_grad": 1e-12,
+  "tolerance_change": 1e-15,
+  "line_search_fn": "strong_wolfe"
+ },
+ "log_every": 50,
+ "rel_l2": "||U - sign*U_newton128||_2 / ||U_newton128||_2 on the 127 grid points, sign = branch the run converged to (see reference_sign)",
+ "state": "S",
+ "amp_c_value": 0.11427327177825565,
+ "reference_sign": 1.0,
+ "run_name": "allen_cahn_checkpoints/S"
+}
