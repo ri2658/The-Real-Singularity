@@ -34,6 +34,9 @@ PAGES = {
              ("web/pinn.onnx", "pinn.onnx")],
     "allen-cahn": [("allen_cahn/js/simulator.html", "index.html"),
                    ("allen_cahn/js/allen_cahn.js", "allen_cahn.js")],
+    "hilltop": [("allen_cahn/js/hilltop.html", "index.html"),
+                ("allen_cahn/js/allen_cahn.js", "allen_cahn.js"),
+                ("allen_cahn/js/hilltop.js", "hilltop.js")],
 }
 DATA = {
     "data/reference_json": "ref_nu*.json",      # the race needs only the ref_ files
