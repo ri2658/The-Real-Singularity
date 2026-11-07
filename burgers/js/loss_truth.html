@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loss vs. Truth</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
+    --nu1: #2a78d6; --nu2: #eb6834; --nu3: #1f9e78; --loss: #1c2330; --err: #c2410c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+      --nu1: #5b9bea; --nu2: #fb923c; --nu3: #34c79a; --loss: #e6e9ef; --err: #fb923c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+    --nu1: #5b9bea; --nu2: #fb923c; --nu3: #34c79a; --loss: #e6e9ef; --err: #fb923c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font: 700 1.6rem/1.2 Georgia, "Iowan Old Style", serif; margin: 0 0 6px; }
+  .lede { color: var(--muted); max-width: 72ch; margin: 0 0 16px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  .presets button { padding: 6px 12px; font: inherit; font-size: 13px; border-radius: 999px; cursor: pointer;
+                    border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  .presets button.on { border-color: var(--ink); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .label { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  canvas { width: 100%; display: block; touch-action: manipulation; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  .sw.ring { background: transparent !important; border: 2px solid; width: 10px; height: 10px; }
+  .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin-top: 12px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-size: 17px; font-variant-numeric: tabular-nums; }
+  .explain { color: var(--muted); max-width: 72ch; margin-top: 18px; font-size: 14px; }
+  .explain b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Does a low loss mean a right answer?</h1>
+  <p class="lede">A physics-informed network is trained by driving down a <b>loss</b>: how badly it breaks the equation at its
+    training points. What we actually care about is the <b>error</b>: how far it is from the exact solution. Each dot below is
+    one training run of our Burgers' equation network. Tap a dot to see how its loss and error moved during training.</p>
+
+  <div class="presets" id="presets"></div>
+
+  <div class="grid">
+    <div class="card">
+      <p class="label">Every run: final training loss vs. final true error (tap a dot)</p>
+      <canvas id="scatter" height="300"></canvas>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--nu1)"></span>ν = 0.01/π (gentle shock)</span>
+        <span><span class="sw" style="background:var(--nu2)"></span>ν = 0.003/π</span>
+        <span><span class="sw" style="background:var(--nu3)"></span>ν = 0.001/π (sharp shock)</span>
+        <span><span class="sw ring" style="border-color:var(--muted)"></span>extra points at the shock</span>
+      </div>
+    </div>
+    <div class="card">
+      <p class="label" id="traceLabel">Selected run during training</p>
+      <canvas id="trace" height="300"></canvas>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--loss)"></span>training loss</span>
+        <span><span class="sw" style="background:var(--err)"></span>true error</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">final training loss</div><div class="v" id="sLoss">–</div></div>
+    <div class="stat"><div class="k">final true error</div><div class="v" id="sErr">–</div></div>
+    <div class="stat"><div class="k">loss fell (from step 2000)</div><div class="v" id="sLossDrop">–</div></div>
+    <div class="stat"><div class="k">error fell (from step 2000)</div><div class="v" id="sErrDrop">–</div></div>
+  </div>
+
+  <p class="explain"><b>What to notice.</b> At ν = 0.003/π with evenly spread training points, the loss keeps dropping by
+    over 200× while the error barely moves and ends at 35%. The same equation trained with extra points near the shock reaches
+    a similar loss with an error of about 1%. The loss only checks the equation at the training points; it never sees the
+    exact solution, so a small loss alone does not tell you the answer is right.</p>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NU_COLOR = { 0.01: "--nu1", 0.003: "--nu2", 0.001: "--nu3" };
+const PRESETS = [
+  { label: "The trap: ν = 0.003/π, even points", name: "nu0.003_vanilla_s2" },
+  { label: "Same ν, extra points at the shock", name: "nu0.003_shock_s2" },
+  { label: "Works: ν = 0.01/π", name: "p1000_8x20_s1" },
+  { label: "Fails: ν = 0.001/π", name: "nu0.001_vanilla_s0" },
+];
+let runs = [], selected = null, scatterPts = [];
+
+async function load() {
+  for (const p of ["../data/loss_truth/runs.json", "../../data/loss_truth/runs.json"]) {
+    try { const r = await fetch(p); if (r.ok) return (await r.json()).runs; } catch (e) { /* next path */ }
+  }
+  throw new Error("runs.json not found");
+}
+
+function setupCanvas(c) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!c._h) c._h = c.height;
+  const w = c.clientWidth, h = c._h;
+  c.width = w * dpr; c.height = h * dpr;
+  const ctx = c.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+
+function text(ctx, s, x, y, align, base, color) {
+  ctx.fillStyle = color || css("--muted"); ctx.font = "11px system-ui, sans-serif";
+  ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(s, x, y);
+}
+
+// Log axis helper: decades lo..hi (powers of ten).
+function logAxis(lo, hi, a, b) {
+  return (v) => a + (Math.log10(v) - lo) / (hi - lo) * (b - a);
+}
+
+function gridY(ctx, Y, lo, hi, x0, x1) {
+  for (let p = lo; p <= hi; p++) {
+    const y = Y(10 ** p);
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+    text(ctx, p === 0 ? "1" : `1e${p}`, x0 - 6, y, "right", "middle");
+  }
+}
+
+function drawScatter() {
+  const { ctx, w, h } = setupCanvas($("scatter"));
+  const pad = { l: 40, r: 10, t: 22, b: 30 };
+  const X = logAxis(-7, -1, pad.l, w - pad.r);
+  const Y = logAxis(-4, 0, h - pad.b, pad.t);
+  gridY(ctx, Y, -4, 0, pad.l, w - pad.r);
+  for (let p = -7; p <= -1; p += (w < 420 ? 2 : 1)) text(ctx, `1e${p}`, X(10 ** p), h - pad.b + 6, "center", "top");
+  text(ctx, "final training loss →", w - pad.r, h - 2, "right", "bottom");
+  text(ctx, "↑ final true error", pad.l, 2, "left", "top");
+  scatterPts = [];
+  for (const r of runs) {
+    const x = X(r.loss.at(-1)), y = Y(r.err.at(-1)), c = css(NU_COLOR[r.nu_pi]);
+    scatterPts.push({ x, y, r });
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r === selected ? 8 : 6, 0, 2 * Math.PI);
+    if (r.sampling === "shock") { ctx.strokeStyle = c; ctx.stroke(); }
+    else { ctx.fillStyle = c; ctx.fill(); }
+    if (r === selected) {
+      ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, y, 12, 0, 2 * Math.PI); ctx.stroke();
+    }
+  }
+}
+
+function drawTrace() {
+  const { ctx, w, h } = setupCanvas($("trace"));
+  if (!selected) return;
+  const pad = { l: 40, r: 10, t: 8, b: 30 };
+  const steps = selected.step, sMax = steps.at(-1);
+  const X = (s) => pad.l + s / sMax * (w - pad.l - pad.r);
+  const Y = logAxis(-7, 1, h - pad.b, pad.t);
+  gridY(ctx, Y, -7, 0, pad.l, w - pad.r);
+  for (const s of [0, Math.round(sMax / 2 / 1000) * 1000, sMax]) {
+    text(ctx, String(s), X(s), h - pad.b + 6, s === 0 ? "left" : s === sMax ? "right" : "center", "top");
+  }
+  text(ctx, "training step →", w - pad.r, h - 2, "right", "bottom");
+  // Adam -> L-BFGS switch at step 2000.
+  const xs = X(2000);
+  ctx.strokeStyle = css("--line"); ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(xs, pad.t); ctx.lineTo(xs, h - pad.b); ctx.stroke(); ctx.setLineDash([]);
+  text(ctx, "optimizer switch", xs + 4, pad.t + 2, "left", "top");
+  const line = (vals, color, width) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath();
+    vals.forEach((v, i) => { const x = X(steps[i]), y = Y(Math.max(v, 1e-7)); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  };
+  line(selected.loss, css("--loss"), 2);
+  line(selected.err, css("--err"), 2.5);
+  text(ctx, "loss", X(sMax) - 2, Y(selected.loss.at(-1)) - 4, "right", "bottom", css("--loss"));
+  text(ctx, "error", X(sMax) - 2, Y(selected.err.at(-1)) - 4, "right", "bottom", css("--err"));
+}
+
+function fmt(v) { return v >= 0.01 ? `${(v * 100).toFixed(1)}%` : v.toExponential(1); }
+
+function valueAt(r, key, step) {
+  const i = r.step.findIndex((s) => s >= step);
+  return r[key][i < 0 ? 0 : i];
+}
+
+function select(r) {
+  selected = r;
+  const nu = `ν = ${r.nu_pi}/π`, how = r.sampling === "shock" ? "extra points at the shock" : "evenly spread points";
+  $("traceLabel").textContent = `${nu}, ${how}, seed ${r.seed}: loss and error during training`;
+  $("sLoss").textContent = r.loss.at(-1).toExponential(1);
+  $("sErr").textContent = fmt(r.err.at(-1));
+  const l0 = valueAt(r, "loss", 2000), e0 = valueAt(r, "err", 2000);
+  $("sLossDrop").textContent = `${(l0 / r.loss.at(-1)).toFixed(0)}×`;
+  $("sErrDrop").textContent = `${(e0 / r.err.at(-1)).toFixed(1)}×`;
+  for (const b of $("presets").children) b.classList.toggle("on", b.dataset.name === r.name);
+  drawScatter(); drawTrace();
+}
+
+$("scatter").addEventListener("click", (ev) => {
+  const rect = ev.target.getBoundingClientRect();
+  const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+  let best = null, bd = 400;                       // within 20 px
+  for (const p of scatterPts) { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; best = p.r; } }
+  if (best) select(best);
+});
+window.addEventListener("resize", () => { drawScatter(); drawTrace(); });
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawScatter(); drawTrace(); });
+
+(async () => {
+  runs = await load();
+  for (const p of PRESETS) {
+    const b = document.createElement("button");
+    b.textContent = p.label; b.dataset.name = p.name;
+    b.onclick = () => select(runs.find((r) => r.name === p.name));
+    $("presets").appendChild(b);
+  }
+  select(runs.find((r) => r.name === PRESETS[0].name));
+})();
+</script>
+</body>
+</html>

@@ -7,7 +7,9 @@ current versions into one folder that publish_site.py uploads:
     site/shock/                  shock-formation viewer   <- shock viewer/
     site/race/                   finite-volume race        <- Finite volume solver/
     site/pinn/                   live ONNX PINN page       <- web/
+    site/loss-vs-truth/          training loss vs. error   <- burgers/js/loss_truth.html
     site/allen-cahn/             Allen-Cahn simulator      <- allen_cahn/js/
+    site/hilltop/                hilltop escape experiment <- allen_cahn/js/hilltop.html
     site/data/reference_json/    Burgers references used by the race
     site/data/allen_cahn/        equilibria and PINN guesses used by the simulator
 
@@ -34,6 +36,7 @@ PAGES = {
              ("web/pinn.onnx", "pinn.onnx")],
     "allen-cahn": [("allen_cahn/js/simulator.html", "index.html"),
                    ("allen_cahn/js/allen_cahn.js", "allen_cahn.js")],
+    "loss-vs-truth": [("burgers/js/loss_truth.html", "index.html")],
     "hilltop": [("allen_cahn/js/hilltop.html", "index.html"),
                 ("allen_cahn/js/allen_cahn.js", "allen_cahn.js"),
                 ("allen_cahn/js/hilltop.js", "hilltop.js")],
@@ -41,6 +44,7 @@ PAGES = {
 DATA = {
     "data/reference_json": "ref_nu*.json",      # the race needs only the ref_ files
     "data/allen_cahn": "*.json",
+    "data/loss_truth": "runs.json",             # from scripts/export_loss_truth.py
 }
 
 # A plain link in the page flow (a floating button covered page titles on phones).
