@@ -10,6 +10,7 @@ current versions into one folder that publish_site.py uploads:
     site/loss-vs-truth/          training loss vs. error   <- burgers/js/loss_truth.html
     site/allen-cahn/             Allen-Cahn simulator      <- allen_cahn/js/
     site/hilltop/                hilltop escape experiment <- allen_cahn/js/hilltop.html
+    site/correction/             PINN guesses corrected    <- allen_cahn/js/correction.html
     site/data/reference_json/    Burgers references used by the race
     site/data/allen_cahn/        equilibria and PINN guesses used by the simulator
 
@@ -40,6 +41,8 @@ PAGES = {
     "hilltop": [("allen_cahn/js/hilltop.html", "index.html"),
                 ("allen_cahn/js/allen_cahn.js", "allen_cahn.js"),
                 ("allen_cahn/js/hilltop.js", "hilltop.js")],
+    "correction": [("allen_cahn/js/correction.html", "index.html"),
+                   ("allen_cahn/js/allen_cahn.js", "allen_cahn.js")],
 }
 DATA = {
     "data/reference_json": "ref_nu*.json",      # the race needs only the ref_ files
@@ -70,6 +73,11 @@ def main():
 
     for page, files in PAGES.items():
         out = SITE / page
+        # A page whose sources are all gone (e.g. web/ on a branch that only keeps
+        # site/pinn/) keeps its current copy in site/ instead of failing the build.
+        if out.exists() and not any((ROOT / src).exists() for src, _ in files):
+            print(f"{'(sources not on this branch)':45s} -> kept existing site/{page}/")
+            continue
         shutil.rmtree(out, ignore_errors=True)
         out.mkdir(parents=True)
         for src, dst in files:

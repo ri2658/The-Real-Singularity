@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Correcting a PINN</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
+    --curve: #2a78d6; --ghost: #a9a79f; --guess: #c2410c; --hump: #15803d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+      --curve: #5b9bea; --ghost: #6b7380; --guess: #fb923c; --hump: #4ade80;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+    --curve: #5b9bea; --ghost: #6b7380; --guess: #fb923c; --hump: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font: 700 1.6rem/1.2 Georgia, "Iowan Old Style", serif; margin: 0 0 6px; }
+  .lede { color: var(--muted); max-width: 70ch; margin: 0 0 18px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .label { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  .key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .key i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid; vertical-align: middle; margin-right: 5px; }
+  canvas { width: 100%; display: block; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 14px 0 6px; }
+  .controls label { font-size: 13px; color: var(--muted); }
+  .controls input[type=range] { width: 160px; max-width: 50vw; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; background: transparent; color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  button { padding: 7px 14px; font: inherit; font-size: 14px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+  button.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  button:disabled { opacity: .5; cursor: default; }
+  .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .status { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid var(--curve); background: var(--panel);
+            border-radius: 0 8px 8px 0; min-height: 2.6em; }
+  .explain { color: var(--muted); max-width: 72ch; margin-top: 18px; font-size: 14px; }
+  .explain b { color: var(--ink); font-weight: 600; }
+  .err { color: var(--guess); }
+</style>
+</head>
+<body>
+<nav style="max-width:980px;margin:0 auto;padding:12px 16px 0;font:14px system-ui,sans-serif"><a href="../index.html" style="color:inherit;opacity:.7;text-decoration:none">&larr; All demos</a></nav>
+<main>
+  <h1>Correcting a PINN</h1>
+  <p class="lede">A physics-informed neural network gave us rough guesses for two steady states of the Allen–Cahn
+    equation: the stable <b>hump</b> and the unstable <b>S</b>. Both guesses have a small training loss. Here a plain
+    forward-Euler solver takes each guess as its starting curve. One heals into the exact answer; the other heals
+    for a while, then falls off.</p>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Which guess">
+      <button id="pickHump" aria-pressed="true">Hump guess</button>
+      <button id="pickS" aria-pressed="false">S guess</button>
+    </div>
+    <button id="run">Run</button>
+    <button id="reset" class="secondary">Reset</button>
+    <label for="speed">Speed <span id="speedVal"></span></label>
+    <input id="speed" type="range" min="-2" max="2" step="1" value="0">
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <p class="label">The curve u(x)</p>
+      <canvas id="plotU" height="260"></canvas>
+      <div class="key">
+        <span><i style="border-color:var(--ghost);border-top-style:dashed"></i><span id="keyExact">exact hump</span></span>
+        <span><i style="border-color:var(--guess);border-top-style:dotted"></i>PINN guess (t = 0)</span>
+        <span><i style="border-color:var(--curve)"></i>solver, now</span>
+      </div>
+    </div>
+    <div class="card">
+      <p class="label">Distance from the exact state, max |U − exact| (log scale)</p>
+      <canvas id="plotD" height="260"></canvas>
+      <div class="key">
+        <span><i style="border-color:var(--curve)"></i><span id="keyD1">distance to the hump</span></span>
+        <span id="keyD2wrap" hidden><i style="border-color:var(--hump)"></i>distance to the nearest hump</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">time t</div><div class="v" id="sT">0.00</div></div>
+    <div class="stat"><div class="k" id="sDk">distance to the hump</div><div class="v" id="sD">–</div></div>
+    <div class="stat"><div class="k">energy E</div><div class="v" id="sE">–</div></div>
+    <div class="stat"><div class="k">PINN guess was off by</div><div class="v" id="sG">–</div></div>
+  </div>
+  <p class="status" id="status">Loading…</p>
+
+  <p class="explain"><b>Why the hump heals.</b> The hump is a bowl: every small change to it shrinks, the slowest
+    at rate 8.69 per time unit, so the PINN's error drops about 6,000× per time unit. The solver turns a rough
+    guess into the exact answer, which is what classical methods are good at.</p>
+  <p class="explain"><b>Why the S falls off.</b> The S is a hilltop: it has exactly one way to change that grows,
+    at rate 1.53. The solver first removes the PINN's error in every other direction, so the curve moves toward S.
+    The tiny leftover piece in the unstable direction keeps growing, and the curve rolls into a hump. The PINN's
+    loss can't tell a bowl from a hilltop: both are exact solutions with zero residual.</p>
+</main>
+
+<script src="allen_cahn.js"></script>
+<script>
+const AC = AllenCahn;
+const $ = (id) => document.getElementById(id);
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const grid = AC.makeGrid();
+
+// Per case: how long to run, how fast to animate (time units per second at speed 1x).
+const CASES = {
+  hump: { guessKey: "hump_guess", exactKey: "hump", tEnd: 3, rate: 0.6 },
+  S:    { guessKey: "S_guess",    exactKey: "S",    tEnd: 25, rate: 3 },
+};
+const HEALED = 1e-8, LANDED = 1e-3;     // done-when thresholds from the week-6 worksheet
+const Y_MIN = -14, Y_MAX = 1;   // up to 10: the distance to S ends near 1.6           // log10 range of the distance chart
+
+let eq = null, guesses = null, which = "hump", sim = null, history = [], running = false;
+let closest = null, landed = null, healedAt = null, timer = null;
+
+// ---------- data ----------
+async function loadJson(name) {
+  // site/correction/ keeps data one level up; allen_cahn/js/ in the repo, two levels up.
+  for (const p of [`../data/allen_cahn/${name}`, `../../data/allen_cahn/${name}`]) {
+    try { const r = await fetch(p); if (r.ok) return await r.json(); } catch (e) { /* next */ }
+  }
+  throw new Error(`could not load ${name}`);
+}
+
+const exactOf = (key) => Float64Array.from(eq.states[key].U);
+const neg = (U) => U.map((v) => -v);
+const mid = Math.floor(grid.x.length / 2) - 1;          // a point left of centre (x ≈ 1.55)
+
+function distances(U) {
+  const c = CASES[which];
+  let exact = exactOf(c.exactKey);
+  // A guess can come out with either sign; compare with the matching copy of the state.
+  if (which === "hump" && Math.sign(guess()[mid]) !== Math.sign(exact[mid])) exact = neg(exact);
+  if (which === "S" && Math.sign(guess()[40]) !== Math.sign(exact[40])) exact = neg(exact);
+  const hump = exactOf("hump");
+  const dExact = AC.maxAbsDiff(U, exact);
+  const dHump = Math.min(AC.maxAbsDiff(U, hump), AC.maxAbsDiff(U, neg(hump)));
+  return { exact, dExact, dHump, humpSign: AC.maxAbsDiff(U, hump) <= AC.maxAbsDiff(U, neg(hump)) ? "+" : "−" };
+}
+
+const guess = () => Float64Array.from(guesses[CASES[which].guessKey]);
+
+// ---------- drawing ----------
+function setupCanvas(c) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!c._h) c._h = c.height;
+  const w = c.clientWidth, h = c._h;
+  c.width = w * dpr; c.height = h * dpr;
+  const ctx = c.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+function axisText(ctx, txt, x, y, align, base) {
+  ctx.fillStyle = css("--muted"); ctx.font = "11px system-ui, sans-serif";
+  ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(txt, x, y);
+}
+function hline(ctx, y, x0, x1, dash) {
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1; ctx.setLineDash(dash || []);
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawCurve() {
+  const { ctx, w, h } = setupCanvas($("plotU"));
+  const pad = { l: 34, r: 8, t: 8, b: 22 };
+  const X = (v) => pad.l + (v / Math.PI) * (w - pad.l - pad.r);
+  const Y = (v) => pad.t + (1 - (v + 1.1) / 2.2) * (h - pad.t - pad.b);
+  for (const v of [-1, 0, 1]) { hline(ctx, Y(v), pad.l, w - pad.r); axisText(ctx, String(v).replace("-", "−"), pad.l - 6, Y(v), "right", "middle"); }
+  axisText(ctx, "0", X(0), h - pad.b + 6, "center", "top");
+  axisText(ctx, "π/2", X(Math.PI / 2), h - pad.b + 6, "center", "top");
+  axisText(ctx, "π", X(Math.PI), h - pad.b + 6, "center", "top");
+  const draw = (U, color, width, dash) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(0));
+    for (let i = 0; i < U.length; i++) ctx.lineTo(X(grid.x[i]), Y(U[i]));
+    ctx.lineTo(X(Math.PI), Y(0)); ctx.stroke(); ctx.setLineDash([]);
+  };
+  if (!sim) return;
+  draw(distances(sim.U).exact, css("--ghost"), 2, [6, 4]);
+  draw(guess(), css("--guess"), 2, [2, 3]);
+  draw(sim.U, css("--curve"), 2.5);
+}
+
+function drawChart() {
+  const { ctx, w, h } = setupCanvas($("plotD"));
+  const pad = { l: 40, r: 10, t: 10, b: 24 };
+  const tEnd = CASES[which].tEnd;
+  const X = (t) => pad.l + (t / tEnd) * (w - pad.l - pad.r);
+  const Y = (d) => {
+    const L = Math.min(Y_MAX, Math.max(Y_MIN, Math.log10(Math.max(d, 1e-300))));
+    return pad.t + (1 - (L - Y_MIN) / (Y_MAX - Y_MIN)) * (h - pad.t - pad.b);
+  };
+  for (let p = Y_MIN; p <= Y_MAX; p += 2) {
+    hline(ctx, Y(10 ** p), pad.l, w - pad.r);
+    axisText(ctx, p === 0 ? "1" : `1e${p}`.replace("-", "−"), pad.l - 6, Y(10 ** p), "right", "middle");
+  }
+  const tStep = tEnd <= 5 ? 1 : 5;
+  for (let t = 0; t <= tEnd + 1e-9; t += tStep) axisText(ctx, String(t), X(t), h - pad.b + 6, t === 0 ? "left" : "center", "top");
+  // Target line: "healed" for the hump, "landed" for the S.
+  const target = which === "hump" ? HEALED : LANDED;
+  ctx.strokeStyle = css("--muted"); ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+  ctx.beginPath(); ctx.moveTo(pad.l, Y(target)); ctx.lineTo(w - pad.r, Y(target)); ctx.stroke(); ctx.setLineDash([]);
+  axisText(ctx, which === "hump" ? "healed (1e−8)" : "on a hump (1e−3)", w - pad.r - 2, Y(target) - 3, "right", "bottom");
+  const line = (key, color) => {
+    if (history.length < 2) return;
+    ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.beginPath();
+    history.forEach((p, i) => (i ? ctx.lineTo(X(p.t), Y(p[key])) : ctx.moveTo(X(p.t), Y(p[key]))));
+    ctx.stroke();
+  };
+  line("dExact", css("--curve"));
+  if (which === "S") line("dHump", css("--hump"));
+}
+
+function fmt(d) { return d < 1e-13 ? "< 1e−13" : d.toExponential(1).replace("-", "−"); }
+
+function updateStats() {
+  if (!sim) return;
+  const d = distances(sim.U);
+  $("sT").textContent = sim.t.toFixed(2);
+  $("sD").textContent = fmt(d.dExact);
+  $("sE").textContent = sim.energy().toFixed(4);
+  $("sG").textContent = fmt(AC.maxAbsDiff(guess(), d.exact));
+  $("status").textContent = statusText(d);
+}
+
+function statusText(d) {
+  if (which === "hump") {
+    if (healedAt !== null) return `Healed: within 1e−8 of the exact hump at t = ${healedAt.toFixed(2)}. ` +
+      `The guess started ${fmt(history[0].dExact)} away; the solver removed the PINN's error.`;
+    if (sim.t === 0) return "The PINN's hump guess, about 2.5% off the exact hump. Press Run.";
+    return "Healing: the gap shrinks about 6,000× per time unit.";
+  }
+  if (landed !== null) return `Fell off: the curve left S and settled on the ${d.humpSign}hump ` +
+    `(within 1e−3 at t = ${landed.toFixed(2)}). Closest approach to S was ${fmt(closest.d)} at t = ${closest.t.toFixed(2)}.`;
+  if (sim.t === 0) return "The PINN's S guess, about 6% off the exact S. Press Run.";
+  if (closest && d.dExact > 3 * closest.d) return `Leaving S: it got within ${fmt(closest.d)} at t = ${closest.t.toFixed(2)}, ` +
+    "and now the one unstable direction is growing.";
+  return "Correcting toward S: the solver removes the PINN's error in every stable direction.";
+}
+
+function redraw() { drawCurve(); drawChart(); updateStats(); }
+
+// ---------- running ----------
+function record() {
+  const d = distances(sim.U);
+  history.push({ t: sim.t, dExact: d.dExact, dHump: d.dHump });
+  if (!closest || d.dExact < closest.d) closest = { d: d.dExact, t: sim.t };
+  if (which === "hump" && healedAt === null && d.dExact < HEALED) healedAt = sim.t;
+  if (which === "S" && landed === null && d.dHump < LANDED) landed = sim.t;
+}
+
+function reset() {
+  stop();
+  sim = AC.createSimulator();
+  sim.set(guess());
+  history = []; closest = null; landed = null; healedAt = null;
+  record();
+  $("keyExact").textContent = which === "hump" ? "exact hump" : "exact S";
+  $("keyD1").textContent = which === "hump" ? "distance to the hump" : "distance to S";
+  $("sDk").textContent = which === "hump" ? "distance to the hump" : "distance to S";
+  $("keyD2wrap").hidden = which !== "S";
+  $("run").textContent = "Run";
+  redraw();
+}
+
+function speed() { return 2 ** +$("speed").value; }
+
+function stop() { running = false; $("run").textContent = "Run"; if (timer) cancelAnimationFrame(timer); timer = null; }
+
+function run() {
+  if (running) { stop(); return; }
+  const c = CASES[which];
+  if (sim.t >= c.tEnd - 1e-9) reset();
+  running = true; $("run").textContent = "Pause";
+  let last = performance.now();
+  const frame = (now) => {
+    if (!running) return;
+    const dtWall = Math.min(0.05, (now - last) / 1000); last = now;
+    const target = Math.min(c.tEnd, sim.t + dtWall * c.rate * speed());
+    const n = Math.max(1, Math.round((target - sim.t) / sim.dt));
+    const chunk = Math.max(1, Math.floor(n / 8));          // record a few points per frame
+    for (let done = 0; done < n; done += chunk) { sim.advance(Math.min(chunk, n - done)); record(); }
+    if (sim.t >= c.tEnd - sim.dt / 2) { stop(); $("run").textContent = "Run again"; }
+    redraw();
+    if (running) timer = requestAnimationFrame(frame);
+  };
+  timer = requestAnimationFrame(frame);
+}
+
+function pick(name) {
+  which = name;
+  $("pickHump").setAttribute("aria-pressed", String(name === "hump"));
+  $("pickS").setAttribute("aria-pressed", String(name === "S"));
+  reset();
+}
+
+$("pickHump").onclick = () => pick("hump");
+$("pickS").onclick = () => pick("S");
+$("run").onclick = run;
+$("reset").onclick = reset;
+$("speed").oninput = () => { $("speedVal").textContent = `${speed()}×`; };
+window.onresize = redraw;
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
+
+(async () => {
+  $("speedVal").textContent = "1×";
+  for (const id of ["run", "reset", "pickHump", "pickS"]) $(id).disabled = true;
+  try {
+    [eq, guesses] = await Promise.all([loadJson("equilibria.json"), loadJson("pinn_rough_w1e4_adam2000.json")]);
+  } catch (e) {
+    $("status").innerHTML = `<span class="err">Could not load the data files (${e.message}). ` +
+      "Serve the site over http, e.g. <code>python -m http.server</code>.</span>";
+    return;
+  }
+  for (const id of ["run", "reset", "pickHump", "pickS"]) $(id).disabled = false;
+  pick("hump");
+})();
+</script>
+</body>
+</html>

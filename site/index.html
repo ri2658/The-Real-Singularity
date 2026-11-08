@@ -61,7 +61,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
       <a class="card" href="allen-cahn/index.html"><h3>Allen–Cahn simulator</h3><p>Forward Euler is gradient descent on an energy: it only ever lands in stable states. Try the hilltop preset.</p></a>
       <a class="card" href="hilltop/index.html"><h3>Leaving a hilltop</h3><p>Push the unstable state by ε and time its escape: each tenfold smaller push adds the same 1.5056.</p></a>
       <div class="card"><h3>Ball and bowl<span class="tag">Coming</span></h3><p>Stability in one picture: bowls hold the ball, hilltops don't.</p></div>
-      <div class="card"><h3>Correction demo<span class="tag">Coming</span></h3><p>Rough PINN guesses fed to the simulator: one heals, one falls off.</p></div>
+      <a class="card" href="correction/index.html"><h3>Correcting a PINN</h3><p>Rough PINN guesses fed to the simulator: the hump heals to 1e-8 by t = 2; the S gets within 5e-6 of S, then falls off.</p></a>
     </div>
     <p class="reality"><b>So far:</b> the simulator reproduces all five equilibria and their stability rates.
       A PINN can find the unstable state that simulation never reaches, so each tool wins a different problem.</p>

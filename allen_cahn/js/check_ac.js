@@ -165,8 +165,8 @@ if (!fs.existsSync(eqPath)) {
 }
 
 // ---------------- Check 7: Michelle's PINN guesses (correction demo preview) ----------------
-console.log("\nCheck 7: PINN guesses (data/allen_cahn/pinn_guesses.json) fed into the simulator");
-const gPath = path.resolve(__dirname, "..", "..", "data", "allen_cahn", "pinn_guesses.json");
+console.log("\nCheck 7: PINN guesses (data/allen_cahn/pinn_rough_w1e4_adam2000.json) fed into the simulator");
+const gPath = path.resolve(__dirname, "..", "..", "data", "allen_cahn", "pinn_rough_w1e4_adam2000.json");
 if (!fs.existsSync(gPath)) {
   console.log("  SKIP  file not here yet");
 } else {
