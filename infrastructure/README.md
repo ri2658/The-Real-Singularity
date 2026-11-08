@@ -13,6 +13,8 @@ source .venv/bin/activate
 AWS_PROFILE=plantdex cdk deploy
 ```
 
+This stack is the PlantDex API only. It does not serve the Burgers page. That site is `burgers_site_stack.py`, deployed with `site_app.py`. Steps are in [`../web/README.md`](../web/README.md).
+
 After deploy, set the frontend env var to the stack output `PlantDexApiUrl`:
 
 ```bash
