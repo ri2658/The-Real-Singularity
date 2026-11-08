@@ -11,6 +11,7 @@ current versions into one folder that publish_site.py uploads:
     site/allen-cahn/             Allen-Cahn simulator      <- allen_cahn/js/
     site/hilltop/                hilltop escape experiment <- allen_cahn/js/hilltop.html
     site/correction/             PINN guesses corrected    <- allen_cahn/js/correction.html
+    site/viscosity/              PINN vs. exact, three nu  <- burgers/js/viscosity.html
     site/data/reference_json/    Burgers references used by the race
     site/data/allen_cahn/        equilibria and PINN guesses used by the simulator
 
@@ -38,6 +39,7 @@ PAGES = {
     "allen-cahn": [("allen_cahn/js/simulator.html", "index.html"),
                    ("allen_cahn/js/allen_cahn.js", "allen_cahn.js")],
     "loss-vs-truth": [("burgers/js/loss_truth.html", "index.html")],
+    "viscosity": [("burgers/js/viscosity.html", "index.html")],
     "hilltop": [("allen_cahn/js/hilltop.html", "index.html"),
                 ("allen_cahn/js/allen_cahn.js", "allen_cahn.js"),
                 ("allen_cahn/js/hilltop.js", "hilltop.js")],
@@ -48,6 +50,7 @@ DATA = {
     "data/reference_json": "ref_nu*.json",      # the race needs only the ref_ files
     "data/allen_cahn": "*.json",
     "data/loss_truth": "runs.json",             # from scripts/export_loss_truth.py
+    "data/viscosity": "*.json",                 # from scripts/export_viscosity.py
 }
 
 # A plain link in the page flow (a floating button covered page titles on phones).
