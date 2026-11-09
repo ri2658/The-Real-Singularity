@@ -16,9 +16,22 @@ Open http://127.0.0.1:8765/web/ . Open the same address on a phone only if the c
 
 ## Deploy
 
-Do not deploy this with the PlantDex / DS3 profile (`AWS_PROFILE=plantdex`). That account is the paid plan. Ryo said this site stays on the AWS free plan, and nothing here has been deployed.
+The whole site (`site/`, this page included) lives on Charles's free-plan AWS account, as Ryo asked:
+**https://d3hn8ndenpdwl3.cloudfront.net**. Do not use the PlantDex / DS3 profile (`AWS_PROFILE=plantdex`).
 
-One-time, on a free-plan account only: install the AWS CLI, log in with that account, then from `infrastructure/`:
+**Every update** (from the repo root):
+
+```bash
+python scripts/deploy.py             # build site/, sign in if needed, upload, refresh CloudFront
+python scripts/deploy.py --dry-run   # build and list what would be uploaded
+```
+
+`deploy.py` rebuilds `site/` first, reuses your AWS sign-in (or opens `aws login` in the browser),
+reads the bucket and distribution from the `BurgersSiteStack` outputs, then calls `publish_site.py`.
+It needs the AWS CLI (`winget install -e --id Amazon.AWSCLI` on Windows) and a sign-in to the account
+that holds the stack.
+
+**One-time setup** (already done, Oct 30): from `infrastructure/`,
 
 ```bash
 python3 -m venv .venv
@@ -28,14 +41,6 @@ npm install -g aws-cdk
 cdk bootstrap
 cdk --app "python site_app.py" deploy BurgersSiteStack
 ```
-
-The deploy prints `BucketName`, `DistributionId`, and `SiteUrl`. Then, from the repo root, with `boto3` installed:
-
-```bash
-python scripts/publish_site.py --bucket BUCKET --distribution DIST_ID
-```
-
-Wait until the CloudFront distribution is deployed (the first time can take several minutes), then open `SiteUrl` on a laptop and a phone. The sliders should redraw the curve.
 
 `publish_site.py` sets the types the checkpoint calls for:
 
@@ -48,7 +53,7 @@ Wait until the CloudFront distribution is deployed (the first time can take seve
 Check the model response:
 
 ```bash
-curl -sI https://YOUR_DOMAIN/pinn.onnx | grep -i content-type
+curl -sI https://d3hn8ndenpdwl3.cloudfront.net/pinn/pinn.onnx | grep -i content-type
 ```
 
 It should say `application/octet-stream`.
