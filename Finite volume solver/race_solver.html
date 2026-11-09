@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Burgers solver: live finite-volume run</title>
+<title>The race: a traditional solver, live</title>
 <style>
 :root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--ref:#8a93a3;--sol:#c2410c}
 @media (prefers-color-scheme:dark){:root{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ref:#98a2b3;--sol:#fb923c}}
@@ -25,33 +25,34 @@ input[type=range]{flex:1 1 200px;accent-color:var(--sol)}
 </head>
 <body>
 <main>
-<h1>Finite-volume Burgers solver, running live in your browser</h1>
-<p>Pick ν and the number of cells N, then press Run. The solver computes the whole solution on the spot; the curve then replays it in time next to the reference.</p>
+<h1>The race: a traditional solver, running live in your browser</h1>
+<p>This is the classic way to simulate the fluid from the previous page. It chops the line into many small cells and updates each cell's speed one small time step at a time (engineers call it the finite-volume method, and have used it for decades). There is no training: it just follows the rules of the equation.</p>
+<p>Pick how thick the fluid is and how many cells to use, then press Run. The solver computes the whole history on the spot, then replays it next to the exact answer (gray). More cells means more detail and more work.</p>
 
 <div class="row">
-  <label>ν <select id="nu">
-    <option value="nu0.01pi">0.01/π</option>
-    <option value="nu0.003pi">0.003/π</option>
-    <option value="nu0.001pi">0.001/π</option></select></label>
-  <label>N <select id="N">
+  <label>fluid thickness <select id="nu">
+    <option value="nu0.01pi">thick (ν = 0.01/π)</option>
+    <option value="nu0.003pi">medium (ν = 0.003/π)</option>
+    <option value="nu0.001pi">thin (ν = 0.001/π)</option></select></label>
+  <label>cells <select id="N">
     <option>500</option><option>1000</option><option selected>2000</option><option>4000</option></select></label>
   <button id="run">Run</button>
 </div>
 
 <canvas id="cv"></canvas>
 <div class="row" style="margin:6px 0">
-  <span><i class="k" style="background:var(--ref)"></i>reference</span>
-  <span><i class="k" style="background:var(--sol)"></i>finite-volume solver</span>
+  <span><i class="k" style="background:var(--ref)"></i>exact answer</span>
+  <span><i class="k" style="background:var(--sol)"></i>traditional solver</span>
 </div>
 <div class="row">
-  <label>t <input id="ts" type="range" min="0" max="99" value="0"></label>
-  <span id="tl">t = –</span>
+  <label>time <input id="ts" type="range" min="0" max="99" value="0"></label>
+  <span id="tl">–</span>
 </div>
 
 <div id="stats">
-  <div><b id="s-time">–</b><span>solve time (solver only, no drawing)</span></div>
-  <div><b id="s-err">–</b><span>relative L² vs reference, whole x–t grid</span></div>
-  <div><b id="s-errt">–</b><span>relative L² at the last time</span></div>
+  <div><b id="s-time">–</b><span>time to compute (not counting drawing)</span></div>
+  <div><b id="s-err">–</b><span>overall error across the whole run</span></div>
+  <div><b id="s-errt">–</b><span>error at the final moment</span></div>
 </div>
 <p id="msg"></p>
 </main>
@@ -70,6 +71,9 @@ async function loadRef(name) {
   }
   return cache[name];
 }
+
+// Relative L2 error shown as a percentage.
+function pct(e) { return `${(e * 100).toPrecision(2)}%`; }
 
 function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 
@@ -93,7 +97,7 @@ function draw() {
   };
   line(ref.x, ref.u[ti], css('--ref'), 3);
   if (snaps) line(x, snaps[ti], css('--sol'), 1.5);
-  $('tl').textContent = `t = ${ref.t[ti].toFixed(2)}`;
+  $('tl').textContent = ref.t[ti].toFixed(2);
 }
 
 async function run() {
@@ -115,8 +119,8 @@ async function run() {
   snaps.forEach((s, ti) => sol.set(interpToRef(ref.x, x, s), ti * nx));
   const last = ref.t.length - 1;
   $('s-time').textContent = ms < 1000 ? `${ms.toFixed(0)} ms` : `${(ms / 1000).toFixed(2)} s`;
-  $('s-err').textContent = relL2(sol, refFlat).toExponential(2);
-  $('s-errt').textContent = relL2(sol.subarray(last * nx), refFlat.subarray(last * nx)).toExponential(2);
+  $('s-err').textContent = pct(relL2(sol, refFlat));
+  $('s-errt').textContent = pct(relL2(sol.subarray(last * nx), refFlat.subarray(last * nx)));
 
   // Replay the solution in time (about 4 seconds).
   const start = performance.now();

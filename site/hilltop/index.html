@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Leaving a Hilltop</title>
+<title>Falling off a hilltop</title>
 <style>
   :root {
     --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
-    --curve: #2a78d6; --ghost: #a9a79f; --point: #eb6834; --theory: #1c2330;
+    --curve: #2a78d6; --ghost: #a9a79f; --point: #eb6834; --theory: #1c2330; --accent: #c2410c;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-      --curve: #5b9bea; --ghost: #6b7380; --point: #fb923c; --theory: #e6e9ef;
+      --curve: #5b9bea; --ghost: #6b7380; --point: #fb923c; --theory: #e6e9ef; --accent: #fb923c;
     }
   }
   :root[data-theme="dark"] {
     --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-    --curve: #5b9bea; --ghost: #6b7380; --point: #fb923c; --theory: #e6e9ef;
+    --curve: #5b9bea; --ghost: #6b7380; --point: #fb923c; --theory: #e6e9ef; --accent: #fb923c;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
@@ -44,46 +44,108 @@
   .stat .v { font-size: 18px; font-variant-numeric: tabular-nums; }
   .explain { color: var(--muted); max-width: 72ch; margin-top: 18px; font-size: 14px; }
   .explain b { color: var(--ink); font-weight: 600; }
+
+  h2.step { font: 700 1.15rem/1.3 Georgia, "Iowan Old Style", serif; margin: 30px 0 8px; }
+  h2.step .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+               background: var(--accent); color: var(--bg); font: 700 13px system-ui, sans-serif;
+               margin-right: 8px; vertical-align: 2px; }
+  .prose { color: var(--muted); max-width: 70ch; margin: 0 0 12px; }
+  .prose b { color: var(--ink); font-weight: 600; }
+  .try { border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 8px 8px 0;
+         padding: 10px 14px; margin: 12px 0 14px; max-width: 72ch; color: var(--ink); font-size: 14px; }
+  .try::before { content: "Try this"; display: block; font: 600 11px system-ui, sans-serif; letter-spacing: .06em;
+                 text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .notice { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+  .notice::before { content: "What to notice: "; font-weight: 600; color: var(--ink); }
+  .takeaways { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px;
+               margin: 14px 0; max-width: 76ch; }
+  .takeaways ul { margin: 0; padding-left: 1.2em; }
+  .takeaways li { margin: 0 0 8px; }
+  .takeaways li:last-child { margin-bottom: 0; }
+  .takeaways .weak { color: var(--accent); font-weight: 600; }
+  details.math { color: var(--muted); max-width: 72ch; margin: 22px 0 0; font-size: 14px; }
+  details.math summary { cursor: pointer; color: var(--ink); }
+  .card .notice { margin-top: 8px; }
 </style>
 </head>
 <body>
-<nav style="max-width:980px;margin:0 auto;padding:12px 16px 0;font:14px system-ui,sans-serif"><a href="../index.html" style="color:inherit;opacity:.7;text-decoration:none">&larr; All demos</a></nav>
+<style>
+.rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
+  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
+.rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
+.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
+.rs-nav .rs-part:first-child{margin-left:0}
+</style>
+<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="../shock/index.html">Cliff</a><a href="../race/index.html">Race</a><a href="../pinn/index.html">PINN</a><a href="../loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="../allen-cahn/index.html">Simulator</a><a href="../hilltop/index.html" class="on" aria-current="page">Hilltop</a></div></div></nav>
 <main>
-  <h1>Leaving a hilltop</h1>
-  <p class="lede">The S-shaped state of the Allen–Cahn equation is a balance point, like a ball resting on a hilltop.
-    Push it by a tiny amount ε and it eventually rolls off toward the stable hump. Theory says each tenfold smaller
-    push buys the same extra waiting time: <b>1.5056</b> time units. Pick a push, run it, and see where the point lands.</p>
+  <h1>Falling off a hilltop</h1>
+  <p class="lede">Can a simulation stay on a hilltop if you are careful enough? This page measures how long it holds on.</p>
+
+  <h2 class="step"><span class="n">1</span>The question</h2>
+  <p class="prose">The S-shaped mixture from the simulator is a resting state, but an unstable one, like a pencil balanced
+    on its tip. Nudge it by a tiny amount and it eventually tips over into the stable one-hump shape.</p>
+  <p class="prose">So how long does it hold on? If you make the nudge much smaller, does it stay up much longer?</p>
+
+  <h2 class="step"><span class="n">2</span>Try it</h2>
+  <p class="try">Press <b>Run</b> with the default nudge (one millionth) and watch the blue curve peel away from the gray
+    S-shape. Then press <b>Run every size</b> to try ten nudges, from one hundredth down to one hundred-billionth.</p>
 
   <div class="grid">
     <div class="card">
-      <p class="label">The curve u(x): S state (gray), current curve (blue)</p>
+      <p class="label">The mixture: the hilltop S-shape (gray), now (blue)</p>
       <canvas id="plotU" height="260"></canvas>
+      <p class="notice">the blue curve hugs the gray S-shape for a long time, then leaves it quickly and rolls into the
+        one-hump shape.</p>
     </div>
     <div class="card">
-      <p class="label">Escape time vs. push size: theory line and your runs</p>
+      <p class="label">Time to fall vs. nudge size (smaller nudges to the right): prediction (line) and your runs (dots)</p>
       <canvas id="plotT" height="260"></canvas>
+      <p class="notice">the dots fall on a straight line. Each step to the right, a 10&times; smaller nudge, adds the same
+        1.5 time units. Even the smallest nudge falls in about 15.</p>
     </div>
   </div>
 
   <div class="controls">
-    <label for="k">Push size ε = <span class="eps" id="epsVal"></span></label>
+    <label for="k">Nudge size: <span class="eps" id="epsVal"></span></label>
     <input id="k" type="range" min="2" max="11" step="1" value="6">
     <button id="run">Run</button>
-    <button id="runAll" class="secondary">Run every ε (fast)</button>
+    <button id="runAll" class="secondary">Run every size (fast)</button>
     <button id="clear" class="secondary">Clear points</button>
   </div>
 
   <div class="readout">
-    <div class="stat"><div class="k">time t</div><div class="v" id="sT">0.000</div></div>
-    <div class="stat"><div class="k">distance from S</div><div class="v" id="sD">0</div></div>
-    <div class="stat"><div class="k">predicted escape time</div><div class="v" id="sPred">–</div></div>
-    <div class="stat"><div class="k">measured escape time</div><div class="v" id="sMeas">–</div></div>
+    <div class="stat"><div class="k">time</div><div class="v" id="sT">0.000</div></div>
+    <div class="stat"><div class="k">distance from the hilltop</div><div class="v" id="sD">0</div></div>
+    <div class="stat"><div class="k">predicted time to fall</div><div class="v" id="sPred">–</div></div>
+    <div class="stat"><div class="k">measured time to fall</div><div class="v" id="sMeas">–</div></div>
   </div>
 
-  <p class="explain"><b>Why 1.5056?</b> Near S, a push grows like ε·e<sup>λ₁t</sup>, where λ₁ ≈ 1.5294 is the one unstable
-    growth rate of the S state. The curve counts as "escaped" once it is 0.1 away from S, so the escape time is about
-    ln(0.1/ε)/λ₁. Making ε ten times smaller adds ln(10)/λ₁ ≈ 1.5056. The simulator is plain forward Euler; it never
-    sees this formula, yet its points fall on the line.</p>
+  <h2 class="step"><span class="n">3</span>Why the same 1.5 every time?</h2>
+  <p class="prose">Near the hilltop, a nudge grows by the same factor every moment, like money earning compound interest:
+    it gets about 10 times bigger every 1.5 time units. A nudge 10 times smaller just needs 1.5 more time units to catch
+    up. The simulator only takes small steps forward and never sees this rule, yet its points land on the line.</p>
+
+  <h2 class="step"><span class="n">4</span>Key takeaways</h2>
+  <div class="takeaways"><ul>
+    <li>A smaller nudge only delays the fall: about 1.5 more time units for each 10&times; smaller nudge.</li>
+    <li>Even a nudge of one hundred-billionth falls in about 15 time units, and the computer's own rounding errors are
+      enough to start the fall.</li>
+    <li>So no amount of care keeps a step-by-step simulation on a hilltop. To study hilltop states you need a method that
+      solves for the resting shape directly, such as Newton's method or a PINN.</li>
+    <li><span class="weak">What this means for PINNs:</span> finding unstable states is a real job where a PINN is useful,
+      not a worse copy of the simulator.</li>
+  </ul></div>
+
+  <details class="math"><summary>The math, for the curious</summary>
+    <p>Near the S state of the Allen–Cahn equation, a push of size ε grows like ε·e<sup>λ₁t</sup>, where λ₁ ≈ 1.5294 is the
+    one unstable growth rate of S. The curve counts as "escaped" once it is 0.1 away from S, so the escape time is about
+    ln(0.1/ε)/λ₁. Making ε ten times smaller adds ln(10)/λ₁ ≈ 1.5056. The simulator is plain forward Euler.</p>
+  </details>
 </main>
 
 <script src="allen_cahn.js"></script>
@@ -164,13 +226,13 @@ function drawChart() {
   for (let t = 0; t <= tMax; t += 4) { hline(ctx, Y(t), pad.l, w - pad.r); axisText(ctx, String(t), pad.l - 6, Y(t), "right", "middle"); }
   for (let k = K_MIN; k <= K_MAX; k += (w < 420 ? 3 : 1)) {
     const align = k === K_MIN ? "left" : k >= K_MAX - (w < 420 ? 2 : 0) ? "right" : "center";
-    axisText(ctx, `1e-${k}`, X(k), h - pad.b + 6, align, "top");
+    axisText(ctx, pow10(-k), X(k), h - pad.b + 6, align, "top");
   }
   // Theory line.
   ctx.strokeStyle = css("--theory"); ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
   ctx.beginPath(); ctx.moveTo(X(K_MIN), Y(predicted(K_MIN))); ctx.lineTo(X(K_MAX), Y(predicted(K_MAX))); ctx.stroke();
   ctx.setLineDash([]);
-  axisText(ctx, "theory: +1.5056 per decade", X(K_MIN) + 4, Y(predicted(K_MAX)) + 2, "left", "top");
+  axisText(ctx, "prediction: +1.5056 for each 10× smaller nudge", X(K_MIN) + 4, Y(predicted(K_MAX)) + 2, "left", "top");
   // Points.
   for (const p of points) {
     ctx.fillStyle = css("--point"); ctx.strokeStyle = css("--panel"); ctx.lineWidth = 1.5;
@@ -183,13 +245,24 @@ function drawChart() {
   }
 }
 
+// Number display helpers: 10⁻⁶, "one millionth", 1.2 × 10⁻⁵.
+const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+function pow10(p) { return p === 0 ? "1" : "10" + [...String(p)].map((c) => SUP[c]).join(""); }
+function sci(v) {
+  if (v === 0) return "0";
+  const p = Math.floor(Math.log10(v));
+  return p >= -2 ? v.toFixed(3) : `${(v / 10 ** p).toFixed(1)} × ${pow10(p)}`;
+}
+const NUDGE_WORDS = { 2: "hundredth", 3: "thousandth", 4: "ten-thousandth", 5: "hundred-thousandth", 6: "millionth",
+  7: "ten-millionth", 8: "hundred-millionth", 9: "billionth", 10: "ten-billionth", 11: "hundred-billionth" };
+
 function updateStats() {
   const k = +$("k").value;
-  $("epsVal").textContent = `1e-${k}`;
+  $("epsVal").textContent = `${pow10(-k)} (one ${NUDGE_WORDS[k]})`;
   $("sPred").textContent = predicted(k).toFixed(3);
   if (sim) {
     $("sT").textContent = sim.t.toFixed(3);
-    $("sD").textContent = AC.maxAbsDiff(sim.U, S).toExponential(1);
+    $("sD").textContent = sci(AC.maxAbsDiff(sim.U, S));
   }
 }
 
@@ -239,11 +312,11 @@ function runAll() {
   setButtons(true);
   let k = K_MIN;
   const next = () => {
-    if (k > K_MAX) { setButtons(false); $("sMeas").textContent = `all ${K_MAX - K_MIN + 1} pushes done`; redraw(); return; }
+    if (k > K_MAX) { setButtons(false); $("sMeas").textContent = `all ${K_MAX - K_MIN + 1} nudges done`; redraw(); return; }
     const r = H.escapeTime(S, mode.v, 10 ** -k, { delta: DELTA });
     startAt(k); sim.advance(r.steps);                   // show the curve at its escape moment
     addPoint(k, r.T);
-    $("sMeas").textContent = `ε = 1e-${k}: ${r.T.toFixed(3)}`;
+    $("sMeas").textContent = `nudge ${pow10(-k)}: ${r.T.toFixed(3)}`;
     k++; redraw();
     setTimeout(next, 30);                               // let the page repaint between runs
   };

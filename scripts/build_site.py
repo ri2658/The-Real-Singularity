@@ -13,7 +13,8 @@ current versions into one folder that publish_site.py uploads:
     site/data/reference_json/    Burgers references used by the race
     site/data/allen_cahn/        equilibria and PINN guesses used by the simulator
 
-Every copied page gets a small "back to all demos" link. Links use explicit
+Every copied page gets the site-wide navigation bar (see NAV), and the
+landing page's bar is refreshed between its <!-- NAV --> markers. Links use explicit
 .../index.html paths because CloudFront only serves index.html at the site root.
 
 Run from the repo root after changing any page, then commit site/:
@@ -47,20 +48,56 @@ DATA = {
     "data/loss_truth": "runs.json",             # from scripts/export_loss_truth.py
 }
 
-# A plain link in the page flow (a floating button covered page titles on phones).
-BACK_LINK = (
-    '<nav style="max-width:980px;margin:0 auto;padding:12px 16px 0;'
-    'font:14px system-ui,sans-serif"><a href="../index.html" '
-    'style="color:inherit;opacity:.7;text-decoration:none">&larr; All demos</a></nav>'
-)
+# Site-wide navigation, injected at the top of every page so readers can move
+# between demos in order. (page key, short label) grouped by part; None = home.
+NAV = [
+    ("Part 1", [("shock", "Cliff"), ("race", "Race"), ("pinn", "PINN"), ("loss-vs-truth", "Score")]),
+    ("Part 2", [("allen-cahn", "Simulator"), ("hilltop", "Hilltop")]),
+]
+NAV_STYLE = """<style>
+.rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
+  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
+.rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
+.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
+.rs-nav .rs-part:first-child{margin-left:0}
+</style>"""
 
 
-def add_back_link(html: str) -> str:
+def nav_html(current, prefix="../"):
+    """Navigation bar; `current` is the page key to highlight, `prefix` the path back to the site root."""
+    parts = []
+    for part, pages in NAV:
+        parts.append(f'<span class="rs-part">{part}</span>')
+        for key, label in pages:
+            on = ' class="on" aria-current="page"' if key == current else ""
+            parts.append(f'<a href="{prefix}{key}/index.html"{on}>{label}</a>')
+    return (f'{NAV_STYLE}\n<nav class="rs-nav" aria-label="Demos"><div class="rs-in">'
+            f'<a class="rs-home" href="{prefix}index.html">The Real Singularity</a>'
+            f'<div class="rs-links">{"".join(parts)}</div></div></nav>')
+
+
+def add_nav(html: str, current: str) -> str:
     i = html.find("<body")
     if i < 0:
         return html
     j = html.find(">", i) + 1
-    return html[:j] + "\n" + BACK_LINK + html[j:]
+    return html[:j] + "\n" + nav_html(current) + html[j:]
+
+
+def refresh_landing_nav():
+    """The landing page is hand-written; only the part between the NAV markers is regenerated."""
+    landing = SITE / "index.html"
+    html = landing.read_text(encoding="utf-8")
+    a, b = "<!-- NAV -->", "<!-- /NAV -->"
+    if a in html and b in html:
+        start, end = html.index(a) + len(a), html.index(b)
+        html = html[:start] + "\n" + nav_html(None, prefix="") + "\n" + html[end:]
+        landing.write_text(html, encoding="utf-8")
 
 
 def main():
@@ -77,11 +114,13 @@ def main():
             if not src_path.exists():
                 raise SystemExit(f"missing source for {page}: {src}")
             if dst.endswith(".html"):
-                (out / dst).write_text(add_back_link(src_path.read_text(encoding="utf-8")),
+                (out / dst).write_text(add_nav(src_path.read_text(encoding="utf-8"), page),
                                        encoding="utf-8")
             else:
                 shutil.copy2(src_path, out / dst)
             print(f"{src:45s} -> site/{page}/{dst}")
+
+    refresh_landing_nav()
 
     for folder, pattern in DATA.items():
         out = SITE / folder

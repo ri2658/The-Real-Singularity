@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loss vs. Truth</title>
+<title>The score that lies</title>
 <style>
   :root {
     --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
-    --nu1: #2a78d6; --nu2: #eb6834; --nu3: #1f9e78; --loss: #1c2330; --err: #c2410c;
+    --nu1: #2a78d6; --nu2: #eb6834; --nu3: #1f9e78; --loss: #1c2330; --err: #c2410c; --accent: #c2410c;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-      --nu1: #5b9bea; --nu2: #fb923c; --nu3: #34c79a; --loss: #e6e9ef; --err: #fb923c;
+      --nu1: #5b9bea; --nu2: #fb923c; --nu3: #34c79a; --loss: #e6e9ef; --err: #fb923c; --accent: #fb923c;
     }
   }
   :root[data-theme="dark"] {
     --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-    --nu1: #5b9bea; --nu2: #fb923c; --nu3: #34c79a; --loss: #e6e9ef; --err: #fb923c;
+    --nu1: #5b9bea; --nu2: #fb923c; --nu3: #34c79a; --loss: #e6e9ef; --err: #fb923c; --accent: #fb923c;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
@@ -43,50 +43,119 @@
   .stat .v { font-size: 17px; font-variant-numeric: tabular-nums; }
   .explain { color: var(--muted); max-width: 72ch; margin-top: 18px; font-size: 14px; }
   .explain b { color: var(--ink); font-weight: 600; }
+
+  h2.step { font: 700 1.15rem/1.3 Georgia, "Iowan Old Style", serif; margin: 30px 0 8px; }
+  h2.step .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+               background: var(--accent); color: var(--bg); font: 700 13px system-ui, sans-serif;
+               margin-right: 8px; vertical-align: 2px; }
+  .prose { color: var(--muted); max-width: 70ch; margin: 0 0 12px; }
+  .prose b { color: var(--ink); font-weight: 600; }
+  .try { border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 8px 8px 0;
+         padding: 10px 14px; margin: 12px 0 14px; max-width: 72ch; color: var(--ink); font-size: 14px; }
+  .try::before { content: "Try this"; display: block; font: 600 11px system-ui, sans-serif; letter-spacing: .06em;
+                 text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .notice { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+  .notice::before { content: "What to notice: "; font-weight: 600; color: var(--ink); }
+  .takeaways { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px;
+               margin: 14px 0; max-width: 76ch; }
+  .takeaways ul { margin: 0; padding-left: 1.2em; }
+  .takeaways li { margin: 0 0 8px; }
+  .takeaways li:last-child { margin-bottom: 0; }
+  .takeaways .weak { color: var(--accent); font-weight: 600; }
+  details.math { color: var(--muted); max-width: 72ch; margin: 22px 0 0; font-size: 14px; }
+  details.math summary { cursor: pointer; color: var(--ink); }
 </style>
 </head>
 <body>
-<nav style="max-width:980px;margin:0 auto;padding:12px 16px 0;font:14px system-ui,sans-serif"><a href="../index.html" style="color:inherit;opacity:.7;text-decoration:none">&larr; All demos</a></nav>
+<style>
+.rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
+  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
+.rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
+.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
+.rs-nav .rs-part:first-child{margin-left:0}
+</style>
+<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="../shock/index.html">Cliff</a><a href="../race/index.html">Race</a><a href="../pinn/index.html">PINN</a><a href="../loss-vs-truth/index.html" class="on" aria-current="page">Score</a><span class="rs-part">Part 2</span><a href="../allen-cahn/index.html">Simulator</a><a href="../hilltop/index.html">Hilltop</a></div></div></nav>
 <main>
-  <h1>Does a low loss mean a right answer?</h1>
-  <p class="lede">A physics-informed network is trained by driving down a <b>loss</b>: how badly it breaks the equation at its
-    training points. What we actually care about is the <b>error</b>: how far it is from the exact solution. Each dot below is
-    one training run of our Burgers' equation network. Tap a dot to see how its loss and error moved during training.</p>
+  <h1>Does a good score mean a right answer?</h1>
+  <p class="lede">A PINN learns by pushing one number down. This page shows that the number can look great while the
+    answer is badly wrong, and that the PINN has no way to tell the difference.</p>
+
+  <h2 class="step"><span class="n">1</span>Two numbers: the score and the truth</h2>
+  <p class="prose">While a PINN trains, it grades itself with one number, called the <b>loss</b>: how badly its answer
+    breaks the equation at a set of check points. Lower is better, and training is just pushing this number down.</p>
+  <p class="prose">What we actually care about is the <b>error</b>: how far its answer is from the exact one. The PINN never
+    sees the exact answer, so it cannot measure its own error. We can, because for this fluid problem the exact answer
+    is known.</p>
+  <p class="prose">Think of checking a map only at the towns you visited. It can be perfect at every town and still draw
+    the roads between them wrong.</p>
+
+  <h2 class="step"><span class="n">2</span>See it for yourself</h2>
+  <p class="prose">Each dot below is one PINN we trained on the fluid from the earlier pages. Tap a dot, or a button,
+    to see how its score and its error changed during training.</p>
+  <p class="try">Click <b>The trap</b>. On the right chart, the score keeps falling after the training method switches,
+    while the orange error line stays flat near 35%. Then click <b>Same fluid, extra points at the jump</b> and compare.</p>
 
   <div class="presets" id="presets"></div>
 
   <div class="grid">
     <div class="card">
-      <p class="label">Every run: final training loss vs. final true error (tap a dot)</p>
+      <p class="label">Every PINN we trained: final score (loss) vs. final error (tap a dot)</p>
       <canvas id="scatter" height="300"></canvas>
       <div class="legend">
-        <span><span class="sw" style="background:var(--nu1)"></span>ν = 0.01/π (gentle shock)</span>
-        <span><span class="sw" style="background:var(--nu2)"></span>ν = 0.003/π</span>
-        <span><span class="sw" style="background:var(--nu3)"></span>ν = 0.001/π (sharp shock)</span>
-        <span><span class="sw ring" style="border-color:var(--muted)"></span>extra points at the shock</span>
+        <span><span class="sw" style="background:var(--nu1)"></span>thick fluid (gentle jump)</span>
+        <span><span class="sw" style="background:var(--nu2)"></span>medium fluid</span>
+        <span><span class="sw" style="background:var(--nu3)"></span>thin fluid (sharp jump)</span>
+        <span><span class="sw ring" style="border-color:var(--muted)"></span>extra check points at the jump</span>
       </div>
+      <p class="notice">if a good score meant a right answer, the dots would rise in one line from bottom left to
+        top right. They don't: around a score of 10⁻⁵, some PINNs are about 1% off and others are 35% off.</p>
     </div>
     <div class="card">
-      <p class="label" id="traceLabel">Selected run during training</p>
+      <p class="label" id="traceLabel">The selected PINN during training</p>
       <canvas id="trace" height="300"></canvas>
       <div class="legend">
-        <span><span class="sw" style="background:var(--loss)"></span>training loss</span>
-        <span><span class="sw" style="background:var(--err)"></span>true error</span>
+        <span><span class="sw" style="background:var(--loss)"></span>score (loss)</span>
+        <span><span class="sw" style="background:var(--err)"></span>error</span>
       </div>
+      <p class="notice">in "The trap", the score line drops steeply after the switch but the error line barely moves.
+        A better score did not mean a better answer.</p>
     </div>
   </div>
 
   <div class="readout">
-    <div class="stat"><div class="k">final training loss</div><div class="v" id="sLoss">–</div></div>
-    <div class="stat"><div class="k">final true error</div><div class="v" id="sErr">–</div></div>
-    <div class="stat"><div class="k">loss fell (from step 2000)</div><div class="v" id="sLossDrop">–</div></div>
-    <div class="stat"><div class="k">error fell (from step 2000)</div><div class="v" id="sErrDrop">–</div></div>
+    <div class="stat"><div class="k">final score (loss)</div><div class="v" id="sLoss">–</div></div>
+    <div class="stat"><div class="k">final error</div><div class="v" id="sErr">–</div></div>
+    <div class="stat"><div class="k">score improved after the switch (step 2000)</div><div class="v" id="sLossDrop">–</div></div>
+    <div class="stat"><div class="k">error improved after the switch (step 2000)</div><div class="v" id="sErrDrop">–</div></div>
   </div>
 
-  <p class="explain"><b>What to notice.</b> At ν = 0.003/π with evenly spread training points, the loss keeps dropping by
-    over 200× while the error barely moves and ends at 35%. The same equation trained with extra points near the shock reaches
-    a similar loss with an error of about 1%. The loss only checks the equation at the training points; it never sees the
-    exact solution, so a small loss alone does not tell you the answer is right.</p>
+  <h2 class="step"><span class="n">3</span>Why this happens</h2>
+  <p class="prose">The score only checks the equation at the check points. Near the jump the fluid's speed changes
+    very quickly, so a PINN can obey the equation well at every point it checks and still get the jump wrong in between,
+    like the map that is right at every town. Putting extra check points at the jump closes that gap, which is why the
+    second button reaches about 1% error at a similar score.</p>
+
+  <h2 class="step"><span class="n">4</span>Key takeaways</h2>
+  <div class="takeaways"><ul>
+    <li>The score (loss) measures how well the PINN obeys the equation at its check points, not how close it is to the truth.</li>
+    <li>Near a sharp jump the two can disagree completely: the score improved more than 200&times; while the answer stayed 35% off.</li>
+    <li>In this case, moving the check points to the jump fixed the error. More training did not.</li>
+    <li><span class="weak">The PINN weakness:</span> in a real problem nobody has the exact answer, so the score is the only
+      number you get, and it cannot tell you whether you landed in the trap or got a good run.</li>
+  </ul></div>
+
+  <details class="math"><summary>The math, for the curious</summary>
+    <p>The loss is the mean squared residual of Burgers' equation u<sub>t</sub> + u u<sub>x</sub> − ν u<sub>xx</sub> = 0 at
+      the collocation points, plus the initial-condition and boundary terms. The error is the relative L² error against the
+      Cole–Hopf exact solution over the whole x–t grid. Training runs Adam, then switches to L-BFGS at step 2000.
+      Thick, medium and thin fluid are ν = 0.01/π, 0.003/π and 0.001/π; "extra check points at the jump" means
+      collocation points concentrated near the shock at x = 0.</p>
+  </details>
 </main>
 
 <script>
@@ -94,10 +163,10 @@ const $ = (id) => document.getElementById(id);
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const NU_COLOR = { 0.01: "--nu1", 0.003: "--nu2", 0.001: "--nu3" };
 const PRESETS = [
-  { label: "The trap: ν = 0.003/π, even points", name: "nu0.003_vanilla_s2" },
-  { label: "Same ν, extra points at the shock", name: "nu0.003_shock_s2" },
-  { label: "Works: ν = 0.01/π", name: "p1000_8x20_s1" },
-  { label: "Fails: ν = 0.001/π", name: "nu0.001_vanilla_s0" },
+  { label: "The trap: medium fluid, evenly spread points", name: "nu0.003_vanilla_s2" },
+  { label: "Same fluid, extra points at the jump", name: "nu0.003_shock_s2" },
+  { label: "Works: thick fluid", name: "p1000_8x20_s1" },
+  { label: "Fails: thin fluid", name: "nu0.001_vanilla_s0" },
 ];
 let runs = [], selected = null, scatterPts = [];
 
@@ -124,17 +193,21 @@ function text(ctx, s, x, y, align, base, color) {
   ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(s, x, y);
 }
 
+// Axis label for 10^p: superscript digits, e.g. 10⁻³.
+const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+function pow10(p) { return p === 0 ? "1" : "10" + [...String(p)].map((c) => SUP[c]).join(""); }
+
 // Log axis helper: decades lo..hi (powers of ten).
 function logAxis(lo, hi, a, b) {
   return (v) => a + (Math.log10(v) - lo) / (hi - lo) * (b - a);
 }
 
-function gridY(ctx, Y, lo, hi, x0, x1) {
+function gridY(ctx, Y, lo, hi, x0, x1, label = pow10) {
   for (let p = lo; p <= hi; p++) {
     const y = Y(10 ** p);
     ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
-    text(ctx, p === 0 ? "1" : `1e${p}`, x0 - 6, y, "right", "middle");
+    text(ctx, label(p), x0 - 6, y, "right", "middle");
   }
 }
 
@@ -143,10 +216,10 @@ function drawScatter() {
   const pad = { l: 40, r: 10, t: 22, b: 30 };
   const X = logAxis(-7, -1, pad.l, w - pad.r);
   const Y = logAxis(-4, 0, h - pad.b, pad.t);
-  gridY(ctx, Y, -4, 0, pad.l, w - pad.r);
-  for (let p = -7; p <= -1; p += (w < 420 ? 2 : 1)) text(ctx, `1e${p}`, X(10 ** p), h - pad.b + 6, "center", "top");
-  text(ctx, "final training loss →", w - pad.r, h - 2, "right", "bottom");
-  text(ctx, "↑ final true error", pad.l, 2, "left", "top");
+  gridY(ctx, Y, -4, 0, pad.l, w - pad.r, (p) => `${+(100 * 10 ** p).toPrecision(1)}%`);
+  for (let p = -7; p <= -1; p += (w < 420 ? 2 : 1)) text(ctx, pow10(p), X(10 ** p), h - pad.b + 6, "center", "top");
+  text(ctx, "final score (loss), lower is better →", w - pad.r, h - 2, "right", "bottom");
+  text(ctx, "↑ final error", pad.l, 2, "left", "top");
   scatterPts = [];
   for (const r of runs) {
     const x = X(r.loss.at(-1)), y = Y(r.err.at(-1)), c = css(NU_COLOR[r.nu_pi]);
@@ -178,7 +251,7 @@ function drawTrace() {
   const xs = X(2000);
   ctx.strokeStyle = css("--line"); ctx.setLineDash([3, 3]);
   ctx.beginPath(); ctx.moveTo(xs, pad.t); ctx.lineTo(xs, h - pad.b); ctx.stroke(); ctx.setLineDash([]);
-  text(ctx, "optimizer switch", xs + 4, pad.t + 2, "left", "top");
+  text(ctx, "training method switches", xs + 4, pad.t + 2, "left", "top");
   const line = (vals, color, width) => {
     ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath();
     vals.forEach((v, i) => { const x = X(steps[i]), y = Y(Math.max(v, 1e-7)); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
@@ -186,11 +259,13 @@ function drawTrace() {
   };
   line(selected.loss, css("--loss"), 2);
   line(selected.err, css("--err"), 2.5);
-  text(ctx, "loss", X(sMax) - 2, Y(selected.loss.at(-1)) - 4, "right", "bottom", css("--loss"));
+  text(ctx, "score (loss)", X(sMax) - 2, Y(selected.loss.at(-1)) - 4, "right", "bottom", css("--loss"));
   text(ctx, "error", X(sMax) - 2, Y(selected.err.at(-1)) - 4, "right", "bottom", css("--err"));
 }
 
-function fmt(v) { return v >= 0.01 ? `${(v * 100).toFixed(1)}%` : v.toExponential(1); }
+function fmt(v) { return v >= 0.01 ? `${(v * 100).toFixed(1)}%` : `${(v * 100).toPrecision(2)}%`; }
+// Small numbers as "1.2 × 10⁻⁶".
+function sci(v) { const p = Math.floor(Math.log10(v)); return `${(v / 10 ** p).toFixed(1)} × ${pow10(p)}`; }
 
 function valueAt(r, key, step) {
   const i = r.step.findIndex((s) => s >= step);
@@ -199,9 +274,10 @@ function valueAt(r, key, step) {
 
 function select(r) {
   selected = r;
-  const nu = `ν = ${r.nu_pi}/π`, how = r.sampling === "shock" ? "extra points at the shock" : "evenly spread points";
-  $("traceLabel").textContent = `${nu}, ${how}, seed ${r.seed}: loss and error during training`;
-  $("sLoss").textContent = r.loss.at(-1).toExponential(1);
+  const fluid = { 0.01: "Thick", 0.003: "Medium", 0.001: "Thin" }[r.nu_pi] || `ν = ${r.nu_pi}/π`;
+  const how = r.sampling === "shock" ? "extra check points at the jump" : "evenly spread check points";
+  $("traceLabel").textContent = `${fluid} fluid, ${how} (seed ${r.seed}): score and error during training`;
+  $("sLoss").textContent = sci(r.loss.at(-1));
   $("sErr").textContent = fmt(r.err.at(-1));
   const l0 = valueAt(r, "loss", 2000), e0 = valueAt(r, "err", 2000);
   $("sLossDrop").textContent = `${(l0 / r.loss.at(-1)).toFixed(0)}×`;

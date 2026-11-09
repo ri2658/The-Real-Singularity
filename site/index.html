@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Real Singularity</title>
-<meta name="description" content="What physics-informed neural networks can and can't do: three myths, tested with interactive demos.">
+<meta name="description" content="What AI physics models (PINNs) can and can't do: three popular claims, tested with demos you can play with.">
 <style>
 :root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--soon:#8a8f99}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380}}
@@ -29,51 +29,106 @@ div.card h3{color:var(--soon)}
 .tag{font:600 .7rem system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--soon);margin-left:6px}
 .reality{font-size:.95rem;color:var(--mut);max-width:64ch;margin:0 0 8px}
 .reality b{color:var(--fg);font-weight:600}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:0 0 8px;padding:0;list-style:none;counter-reset:st}
+.steps li{counter-increment:st;font:.9rem/1.45 system-ui,sans-serif;color:var(--mut)}
+.steps li::before{content:counter(st);display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  background:var(--accent);color:var(--bg);font-weight:700;font-size:.85rem;margin:0 0 6px}
+.steps b{display:block;color:var(--fg);font-weight:600;margin-bottom:2px}
+.tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:4px}
+.tags span{font:600 .66rem system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);
+  border:1px solid var(--grid);border-radius:999px;padding:2px 7px}
+.tags span.weak{color:var(--accent);border-color:var(--accent)}
+.findings{margin:0 0 8px;padding-left:1.2em;max-width:64ch}
+.findings li{margin:0 0 8px}
+.findings b{font-weight:600}
 footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.82rem/1.5 system-ui,sans-serif;color:var(--mut)}
 </style>
 </head>
 <body>
+<!-- NAV -->
+<style>
+.rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
+  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
+.rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
+.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
+.rs-nav .rs-part:first-child{margin-left:0}
+</style>
+<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="shock/index.html">Cliff</a><a href="race/index.html">Race</a><a href="pinn/index.html">PINN</a><a href="loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="allen-cahn/index.html">Simulator</a><a href="hilltop/index.html">Hilltop</a></div></div></nav>
+<!-- /NAV -->
 <main>
   <h1>The Real Singularity</h1>
-  <p class="lede">Physics-informed neural networks (PINNs) are often sold as a replacement for classical solvers.
-    We test three popular claims with interactive demos you can run in your browser, and show where each tool actually wins.</p>
+  <p class="lede">A <b>PINN</b> (physics-informed neural network) is an AI model that learns to obey a physics equation,
+    instead of copying answers someone already computed. PINNs are often pitched as a replacement for the traditional
+    simulation programs scientists have used for decades. We put three popular claims to the test with demos you can
+    play with in your browser. No math background needed.</p>
 
   <section class="beat">
-    <p class="num">Beat 1 · Burgers' equation</p>
-    <h2>Shocks, losses and solvers</h2>
-    <p class="myth"><b>Myth</b>"PINNs replace solvers." "Low loss means the right answer." "More compute fixes it."</p>
-    <div class="cards">
-      <a class="card" href="shock/index.html"><h3>How a shock forms</h3><p>Characteristics collide at x = 0 at t* = 1/π. Scrub time and change the viscosity.</p></a>
-      <a class="card" href="race/index.html"><h3>The race</h3><p>A finite-volume solver in JavaScript, timed live and checked against the exact solution.</p></a>
-      <a class="card" href="pinn/index.html"><h3>A PINN in your browser</h3><p>Our trained network (ONNX) evaluates u(x, t) live as you move the sliders.</p></a>
-      <a class="card" href="loss-vs-truth/index.html"><h3>Loss vs. truth</h3><p>Every training run on one chart: the loss can fall 200&times; while the answer stays 35% wrong.</p></a>
-    </div>
-    <p class="reality"><b>So far:</b> at ν = 0.01/π the PINN reaches a relative L² error of about 5e-4.
-      At ν = 0.001/π it fails (error ≈ 0.4) even with points concentrated at the shock, while the finite-volume solver
-      gets about 2e-3 in a few dozen milliseconds.</p>
+    <p class="num">How to explore</p>
+    <ol class="steps">
+      <li><b>Go in order</b>Start with Part 1 and use the bar at the top to move to the next page.</li>
+      <li><b>Try the suggestion</b>Each page has a "Try this" box: one setting to change first.</li>
+      <li><b>Look for "What to notice"</b>Under each chart, one sentence on what it is showing you.</li>
+      <li><b>Read the takeaway</b>Each page ends with the PINN weakness it reveals. The math is folded away at the bottom.</li>
+    </ol>
   </section>
 
   <section class="beat">
-    <p class="num">Beat 2 · Allen–Cahn</p>
-    <h2>Stable and unstable states</h2>
+    <p class="num">Part 1 · A wave that turns into a cliff</p>
+    <h2>Sharp edges, misleading scores, and the race</h2>
+    <p class="myth"><b>Myth</b>"PINNs replace traditional solvers." "A good training score means a right answer." "More computing power fixes it."</p>
+    <div class="cards">
+      <a class="card" href="shock/index.html"><h3>How a cliff forms</h3><p>Fast-moving fluid catches up with slow fluid and piles into a sudden jump, called a shock. Press Play and watch it happen.</p><div class="tags"><span>Background</span></div></a>
+      <a class="card" href="race/index.html"><h3>The race</h3><p>The traditional method, running live in your browser. See how fast it is and how close it gets to the exact answer.</p><div class="tags"><span>Traditional solver</span></div></a>
+      <a class="card" href="pinn/index.html"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws its answer instantly.</p><div class="tags"><span>PINN</span></div></a>
+      <a class="card" href="loss-vs-truth/index.html"><h3>The score that lies</h3><p>A PINN grades itself with one score while it trains. That score can improve 200&times; while the answer stays 35% wrong.</p><div class="tags"><span class="weak">PINN weakness</span></div></a>
+    </div>
+    <p class="reality"><b>So far:</b> when the fluid is thick and the cliff is gentle, the PINN is very accurate (off by about 0.05%).
+      Make the fluid 10&times; thinner so the cliff turns sharp, and the PINN is off by about 40%, even when we give it extra
+      practice right at the cliff. The traditional solver gets within 0.2% in a few hundredths of a second.</p>
+  </section>
+
+  <section class="beat">
+    <p class="num">Part 2 · A mixture that separates</p>
+    <h2>Balls in bowls, balls on hilltops</h2>
     <p class="myth"><b>Myth</b>"PINNs are just worse solvers."</p>
     <div class="cards">
-      <a class="card" href="allen-cahn/index.html"><h3>Allen–Cahn simulator</h3><p>Forward Euler is gradient descent on an energy: it only ever lands in stable states. Try the hilltop preset.</p></a>
-      <a class="card" href="hilltop/index.html"><h3>Leaving a hilltop</h3><p>Push the unstable state by ε and time its escape: each tenfold smaller push adds the same 1.5056.</p></a>
-      <div class="card"><h3>Ball and bowl<span class="tag">Coming</span></h3><p>Stability in one picture: bowls hold the ball, hilltops don't.</p></div>
-      <div class="card"><h3>Correction demo<span class="tag">Coming</span></h3><p>Rough PINN guesses fed to the simulator: one heals, one falls off.</p></div>
+      <a class="card" href="allen-cahn/index.html"><h3>The step-by-step simulator</h3><p>A traditional simulation always rolls downhill, so it can only ever settle into a stable state. Try the S-shape with a tiny nudge.</p><div class="tags"><span>Traditional solver</span></div></a>
+      <a class="card" href="hilltop/index.html"><h3>Falling off a hilltop</h3><p>Balance the mixture on a hilltop, nudge it, and time the fall. A 10&times; smaller nudge only buys about 1.5 more time units.</p><div class="tags"><span>Simulation's blind spot</span></div></a>
+      <div class="card"><h3>Ball and bowl<span class="tag">Coming</span></h3><p>Stability in one picture: a ball in a bowl stays put, a ball on a hilltop rolls off.</p></div>
+      <div class="card"><h3>Fixing the PINN's guesses<span class="tag">Coming</span></h3><p>We hand the PINN's rough answers to the simulator: one settles into place, one falls off.</p></div>
     </div>
-    <p class="reality"><b>So far:</b> the simulator reproduces all five equilibria and their stability rates.
-      A PINN can find the unstable state that simulation never reaches, so each tool wins a different problem.</p>
+    <p class="reality"><b>So far:</b> the simulator matches all five known resting states, and how strongly each one pulls
+      nearby shapes in or pushes them away. But because it always rolls downhill, it can never stop on a hilltop.
+      A PINN can find those hilltop states directly. Each tool wins a different problem.</p>
   </section>
 
   <section class="beat">
-    <p class="num">Beat 3 · The ladder</p>
-    <h2>Did AI solve Navier–Stokes?</h2>
-    <p class="myth"><b>Myth</b>"AI solved Navier–Stokes."</p>
+    <p class="num">Part 3 · The hardest problem</p>
+    <h2>Did AI crack the equations of fluid flow?</h2>
+    <p class="myth"><b>Myth</b>"AI solved Navier–Stokes." <span style="font-style:normal;color:var(--mut)">Navier–Stokes are the equations of fluid flow; whether their answers can blow up to infinity is a famous unsolved math problem.</span></p>
     <div class="cards">
-      <div class="card"><h3>The difficulty ladder<span class="tag">Coming</span></h3><p>Stable blowup, unstable blowup, and a disputed claim, side by side.</p></div>
+      <div class="card"><h3>The difficulty ladder<span class="tag">Coming</span></h3><p>Three cases where an equation's answer shoots to infinity, from easiest to hardest to find, including one disputed claim.</p></div>
     </div>
+  </section>
+
+  <section class="beat">
+    <p class="num">The short version</p>
+    <h2>What PINNs get wrong, and what they get right</h2>
+    <ul class="findings">
+      <li><b>Sharp edges break them.</b> On a gentle wave the PINN is off by about 0.05%; make the fluid 10&times; thinner so
+        the wave turns into a cliff, and it is off by about 40%.</li>
+      <li><b>Their own score can't warn you.</b> The number a PINN trains on can improve 200&times; while the answer stays
+        35% wrong, and in a real problem there is no exact answer to check against.</li>
+      <li><b>The traditional method still wins the race.</b> On the same sharp cliff, the classical solver lands within
+        0.2% in a few hundredths of a second.</li>
+      <li><b>But they are not just worse solvers.</b> A step-by-step simulation can never stop on a hilltop state; a PINN
+        aims at the resting shape directly, so it can find states that simulation never reaches.</li>
+    </ul>
   </section>
 
   <footer>

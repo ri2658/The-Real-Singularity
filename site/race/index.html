@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Burgers solver: live finite-volume run</title>
+<title>The race: a traditional solver, live</title>
 <style>
 :root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--ref:#8a93a3;--sol:#c2410c}
 @media (prefers-color-scheme:dark){:root{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ref:#98a2b3;--sol:#fb923c}}
@@ -24,35 +24,48 @@ input[type=range]{flex:1 1 200px;accent-color:var(--sol)}
 </style>
 </head>
 <body>
-<nav style="max-width:980px;margin:0 auto;padding:12px 16px 0;font:14px system-ui,sans-serif"><a href="../index.html" style="color:inherit;opacity:.7;text-decoration:none">&larr; All demos</a></nav>
+<style>
+.rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
+  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
+.rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
+.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
+.rs-nav .rs-part:first-child{margin-left:0}
+</style>
+<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="../shock/index.html">Cliff</a><a href="../race/index.html" class="on" aria-current="page">Race</a><a href="../pinn/index.html">PINN</a><a href="../loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="../allen-cahn/index.html">Simulator</a><a href="../hilltop/index.html">Hilltop</a></div></div></nav>
 <main>
-<h1>Finite-volume Burgers solver, running live in your browser</h1>
-<p>Pick ν and the number of cells N, then press Run. The solver computes the whole solution on the spot; the curve then replays it in time next to the reference.</p>
+<h1>The race: a traditional solver, running live in your browser</h1>
+<p>This is the classic way to simulate the fluid from the previous page. It chops the line into many small cells and updates each cell's speed one small time step at a time (engineers call it the finite-volume method, and have used it for decades). There is no training: it just follows the rules of the equation.</p>
+<p>Pick how thick the fluid is and how many cells to use, then press Run. The solver computes the whole history on the spot, then replays it next to the exact answer (gray). More cells means more detail and more work.</p>
 
 <div class="row">
-  <label>ν <select id="nu">
-    <option value="nu0.01pi">0.01/π</option>
-    <option value="nu0.003pi">0.003/π</option>
-    <option value="nu0.001pi">0.001/π</option></select></label>
-  <label>N <select id="N">
+  <label>fluid thickness <select id="nu">
+    <option value="nu0.01pi">thick (ν = 0.01/π)</option>
+    <option value="nu0.003pi">medium (ν = 0.003/π)</option>
+    <option value="nu0.001pi">thin (ν = 0.001/π)</option></select></label>
+  <label>cells <select id="N">
     <option>500</option><option>1000</option><option selected>2000</option><option>4000</option></select></label>
   <button id="run">Run</button>
 </div>
 
 <canvas id="cv"></canvas>
 <div class="row" style="margin:6px 0">
-  <span><i class="k" style="background:var(--ref)"></i>reference</span>
-  <span><i class="k" style="background:var(--sol)"></i>finite-volume solver</span>
+  <span><i class="k" style="background:var(--ref)"></i>exact answer</span>
+  <span><i class="k" style="background:var(--sol)"></i>traditional solver</span>
 </div>
 <div class="row">
-  <label>t <input id="ts" type="range" min="0" max="99" value="0"></label>
-  <span id="tl">t = –</span>
+  <label>time <input id="ts" type="range" min="0" max="99" value="0"></label>
+  <span id="tl">–</span>
 </div>
 
 <div id="stats">
-  <div><b id="s-time">–</b><span>solve time (solver only, no drawing)</span></div>
-  <div><b id="s-err">–</b><span>relative L² vs reference, whole x–t grid</span></div>
-  <div><b id="s-errt">–</b><span>relative L² at the last time</span></div>
+  <div><b id="s-time">–</b><span>time to compute (not counting drawing)</span></div>
+  <div><b id="s-err">–</b><span>overall error across the whole run</span></div>
+  <div><b id="s-errt">–</b><span>error at the final moment</span></div>
 </div>
 <p id="msg"></p>
 </main>
@@ -71,6 +84,9 @@ async function loadRef(name) {
   }
   return cache[name];
 }
+
+// Relative L2 error shown as a percentage.
+function pct(e) { return `${(e * 100).toPrecision(2)}%`; }
 
 function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 
@@ -94,7 +110,7 @@ function draw() {
   };
   line(ref.x, ref.u[ti], css('--ref'), 3);
   if (snaps) line(x, snaps[ti], css('--sol'), 1.5);
-  $('tl').textContent = `t = ${ref.t[ti].toFixed(2)}`;
+  $('tl').textContent = ref.t[ti].toFixed(2);
 }
 
 async function run() {
@@ -116,8 +132,8 @@ async function run() {
   snaps.forEach((s, ti) => sol.set(interpToRef(ref.x, x, s), ti * nx));
   const last = ref.t.length - 1;
   $('s-time').textContent = ms < 1000 ? `${ms.toFixed(0)} ms` : `${(ms / 1000).toFixed(2)} s`;
-  $('s-err').textContent = relL2(sol, refFlat).toExponential(2);
-  $('s-errt').textContent = relL2(sol.subarray(last * nx), refFlat.subarray(last * nx)).toExponential(2);
+  $('s-err').textContent = pct(relL2(sol, refFlat));
+  $('s-errt').textContent = pct(relL2(sol.subarray(last * nx), refFlat.subarray(last * nx)));
 
   // Replay the solution in time (about 4 seconds).
   const start = performance.now();

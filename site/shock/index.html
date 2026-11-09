@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Shock formation in Burgers’ equation</title>
+<title>How a smooth wave turns into a cliff</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 --bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--ch:#2a6f97;--hot:#c2410c;--ph:#14532d;--vis:#7c3aed}
@@ -25,25 +25,39 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 </style>
 </head>
 <body>
-<nav style="max-width:980px;margin:0 auto;padding:12px 16px 0;font:14px system-ui,sans-serif"><a href="../index.html" style="color:inherit;opacity:.7;text-decoration:none">&larr; All demos</a></nav>
+<style>
+.rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
+  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
+.rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
+.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
+.rs-nav .rs-part:first-child{margin-left:0}
+</style>
+<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="../shock/index.html" class="on" aria-current="page">Cliff</a><a href="../race/index.html">Race</a><a href="../pinn/index.html">PINN</a><a href="../loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="../allen-cahn/index.html">Simulator</a><a href="../hilltop/index.html">Hilltop</a></div></div></nav>
 <main>
-<h1>Why Burgers’ equation forms a shock</h1>
-<p>Each characteristic carries its starting velocity u₀(x₀) = −sin(πx₀) in a straight line. Left of zero the fluid moves right and right of zero it moves left, so the lines collide at x = 0 at t* = 1/π ≈ 0.318.</p>
+<h1>How a smooth wave turns into a cliff</h1>
+<p>We start with a smooth wave of moving fluid. Fluid on the left side moves right, fluid on the right side moves left, so everything heads toward the middle. Each blue line in the top picture follows one bit of fluid as it moves at its starting speed.</p>
+<p>The faster bits catch up with the slower ones ahead of them. At time t ≈ 0.318 the lines first cross at the middle (x = 0), and the smooth wave becomes a sudden jump, called a <b>shock</b>. Press Play to watch it happen. Sharp jumps like this are exactly what trips up the PINN on the next pages.</p>
+<p>The bottom picture shows the fluid's speed at each position. The thickness menu sets how thick (viscous) the fluid is: thick fluid rounds the jump off a little, thin fluid makes it almost a vertical wall.</p>
 
 <canvas id="c1"></canvas>
 <canvas id="c2"></canvas>
 
 <div class="row">
  <button id="play">Play</button>
- <button id="jump">Jump to t*</button>
- <label>t <input id="t" type="range" min="0" max="1" step="0.002" value="0" aria-label="time"></label>
- <label>ν <select id="nu"><option value="0.01">0.01/π</option><option value="0.003">0.003/π</option><option value="0.001">0.001/π</option></select></label>
+ <button id="jump">Jump to the first crossing</button>
+ <label>time <input id="t" type="range" min="0" max="1" step="0.002" value="0" aria-label="time"></label>
+ <label>fluid thickness <select id="nu"><option value="0.01">thick (ν = 0.01/π)</option><option value="0.003">medium (ν = 0.003/π)</option><option value="0.001">thin (ν = 0.001/π)</option></select></label>
 </div>
 <div class="row" style="margin-top:0;color:var(--mut)">
- <span><i class="k" style="background:var(--ch)"></i>characteristics</span>
- <span><i class="k" style="background:var(--ph)"></i>shock solution (ν → 0)</span>
- <span><i class="k" style="background:var(--vis)"></i>viscous solution</span>
- <span><i class="k" style="background:var(--grid)"></i>folded, non-physical</span>
+ <span><i class="k" style="background:var(--ch)"></i>paths of fluid bits</span>
+ <span><i class="k" style="background:var(--ph)"></i>zero-thickness fluid (ideal)</span>
+ <span><i class="k" style="background:var(--vis)"></i>fluid at the chosen thickness</span>
+ <span><i class="k" style="background:var(--grid)"></i>if the bits passed through each other (impossible)</span>
 </div>
 <div id="read"></div>
 </main>
@@ -89,7 +103,7 @@ function draw(){
   const t=+tIn.value, nu=+nuSel.value/PI;
   // top: characteristics in the x–t plane
   let {g,w,h}=setup(c1);
-  let {X,Y}=frame(g,w,h,[-1,1],[0,1],'x','t');
+  let {X,Y}=frame(g,w,h,[-1,1],[0,1],'position x','time t');
   g.lineWidth=1.2; g.strokeStyle=col('--ch'); g.globalAlpha=.7;
   for(let k=0;k<=40;k++){
     const x0=-1+k/20; g.beginPath(); g.moveTo(X(x0),Y(0)); g.lineTo(X(x0-Math.sin(PI*x0)),Y(1)); g.stroke();
@@ -98,13 +112,13 @@ function draw(){
   g.setLineDash([5,4]); g.strokeStyle=col('--hot'); g.lineWidth=1.5;
   g.beginPath(); g.moveTo(X(-1),Y(TS)); g.lineTo(X(1),Y(TS)); g.stroke(); g.setLineDash([]);
   g.fillStyle=col('--hot'); g.beginPath(); g.arc(X(0),Y(TS),4.5,0,2*PI); g.fill();
-  g.textAlign='left'; g.fillText('t* = 1/π: first crossing',X(0)+9,Y(TS)-6);
+  g.textAlign='left'; g.fillText('lines first cross (t ≈ 0.318)',X(0)+9,Y(TS)-6);
   g.strokeStyle=col('--fg'); g.lineWidth=2;
   g.beginPath(); g.moveTo(X(-1),Y(t)); g.lineTo(X(1),Y(t)); g.stroke();
 
   // bottom: u(x,t)
   ({g,w,h}=setup(c2));
-  ({X,Y}=frame(g,w,h,[-1,1],[-1.15,1.15],'x','u'));
+  ({X,Y}=frame(g,w,h,[-1,1],[-1.15,1.15],'position x','speed u'));
   const N=600, P=[];
   for(let i=0;i<=N;i++){const x0=-1+2*i/N, u0=-Math.sin(PI*x0); P.push([x0+u0*t, u0, x0]);}
   // folded curve (all characteristics)
@@ -126,8 +140,8 @@ function draw(){
 
   // readout
   let sl=0; for(let i=1;i<V.length;i++) sl=Math.max(sl,Math.abs((V[i][1]-V[i-1][1])*120));
-  const inv=t<TS?(PI/(1-PI*t)).toFixed(2):'∞ (gradient blow-up)';
-  $('read').innerHTML=`t = ${t.toFixed(3)} (${t<TS?'before':t===TS?'at':'after'} t* = ${TS.toFixed(3)}).<br>Steepest slope at x = 0: inviscid ${inv}, viscous ${sl.toFixed(1)}.`;
+  const inv=t<TS?(PI/(1-PI*t)).toFixed(2):'infinite (a perfect jump)';
+  $('read').innerHTML=`Time ${t.toFixed(3)}: ${t<TS?'before':t===TS?'at':'after'} the first crossing at ${TS.toFixed(3)}.<br>Steepness of the wave at the middle: ${inv} with zero thickness, ${sl.toFixed(1)} at the chosen thickness.`;
 }
 
 let raf=null;
