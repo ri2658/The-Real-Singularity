@@ -51,6 +51,7 @@ DATA = {
     "data/allen_cahn": "*.json",
     "data/loss_truth": "runs.json",             # from scripts/export_loss_truth.py
     "data/viscosity": "*.json",                 # from scripts/export_viscosity.py
+    "data/race_pinn": "*",                      # from scripts/export_race_onnx.py (.onnx + index.json)
 }
 
 # A plain link in the page flow (a floating button covered page titles on phones).
