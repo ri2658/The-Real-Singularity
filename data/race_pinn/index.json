@@ -1,0 +1,20 @@
+{
+ "nu0.01pi": {
+  "run": "p1000_8x20_s1",
+  "file": "pinn_nu0.01pi.onnx",
+  "rel_l2": 0.000546,
+  "train_seconds": 1292.1
+ },
+ "nu0.003pi": {
+  "run": "nu0.003_vanilla_s0",
+  "file": "pinn_nu0.003pi.onnx",
+  "rel_l2": 0.485795,
+  "train_seconds": 3341.8
+ },
+ "nu0.001pi": {
+  "run": "nu0.001_vanilla_s0",
+  "file": "pinn_nu0.001pi.onnx",
+  "rel_l2": 0.41652,
+  "train_seconds": 1387.2
+ }
+}

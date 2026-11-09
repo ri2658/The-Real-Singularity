@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The race: a traditional solver, live</title>
+<title>The race: traditional solver vs. PINN</title>
 <style>
-:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--ref:#8a93a3;--sol:#c2410c}
-@media (prefers-color-scheme:dark){:root{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ref:#98a2b3;--sol:#fb923c}}
+:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--ref:#8a93a3;--sol:#c2410c;--pinn:#2a78d6}
+@media (prefers-color-scheme:dark){:root{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ref:#98a2b3;--sol:#fb923c;--pinn:#5b9bea}}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Georgia,serif}
 main{max-width:760px;margin:0 auto;padding:20px 16px 32px}
 h1{font-size:1.4rem;margin:0 0 4px}
@@ -15,10 +15,11 @@ canvas{width:100%;aspect-ratio:16/9;display:block;border-bottom:1px solid var(--
 .row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:12px 0;font:.9rem system-ui,sans-serif}
 button,select{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:transparent;color:var(--fg);border-radius:6px;cursor:pointer}
 input[type=range]{flex:1 1 200px;accent-color:var(--sol)}
-#stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;font-family:system-ui,sans-serif}
-#stats div{border:1px solid var(--grid);border-radius:8px;padding:8px 10px}
-#stats b{display:block;font-size:1.25rem}
-#stats span{color:var(--mut);font-size:.8rem}
+table.race{width:100%;border-collapse:collapse;font:15px system-ui,sans-serif;font-variant-numeric:tabular-nums;margin-top:6px}
+.race th,.race td{padding:7px 10px;border-bottom:1px solid var(--grid);text-align:right}
+.race th:first-child,.race td:first-child{text-align:left;color:var(--mut);font-weight:400}
+.race td b{font-size:1.1rem}
+.note{font:.85rem system-ui,sans-serif;color:var(--mut);margin:8px 0 0}
 #msg{color:var(--sol);font:.9rem system-ui,sans-serif;white-space:pre-wrap}
 .k{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
 </style>
@@ -38,9 +39,9 @@ input[type=range]{flex:1 1 200px;accent-color:var(--sol)}
 </style>
 <nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="../shock/index.html">Cliff</a><a href="../race/index.html" class="on" aria-current="page">Race</a><a href="../pinn/index.html">PINN</a><a href="../viscosity/index.html">Breaking point</a><a href="../loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="../allen-cahn/index.html">Simulator</a><a href="../correction/index.html">Fixing guesses</a><a href="../hilltop/index.html">Hilltop</a></div></div></nav>
 <main>
-<h1>The race: a traditional solver, running live in your browser</h1>
+<h1>The race: a traditional solver vs. our PINN</h1>
 <p>This is the classic way to simulate the fluid from the previous page. It chops the line into many small cells and updates each cell's speed one small time step at a time (engineers call it the finite-volume method, and have used it for decades). There is no training: it just follows the rules of the equation.</p>
-<p>Pick how thick the fluid is and how many cells to use, then press Run. The solver computes the whole history on the spot, then replays it next to the exact answer (gray). More cells means more detail and more work.</p>
+<p>Pick how thick the fluid is and how many cells to use, then press Run. The traditional solver computes the whole history on the spot, and our trained PINN, running in your browser, fills in the same 256 × 100 grid of points. Both are timed and compared with the exact answer (gray).</p>
 
 <div class="row">
   <label>fluid thickness <select id="nu">
@@ -56,25 +57,80 @@ input[type=range]{flex:1 1 200px;accent-color:var(--sol)}
 <div class="row" style="margin:6px 0">
   <span><i class="k" style="background:var(--ref)"></i>exact answer</span>
   <span><i class="k" style="background:var(--sol)"></i>traditional solver</span>
+  <span><i class="k" style="background:var(--pinn)"></i>PINN</span>
 </div>
 <div class="row">
   <label>time <input id="ts" type="range" min="0" max="99" value="0"></label>
   <span id="tl">–</span>
 </div>
 
-<div id="stats">
-  <div><b id="s-time">–</b><span>time to compute (not counting drawing)</span></div>
-  <div><b id="s-err">–</b><span>overall error across the whole run</span></div>
-  <div><b id="s-errt">–</b><span>error at the final moment</span></div>
-</div>
+<table class="race">
+  <thead><tr><th></th><th>Traditional solver</th><th>PINN</th></tr></thead>
+  <tbody>
+    <tr><th>time to compute (not counting drawing)</th><td><b id="s-time">–</b></td><td><b id="p-time">–</b></td></tr>
+    <tr><th>overall error across the whole run</th><td><b id="s-err">–</b></td><td><b id="p-err">–</b></td></tr>
+    <tr><th>error at the final moment</th><td><b id="s-errt">–</b></td><td><b id="p-errt">–</b></td></tr>
+    <tr><th>training needed before the race</th><td>none</td><td id="p-train">–</td></tr>
+  </tbody>
+</table>
+<p class="note" id="pnote"></p>
 <p id="msg"></p>
 </main>
 
 <script src="burgers_fv.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/ort.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const cache = {};                       // reference files already loaded
-let ref = null, x = null, snaps = null, shown = null, raf = null;
+let ref = null, x = null, snaps = null, shown = null, raf = null, pinnU = null;
+// One trained PINN per viscosity, exported by scripts/export_race_onnx.py into data/race_pinn/
+// (same runs as the uniform row of the viscosity page). Both the repo page (Finite volume solver/)
+// and site/race/ reach it as ../data/race_pinn/.
+const PINN_DIR = '../data/race_pinn/';
+let pinnIndex = null;
+const sessions = {};
+
+async function getIndex() {
+  if (!pinnIndex) {
+    const r = await fetch(PINN_DIR + 'index.json');
+    if (!r.ok) throw new Error('no PINN models (run python3 scripts/export_race_onnx.py)');
+    pinnIndex = await r.json();
+  }
+  return pinnIndex;
+}
+
+async function getSession(nu) {
+  if (sessions[nu]) return sessions[nu];
+  if (typeof ort === 'undefined') throw new Error('onnxruntime-web did not load');
+  const info = (await getIndex())[nu];
+  if (!info) throw new Error(`no PINN model for ${nu}`);
+  ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/';
+  ort.env.wasm.numThreads = 1;
+  const s = await ort.InferenceSession.create(PINN_DIR + info.file);
+  // Warm-up on one point so the timed run measures inference, not WebAssembly start-up.
+  await s.run({ x: new ort.Tensor('float32', new Float32Array([0]), [1, 1]),
+                t: new ort.Tensor('float32', new Float32Array([0.5]), [1, 1]) });
+  return (sessions[nu] = s);
+}
+
+// Evaluate the PINN on the whole reference grid (nt x nx points) in one batch. Returns ms and u[t][x].
+async function runPinn(ref, nu) {
+  const s = await getSession(nu);
+  const nx = ref.x.length, nt = ref.t.length, n = nx * nt;
+  const xs = new Float32Array(n), ts = new Float32Array(n);
+  for (let j = 0; j < nt; j++) for (let i = 0; i < nx; i++) { xs[j * nx + i] = ref.x[i]; ts[j * nx + i] = ref.t[j]; }
+  const feeds = { x: new ort.Tensor('float32', xs, [n, 1]), t: new ort.Tensor('float32', ts, [n, 1]) };
+  const t0 = performance.now();
+  const out = await s.run(feeds);                                           // the timed part
+  const ms = performance.now() - t0;
+  const u = out[s.outputNames[0]].data;
+  const rows = [];
+  for (let j = 0; j < nt; j++) rows.push(Float64Array.from(u.subarray(j * nx, (j + 1) * nx)));
+  return { ms, rows, flat: Float64Array.from(u) };
+}
+const fmtMs = (ms) => ms < 1 ? `${ms.toFixed(2)} ms` : ms < 1000 ? `${ms.toFixed(0)} ms` : `${(ms / 1000).toFixed(2)} s`;
+function clearPinn(note) { pinnU = null; ['p-time', 'p-err', 'p-errt', 'p-train'].forEach(i => $(i).textContent = '–'); $('pnote').innerHTML = note || ''; }
+
 
 async function loadRef(name) {
   if (!cache[name]) {
@@ -110,6 +166,7 @@ function draw() {
   };
   line(ref.x, ref.u[ti], css('--ref'), 3);
   if (snaps) line(x, snaps[ti], css('--sol'), 1.5);
+  if (pinnU) { g.setLineDash([6, 4]); line(ref.x, pinnU[ti], css('--pinn'), 2); g.setLineDash([]); }
   $('tl').textContent = ref.t[ti].toFixed(2);
 }
 
@@ -135,6 +192,22 @@ async function run() {
   $('s-err').textContent = pct(relL2(sol, refFlat));
   $('s-errt').textContent = pct(relL2(sol.subarray(last * nx), refFlat.subarray(last * nx)));
 
+  // PINN on the same reference grid (only for the viscosity it was trained on).
+  const nu = $('nu').value;
+  $('p-time').textContent = '…';
+  try {
+    const p = await runPinn(ref, nu);
+    const info = pinnIndex[nu];
+    pinnU = p.rows;
+    $('p-time').textContent = fmtMs(p.ms);
+    $('p-err').textContent = relL2(p.flat, refFlat).toExponential(2);
+    $('p-errt').textContent = relL2(p.flat.subarray(last * nx), refFlat.subarray(last * nx)).toExponential(2);
+    $('p-train').textContent = `${(info.train_seconds / 60).toFixed(1)} min of training`;
+    $('pnote').innerHTML = `PINN: run <code>${info.run}</code>, trained once for this ν only. One batch of ${ref.x.length * ref.t.length} points, ` +
+      `timed after a one-point warm-up, so model loading isn't counted. Its answer doesn't depend on N.` +
+      (nu === 'nu0.01pi' ? '' : ' At this ν the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html">Where a PINN breaks</a>.');
+  } catch (e) { clearPinn(`PINN not available here (${e.message}).`); }
+
   // Replay the solution in time (about 4 seconds).
   const start = performance.now();
   const step = () => {
@@ -149,6 +222,7 @@ $('run').onclick = run;
 $('ts').oninput = () => { cancelAnimationFrame(raf); draw(); };
 $('nu').onchange = async () => {       // show the new reference right away, clear old solver output
   snaps = null; ['s-time', 's-err', 's-errt'].forEach(i => $(i).textContent = '–');
+  clearPinn('');
   try { ref = await loadRef($('nu').value); $('msg').textContent = ''; }
   catch (e) { ref = null; $('msg').textContent = 'Reference file not loaded. Serve the repo root with: python3 -m http.server\nthen open http://localhost:8000/Finite%20volume%20solver/race_solver.html'; }
   draw();

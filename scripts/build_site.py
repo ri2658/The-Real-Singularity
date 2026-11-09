@@ -16,6 +16,7 @@ current versions into one folder that publish_site.py uploads:
     site/data/allen_cahn/        equilibria and PINN guesses used by the simulator
     site/data/loss_truth/        training histories for the loss-vs-truth page
     site/data/viscosity/         PINN predictions for the viscosity page
+    site/data/race_pinn/         one PINN per viscosity for the race (ONNX)
 
 Every copied page gets the site-wide navigation bar (see NAV), and the
 landing page's bar is refreshed between its <!-- NAV --> markers. Links use explicit
@@ -54,6 +55,7 @@ DATA = {
     "data/allen_cahn": "*.json",
     "data/loss_truth": "runs.json",             # from scripts/export_loss_truth.py
     "data/viscosity": "*.json",                 # from scripts/export_viscosity.py
+    "data/race_pinn": "*",                      # from scripts/export_race_onnx.py (.onnx + index.json)
 }
 
 # Site-wide navigation, injected at the top of every page so readers can move
