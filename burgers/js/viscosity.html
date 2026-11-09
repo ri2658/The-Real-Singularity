@@ -115,12 +115,12 @@
 
   <p class="explain"><b>Why the shock is hard.</b> A PINN is a smooth function (tanh layers) trained only to make the
     equation's residual small at sample points. At ν = 0.001/π the solution drops by about 1.5 over a width of a
-    few thousandths. The network can't bend that sharply without huge derivatives. A shock that is smeared, or sits
+    less than a thousandth, narrower than the spacing of the grid we compare on. The network can't bend that sharply without huge derivatives. A shock that is smeared, or sits
     slightly in the wrong place, still makes the residual small almost everywhere, so training settles on the wrong
-    answer: at t = 1 the PINN's jump sits a few hundredths to the right of the true one.</p>
+    answer: in the uniform run, the PINN's jump at t = 1 sits a few hundredths to the right of the true one.</p>
   <p class="explain"><b>Why more points at the shock isn't enough.</b> Putting half the training points near x = 0 rescues
-    ν = 0.003/π, from about 49% error down to about 1.3%, but not ν = 0.001/π: still about 45%. A finite-volume solver handles
-    the same shock in milliseconds (see the race page).</p>
+    ν = 0.003/π, from about 49% error down to about 1.3%, but not ν = 0.001/π: still about 45%. A finite-volume solver gets
+    the same shock to about 0.1% error (see the race page).</p>
 </main>
 
 <script>
@@ -236,7 +236,7 @@ async function redraw() {
   $("verdict").className = "verdict" + (tier === "good" ? "" : ` ${tier}`);
   $("verdict").textContent = {
     good: `Matches: over the whole run the PINN is within ${pct(c.rel_l2)} of the exact solution.`,
-    mid: `Close: ${pct(c.rel_l2)} error over the whole run. The shock is slightly smeared; look near x = 0.`,
+    mid: `Close: ${pct(c.rel_l2)} error over the whole run, most of it near the shock at x = 0.`,
     bad: `Misses the shock: ${pct(c.rel_l2)} error over the whole run. Look near x = 0 at late times.`,
   }[tier];
   document.querySelectorAll("#summary td[data-key]").forEach((td) => td.classList.toggle("cur", td.dataset.key === `${c.sampling}|${c.nu_pi}`));
