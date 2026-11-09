@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where a PINN Breaks</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
+    --ref: #1c2330; --pinn: #c2410c; --errfill: rgba(194, 65, 12, .18); --good: #15803d; --bad: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+      --ref: #e6e9ef; --pinn: #fb923c; --errfill: rgba(251, 146, 60, .22); --good: #4ade80; --bad: #f87171;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+    --ref: #e6e9ef; --pinn: #fb923c; --errfill: rgba(251, 146, 60, .22); --good: #4ade80; --bad: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font: 700 1.6rem/1.2 Georgia, "Iowan Old Style", serif; margin: 0 0 6px; }
+  .lede { color: var(--muted); max-width: 70ch; margin: 0 0 18px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .label { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  .key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .key i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid; vertical-align: middle; margin-right: 5px; }
+  canvas { width: 100%; display: block; }
+  .controls { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; margin: 0 0 14px; }
+  .controls > label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .nu { width: 100%; max-width: 420px; }
+  .nu input { width: 100%; }
+  .ticks { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; background: transparent; color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  button { padding: 6px 12px; font: inherit; font-size: 14px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+  input[type=range].time { flex: 1; min-width: 160px; }
+  .tv { font-variant-numeric: tabular-nums; min-width: 5ch; }
+  .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .verdict { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid var(--good); background: var(--panel);
+             border-radius: 0 8px 8px 0; }
+  .verdict.bad { border-left-color: var(--bad); }
+  table { border-collapse: collapse; font-size: 14px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 5px 12px; border-bottom: 1px solid var(--line); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  td.cur { outline: 2px solid var(--pinn); outline-offset: -2px; border-radius: 4px; }
+  .g { color: var(--good); } .b { color: var(--bad); } .m { color: var(--ink); }
+  .verdict.mid { border-left-color: var(--muted); }
+  h2 { font: 600 1.05rem system-ui, sans-serif; margin: 22px 0 4px; }
+  .explain { color: var(--muted); max-width: 72ch; margin-top: 14px; font-size: 14px; }
+  .explain b { color: var(--ink); font-weight: 600; }
+  .err { color: var(--bad); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Where a PINN breaks</h1>
+  <p class="lede">Burgers' equation u<sub>t</sub> + u u<sub>x</sub> = ν u<sub>xx</sub> starts from a smooth sine wave and
+    steepens into a shock at x = 0. The smaller the viscosity ν, the sharper the shock. Our PINN, trained the same way
+    each time, nails the smooth case and falls apart as the shock sharpens. Slide ν and t to see where.</p>
+
+  <div class="controls">
+    <label for="nu">Viscosity ν</label>
+    <div class="nu">
+      <input id="nu" type="range" min="0" max="2" step="1" value="0" aria-describedby="nuTicks">
+      <div class="ticks" id="nuTicks"><span>0.01/π (smooth)</span><span>0.003/π</span><span>0.001/π (sharp)</span></div>
+    </div>
+    <label>Training points</label>
+    <div class="row">
+      <div class="seg" role="group" aria-label="Collocation sampling">
+        <button id="sUniform" aria-pressed="true">Uniform</button>
+        <button id="sShock" aria-pressed="false">Shock-focused</button>
+      </div>
+    </div>
+    <label for="t">Time t = <span class="tv" id="tVal"></span></label>
+    <div class="row">
+      <input id="t" class="time" type="range" min="0" max="99" step="1" value="99">
+      <button id="play">Play</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="label">u(x) at the chosen time</p>
+    <canvas id="plotU" height="280"></canvas>
+    <p class="label" style="margin-top:8px">Pointwise error |PINN − exact|</p>
+    <canvas id="plotE" height="90"></canvas>
+    <div class="key">
+      <span><i style="border-color:var(--ref)"></i>exact (Cole–Hopf reference)</span>
+      <span><i style="border-color:var(--pinn);border-top-style:dashed"></i>PINN</span>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">error at this time</div><div class="v" id="eT">–</div></div>
+    <div class="stat"><div class="k">largest pointwise error</div><div class="v" id="eMax">–</div></div>
+    <div class="stat"><div class="k">error over the whole run</div><div class="v" id="eAll">–</div></div>
+    <div class="stat"><div class="k">trained run</div><div class="v" id="run" style="font-size:14px">–</div></div>
+  </div>
+  <p class="verdict" id="verdict">Loading…</p>
+
+  <h2>All six trained PINNs</h2>
+  <p class="label">Relative L² error over the whole (x, t) grid; median of three seeds, except the uniform ν = 0.01/π model,
+    which is the one behind the live PINN page.</p>
+  <table id="summary"><thead><tr><th>Training points</th><th>0.01/π</th><th>0.003/π</th><th>0.001/π</th></tr></thead><tbody></tbody></table>
+
+  <p class="explain"><b>Why the shock is hard.</b> A PINN is a smooth function (tanh layers) trained only to make the
+    equation's residual small at sample points. At ν = 0.001/π the solution drops by about 1.5 over a width of a
+    few thousandths. The network can't bend that sharply without huge derivatives. A shock that is smeared, or sits
+    slightly in the wrong place, still makes the residual small almost everywhere, so training settles on the wrong
+    answer: at t = 1 the PINN's jump sits a few hundredths to the right of the true one.</p>
+  <p class="explain"><b>Why more points at the shock isn't enough.</b> Putting half the training points near x = 0 rescues
+    ν = 0.003/π, from about 49% error down to about 1.3%, but not ν = 0.001/π: still about 45%. A finite-volume solver handles
+    the same shock in milliseconds (see the race page).</p>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const NUS = [0.01, 0.003, 0.001];
+const GOOD = 0.01, CLOSE = 0.05;         // < 1%: matches; 1-5%: close; above: misses
+
+let index = null, nuIdx = 0, sampling = "uniform", tIdx = 99, playing = false;
+const cache = new Map();                 // file -> data
+
+async function loadJson(rel) {
+  // site/viscosity/ keeps data one level up; burgers/js/ in the repo, two levels up.
+  for (const p of [`../data/${rel}`, `../../data/${rel}`]) {
+    try { const r = await fetch(p); if (r.ok) return await r.json(); } catch (e) { /* next */ }
+  }
+  throw new Error(`could not load data/${rel}`);
+}
+async function getCached(rel) {
+  if (!cache.has(rel)) cache.set(rel, await loadJson(rel));
+  return cache.get(rel);
+}
+const caseOf = () => index.cases.find((c) => c.sampling === sampling && Math.abs(c.nu_pi - NUS[nuIdx]) < 1e-12);
+
+async function current() {
+  const c = caseOf();
+  const [pinn, ref] = await Promise.all([getCached(`viscosity/${c.file}`), getCached(`reference_json/ref_nu${c.nu_pi}pi.json`)]);
+  return { c, pinn, ref };
+}
+
+// ---------- drawing ----------
+function setupCanvas(cv) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!cv._h) cv._h = cv.height;
+  const w = cv.clientWidth, h = cv._h;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+function axisText(ctx, txt, x, y, align, base) {
+  ctx.fillStyle = css("--muted"); ctx.font = "11px system-ui, sans-serif";
+  ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(txt, x, y);
+}
+function hline(ctx, y, x0, x1) {
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+}
+const PAD = { l: 38, r: 10, t: 8, b: 22 };
+
+function drawU(x, uRef, uPinn) {
+  const { ctx, w, h } = setupCanvas($("plotU"));
+  const X = (v) => PAD.l + ((v + 1) / 2) * (w - PAD.l - PAD.r);
+  const Y = (v) => PAD.t + (1 - (v + 1.1) / 2.2) * (h - PAD.t - PAD.b);
+  for (const v of [-1, -0.5, 0, 0.5, 1]) { hline(ctx, Y(v), PAD.l, w - PAD.r); axisText(ctx, String(v).replace("-", "−"), PAD.l - 6, Y(v), "right", "middle"); }
+  for (const v of [-1, -0.5, 0, 0.5, 1]) axisText(ctx, String(v).replace("-", "−"), X(v), h - PAD.b + 6, "center", "top");
+  const line = (u, color, width, dash) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []);
+    ctx.beginPath(); u.forEach((v, i) => (i ? ctx.lineTo(X(x[i]), Y(v)) : ctx.moveTo(X(x[i]), Y(v)))); ctx.stroke();
+    ctx.setLineDash([]);
+  };
+  line(uRef, css("--ref"), 2);
+  line(uPinn, css("--pinn"), 2.5, [7, 4]);
+}
+
+function drawE(x, err, scaleMax) {
+  const { ctx, w, h } = setupCanvas($("plotE"));
+  const pad = { ...PAD, t: 6, b: 18 };
+  const X = (v) => pad.l + ((v + 1) / 2) * (w - pad.l - pad.r);
+  const Y = (v) => pad.t + (1 - Math.min(v, scaleMax) / scaleMax) * (h - pad.t - pad.b);
+  hline(ctx, Y(0), pad.l, w - pad.r); hline(ctx, Y(scaleMax), pad.l, w - pad.r);
+  axisText(ctx, "0", pad.l - 6, Y(0), "right", "middle");
+  axisText(ctx, scaleMax >= 0.1 ? scaleMax.toFixed(1) : scaleMax.toExponential(0).replace("-", "−"), pad.l - 6, Y(scaleMax), "right", "middle");
+  ctx.fillStyle = css("--errfill"); ctx.strokeStyle = css("--pinn"); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(X(x[0]), Y(0));
+  err.forEach((v, i) => ctx.lineTo(X(x[i]), Y(v)));
+  ctx.lineTo(X(x[x.length - 1]), Y(0)); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); err.forEach((v, i) => (i ? ctx.lineTo(X(x[i]), Y(v)) : ctx.moveTo(X(x[i]), Y(v)))); ctx.stroke();
+}
+
+// Error-strip scale: fixed per case (max over all times) so the strip doesn't jump while playing.
+function niceMax(v) { const p = 10 ** Math.floor(Math.log10(v)); for (const m of [1, 2, 5, 10]) if (v <= m * p) return m * p; return 10 * p; }
+function caseScale(pinn, ref) {
+  if (pinn._scale) return pinn._scale;
+  let m = 0;
+  for (let j = 0; j < ref.u.length; j++) for (let i = 0; i < ref.u[j].length; i++) m = Math.max(m, Math.abs(pinn.u[j][i] - ref.u[j][i]));
+  return (pinn._scale = niceMax(Math.max(m, 1e-6)));
+}
+
+const pct = (e) => (e >= 0.01 ? `${(100 * e).toFixed(e >= 0.1 ? 0 : 1)}%` : e.toExponential(1).replace("-", "−"));
+
+async function redraw() {
+  let d;
+  try { d = await current(); } catch (e) {
+    $("verdict").innerHTML = `<span class="err">${e.message}. Serve the site over http, e.g. <code>python3 -m http.server</code>.</span>`;
+    return;
+  }
+  const { c, pinn, ref } = d;
+  const uRef = ref.u[tIdx], uP = pinn.u[tIdx];
+  const err = uP.map((v, i) => Math.abs(v - uRef[i]));
+  let num = 0, den = 0;
+  for (let i = 0; i < uRef.length; i++) { num += (uP[i] - uRef[i]) ** 2; den += uRef[i] ** 2; }
+  const eT = Math.sqrt(num / den), eMax = Math.max(...err);
+  drawU(ref.x, uRef, uP);
+  drawE(ref.x, err, caseScale(pinn, ref));
+  $("tVal").textContent = ref.t[tIdx].toFixed(2);
+  $("eT").textContent = pct(eT);
+  $("eMax").textContent = eMax.toFixed(eMax < 0.01 ? 4 : 2);
+  $("eAll").textContent = pct(c.rel_l2);
+  $("run").textContent = c.run;
+  const tier = c.rel_l2 < GOOD ? "good" : c.rel_l2 < CLOSE ? "mid" : "bad";
+  $("verdict").className = "verdict" + (tier === "good" ? "" : ` ${tier}`);
+  $("verdict").textContent = {
+    good: `Matches: over the whole run the PINN is within ${pct(c.rel_l2)} of the exact solution.`,
+    mid: `Close: ${pct(c.rel_l2)} error over the whole run. The shock is slightly smeared; look near x = 0.`,
+    bad: `Misses the shock: ${pct(c.rel_l2)} error over the whole run. Look near x = 0 at late times.`,
+  }[tier];
+  document.querySelectorAll("#summary td[data-key]").forEach((td) => td.classList.toggle("cur", td.dataset.key === `${c.sampling}|${c.nu_pi}`));
+}
+
+function buildSummary() {
+  const body = $("summary").querySelector("tbody");
+  for (const s of ["uniform", "shock"]) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${s === "uniform" ? "Uniform" : "Shock-focused"}</td>` + NUS.map((nu) => {
+      const c = index.cases.find((k) => k.sampling === s && Math.abs(k.nu_pi - nu) < 1e-12);
+      return `<td data-key="${s}|${c.nu_pi}" class="${c.rel_l2 < GOOD ? "g" : c.rel_l2 < CLOSE ? "m" : "b"}">${pct(c.rel_l2)}</td>`;
+    }).join("");
+    body.appendChild(tr);
+  }
+}
+
+function setSampling(s) {
+  sampling = s;
+  $("sUniform").setAttribute("aria-pressed", String(s === "uniform"));
+  $("sShock").setAttribute("aria-pressed", String(s === "shock"));
+  redraw();
+}
+
+let timer = null;
+function play() {
+  if (playing) { playing = false; $("play").textContent = "Play"; clearInterval(timer); return; }
+  playing = true; $("play").textContent = "Pause";
+  if (tIdx >= 99) tIdx = 0;
+  timer = setInterval(() => {
+    tIdx = Math.min(99, tIdx + 1); $("t").value = tIdx; redraw();
+    if (tIdx >= 99) play();
+  }, 60);
+}
+
+$("nu").oninput = () => { nuIdx = +$("nu").value; redraw(); };
+$("t").oninput = () => { tIdx = +$("t").value; redraw(); };
+$("sUniform").onclick = () => setSampling("uniform");
+$("sShock").onclick = () => setSampling("shock");
+$("play").onclick = play;
+window.onresize = redraw;
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
+
+(async () => {
+  try { index = await loadJson("viscosity/index.json"); } catch (e) {
+    $("verdict").innerHTML = `<span class="err">${e.message}. Run <code>python3 scripts/export_viscosity.py</code>, then serve the site over http.</span>`;
+    return;
+  }
+  buildSummary();
+  redraw();
+})();
+</script>
+</body>
+</html>

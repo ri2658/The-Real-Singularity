@@ -58,7 +58,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
 .rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
 .rs-nav .rs-part:first-child{margin-left:0}
 </style>
-<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="shock/index.html">Cliff</a><a href="race/index.html">Race</a><a href="pinn/index.html">PINN</a><a href="loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="allen-cahn/index.html">Simulator</a><a href="hilltop/index.html">Hilltop</a></div></div></nav>
+<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="shock/index.html">Cliff</a><a href="race/index.html">Race</a><a href="pinn/index.html">PINN</a><a href="viscosity/index.html">Breaking point</a><a href="loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="allen-cahn/index.html">Simulator</a><a href="correction/index.html">Fixing guesses</a><a href="hilltop/index.html">Hilltop</a></div></div></nav>
 <!-- /NAV -->
 <main>
   <h1>The Real Singularity</h1>
@@ -85,6 +85,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
       <a class="card" href="shock/index.html"><h3>How a cliff forms</h3><p>Fast-moving fluid catches up with slow fluid and piles into a sudden jump, called a shock. Press Play and watch it happen.</p><div class="tags"><span>Background</span></div></a>
       <a class="card" href="race/index.html"><h3>The race</h3><p>The traditional method, running live in your browser. See how fast it is and how close it gets to the exact answer.</p><div class="tags"><span>Traditional solver</span></div></a>
       <a class="card" href="pinn/index.html"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws its answer instantly.</p><div class="tags"><span>PINN</span></div></a>
+      <a class="card" href="viscosity/index.html"><h3>The breaking point</h3><p>Slide from thick fluid to thin. The PINN matches the gentle cliff to within 0.05% and misses the sharp one by about 40%.</p><div class="tags"><span class="weak">PINN weakness</span></div></a>
       <a class="card" href="loss-vs-truth/index.html"><h3>The score that lies</h3><p>A PINN grades itself with one score while it trains. That score can improve 200&times; while the answer stays 35% wrong.</p><div class="tags"><span class="weak">PINN weakness</span></div></a>
     </div>
     <p class="reality"><b>So far:</b> when the fluid is thick and the cliff is gentle, the PINN is very accurate (off by about 0.05%).
@@ -100,7 +101,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
       <a class="card" href="allen-cahn/index.html"><h3>The step-by-step simulator</h3><p>A traditional simulation always rolls downhill, so it can only ever settle into a stable state. Try the S-shape with a tiny nudge.</p><div class="tags"><span>Traditional solver</span></div></a>
       <a class="card" href="hilltop/index.html"><h3>Falling off a hilltop</h3><p>Balance the mixture on a hilltop, nudge it, and time the fall. A 10&times; smaller nudge only buys about 1.5 more time units.</p><div class="tags"><span>Simulation's blind spot</span></div></a>
       <div class="card"><h3>Ball and bowl<span class="tag">Coming</span></h3><p>Stability in one picture: a ball in a bowl stays put, a ball on a hilltop rolls off.</p></div>
-      <div class="card"><h3>Fixing the PINN's guesses<span class="tag">Coming</span></h3><p>We hand the PINN's rough answers to the simulator: one settles into place, one falls off.</p></div>
+      <a class="card" href="correction/index.html"><h3>Fixing the PINN's guesses</h3><p>We hand the PINN's rough answers to the simulator: the stable one settles into place, the unstable one falls off.</p><div class="tags"><span>PINN + simulator</span></div></a>
     </div>
     <p class="reality"><b>So far:</b> the simulator matches all five known resting states, and how strongly each one pulls
       nearby shapes in or pushes them away. But because it always rolls downhill, it can never stop on a hilltop.

@@ -9,9 +9,13 @@ current versions into one folder that publish_site.py uploads:
     site/pinn/                   live ONNX PINN page       <- web/
     site/loss-vs-truth/          training loss vs. error   <- burgers/js/loss_truth.html
     site/allen-cahn/             Allen-Cahn simulator      <- allen_cahn/js/
+    site/viscosity/              PINN vs. exact, three nu  <- burgers/js/viscosity.html
     site/hilltop/                hilltop escape experiment <- allen_cahn/js/hilltop.html
+    site/correction/             PINN guesses corrected    <- allen_cahn/js/correction.html
     site/data/reference_json/    Burgers references used by the race
     site/data/allen_cahn/        equilibria and PINN guesses used by the simulator
+    site/data/loss_truth/        training histories for the loss-vs-truth page
+    site/data/viscosity/         PINN predictions for the viscosity page
 
 Every copied page gets the site-wide navigation bar (see NAV), and the
 landing page's bar is refreshed between its <!-- NAV --> markers. Links use explicit
@@ -38,6 +42,9 @@ PAGES = {
     "allen-cahn": [("allen_cahn/js/simulator.html", "index.html"),
                    ("allen_cahn/js/allen_cahn.js", "allen_cahn.js")],
     "loss-vs-truth": [("burgers/js/loss_truth.html", "index.html")],
+    "viscosity": [("burgers/js/viscosity.html", "index.html")],
+    "correction": [("allen_cahn/js/correction.html", "index.html"),
+                   ("allen_cahn/js/allen_cahn.js", "allen_cahn.js")],
     "hilltop": [("allen_cahn/js/hilltop.html", "index.html"),
                 ("allen_cahn/js/allen_cahn.js", "allen_cahn.js"),
                 ("allen_cahn/js/hilltop.js", "hilltop.js")],
@@ -46,13 +53,15 @@ DATA = {
     "data/reference_json": "ref_nu*.json",      # the race needs only the ref_ files
     "data/allen_cahn": "*.json",
     "data/loss_truth": "runs.json",             # from scripts/export_loss_truth.py
+    "data/viscosity": "*.json",                 # from scripts/export_viscosity.py
 }
 
 # Site-wide navigation, injected at the top of every page so readers can move
 # between demos in order. (page key, short label) grouped by part; None = home.
 NAV = [
-    ("Part 1", [("shock", "Cliff"), ("race", "Race"), ("pinn", "PINN"), ("loss-vs-truth", "Score")]),
-    ("Part 2", [("allen-cahn", "Simulator"), ("hilltop", "Hilltop")]),
+    ("Part 1", [("shock", "Cliff"), ("race", "Race"), ("pinn", "PINN"), ("viscosity", "Breaking point"),
+                ("loss-vs-truth", "Score")]),
+    ("Part 2", [("allen-cahn", "Simulator"), ("correction", "Fixing guesses"), ("hilltop", "Hilltop")]),
 ]
 NAV_STYLE = """<style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);

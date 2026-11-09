@@ -86,7 +86,7 @@
 .rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
 .rs-nav .rs-part:first-child{margin-left:0}
 </style>
-<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="../shock/index.html">Cliff</a><a href="../race/index.html">Race</a><a href="../pinn/index.html">PINN</a><a href="../loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="../allen-cahn/index.html" class="on" aria-current="page">Simulator</a><a href="../hilltop/index.html">Hilltop</a></div></div></nav>
+<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="../shock/index.html">Cliff</a><a href="../race/index.html">Race</a><a href="../pinn/index.html">PINN</a><a href="../viscosity/index.html">Breaking point</a><a href="../loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="../allen-cahn/index.html" class="on" aria-current="page">Simulator</a><a href="../correction/index.html">Fixing guesses</a><a href="../hilltop/index.html">Hilltop</a></div></div></nav>
 <main>
   <h1>The step-by-step simulator</h1>
   <p class="lede">This is how a traditional simulation works, and the one thing it can never do.</p>
@@ -204,7 +204,7 @@ const CURVE_NAMES = {
 };
 
 async function loadJsonCurves() {
-  const files = ["equilibria.json", "pinn_guesses.json"];
+  const files = ["equilibria.json", "pinn_rough_w1e4_adam2000.json"];
   for (const f of files) {
     try {
       // site/allen-cahn/ keeps data one level up; allen_cahn/js/ in the repo, two levels up.
