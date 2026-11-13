@@ -4,6 +4,7 @@ Each page keeps living where its owner works on it; this script copies the
 current versions into one folder that publish_site.py uploads:
 
     site/index.html              landing page (hand-written, never overwritten)
+    site/beat1/, site/beat2/     story page of each beat   <- story/beat1.html, story/beat2.html
     site/shock/                  shock-formation viewer   <- shock viewer/
     site/race/                   finite-volume race        <- Finite volume solver/
     site/pinn/                   live ONNX PINN page       <- web/
@@ -18,8 +19,10 @@ current versions into one folder that publish_site.py uploads:
     site/data/viscosity/         PINN predictions for the viscosity page
     site/data/race_pinn/         one PINN per viscosity for the race (ONNX)
 
-Every copied page gets the site-wide navigation bar (see NAV), and the
-landing page's bar is refreshed between its <!-- NAV --> markers. Links use explicit
+Every copied page gets the site-wide navigation bar (home, Beat 1, Beat 2;
+see BEATS), and each demo page also gets a previous / next bar at the bottom
+that walks through its beat in story order. The landing page's bar is
+refreshed between its <!-- NAV --> markers. Links use explicit
 .../index.html paths because CloudFront only serves index.html at the site root.
 
 Run from the repo root after changing any page, then commit site/:
@@ -34,6 +37,8 @@ SITE = ROOT / "site"
 
 # (source, destination inside site/)
 PAGES = {
+    "beat1": [("story/beat1.html", "index.html")],
+    "beat2": [("story/beat2.html", "index.html")],
     "shock": [("shock viewer/index.html", "index.html"),
               ("shock viewer/shock_viewer.js", "shock_viewer.js")],
     "race": [("Finite volume solver/race_solver.html", "index.html"),
@@ -58,38 +63,75 @@ DATA = {
     "data/race_pinn": "*",                      # from scripts/export_race_onnx.py (.onnx + index.json)
 }
 
-# Site-wide navigation, injected at the top of every page so readers can move
-# between demos in order. (page key, short label) grouped by part; None = home.
-NAV = [
-    ("Part 1", [("shock", "Cliff"), ("race", "Race"), ("pinn", "PINN"), ("viscosity", "Breaking point"),
-                ("loss-vs-truth", "Score")]),
-    ("Part 2", [("allen-cahn", "Simulator"), ("correction", "Fixing guesses"), ("hilltop", "Hilltop")]),
+# Site-wide navigation. The top bar shows only home and the beats; each beat's
+# story page links to its demos, and the demos are chained in story order.
+BEATS = [
+    ("beat1", "Beat 1", "The wall of brake lights", [
+        ("shock", "How the wall forms"), ("pinn", "Our PINN, live"), ("viscosity", "The breaking point"),
+        ("loss-vs-truth", "The score that lies"), ("race", "The race")]),
+    ("beat2", "Beat 2", "Balls in bowls", [
+        ("allen-cahn", "The step-by-step simulator"), ("hilltop", "Falling off a hilltop"),
+        ("correction", "Fixing the PINN's guesses")]),
 ]
 NAV_STYLE = """<style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
   font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
 .rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
-.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
 .rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
-.rs-nav .rs-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
-.rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
-.rs-nav .rs-part:first-child{margin-left:0}
+.rs-nav .rs-links{display:flex;align-items:center;gap:4px}
+</style>"""
+PAGER_STYLE = """<style>
+.rs-pager{max-width:980px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
+  display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;
+  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rs-pager a{color:inherit;text-decoration:none;opacity:.8}
+.rs-pager a:hover,.rs-pager a:focus-visible{opacity:1;text-decoration:underline}
+.rs-pager .rs-up{opacity:.6}
+.rs-pager .rs-next{font-weight:600;margin-left:auto}
 </style>"""
 
 
+def beat_of(page):
+    for key, label, title, pages in BEATS:
+        if page == key or page in dict(pages):
+            return key
+    return None
+
+
 def nav_html(current, prefix="../"):
-    """Navigation bar; `current` is the page key to highlight, `prefix` the path back to the site root."""
-    parts = []
-    for part, pages in NAV:
-        parts.append(f'<span class="rs-part">{part}</span>')
-        for key, label in pages:
-            on = ' class="on" aria-current="page"' if key == current else ""
-            parts.append(f'<a href="{prefix}{key}/index.html"{on}>{label}</a>')
-    return (f'{NAV_STYLE}\n<nav class="rs-nav" aria-label="Demos"><div class="rs-in">'
+    """Top bar; `current` is a page key (its beat is highlighted), `prefix` the path back to the site root."""
+    on_beat = beat_of(current)
+    links = []
+    for key, label, title, pages in BEATS:
+        on = ' class="on" aria-current="page"' if key == on_beat else ""
+        links.append(f'<a href="{prefix}{key}/index.html"{on}>{label}</a>')
+    return (f'{NAV_STYLE}\n<nav class="rs-nav" aria-label="Site"><div class="rs-in">'
             f'<a class="rs-home" href="{prefix}index.html">The Real Singularity</a>'
-            f'<div class="rs-links">{"".join(parts)}</div></div></nav>')
+            f'<div class="rs-links">{"".join(links)}</div></div></nav>')
+
+
+def pager_html(page):
+    """Previous / back to the beat / next, for a demo page; empty for pages outside the beats."""
+    for b, (key, label, title, pages) in enumerate(BEATS):
+        keys = [k for k, _ in pages]
+        if page not in keys:
+            continue
+        i = keys.index(page)
+        prev = (f'<a href="../{keys[i - 1]}/index.html">&larr; {pages[i - 1][1]}</a>' if i
+                else f'<a href="../{key}/index.html">&larr; {label}: {title}</a>')
+        up = f'<a class="rs-up" href="../{key}/index.html">Back to {label}</a>' if i else ""
+        if i + 1 < len(keys):
+            nxt = f'<a class="rs-next" href="../{keys[i + 1]}/index.html">Next: {pages[i + 1][1]} &rarr;</a>'
+        elif b + 1 < len(BEATS):
+            nk, nl, nt, _ = BEATS[b + 1]
+            nxt = f'<a class="rs-next" href="../{nk}/index.html">Next: {nl}, {nt} &rarr;</a>'
+        else:
+            nxt = '<a class="rs-next" href="../index.html">Back to the start &rarr;</a>'
+        return f'{PAGER_STYLE}\n<nav class="rs-pager" aria-label="{label} pages">{prev}{up}{nxt}</nav>'
+    return ""
 
 
 def add_nav(html: str, current: str) -> str:
@@ -97,7 +139,12 @@ def add_nav(html: str, current: str) -> str:
     if i < 0:
         return html
     j = html.find(">", i) + 1
-    return html[:j] + "\n" + nav_html(current) + html[j:]
+    html = html[:j] + "\n" + nav_html(current) + html[j:]
+    pager = pager_html(current)
+    k = html.rfind("</body>")
+    if pager and k >= 0:
+        html = html[:k] + pager + "\n" + html[k:]
+    return html
 
 
 def refresh_landing_nav():

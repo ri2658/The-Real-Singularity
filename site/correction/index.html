@@ -58,15 +58,13 @@
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
   font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
 .rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
-.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
 .rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
-.rs-nav .rs-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
-.rs-nav .rs-part{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.5;margin:0 4px 0 10px;white-space:nowrap}
-.rs-nav .rs-part:first-child{margin-left:0}
+.rs-nav .rs-links{display:flex;align-items:center;gap:4px}
 </style>
-<nav class="rs-nav" aria-label="Demos"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><span class="rs-part">Part 1</span><a href="../shock/index.html">Cliff</a><a href="../race/index.html">Race</a><a href="../pinn/index.html">PINN</a><a href="../viscosity/index.html">Breaking point</a><a href="../loss-vs-truth/index.html">Score</a><span class="rs-part">Part 2</span><a href="../allen-cahn/index.html">Simulator</a><a href="../correction/index.html" class="on" aria-current="page">Fixing guesses</a><a href="../hilltop/index.html">Hilltop</a></div></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html">Beat 1</a><a href="../beat2/index.html" class="on" aria-current="page">Beat 2</a></div></div></nav>
 <main>
   <h1>Correcting a PINN</h1>
   <p class="lede">A physics-informed neural network gave us rough guesses for two steady states of the Allen–Cahn
@@ -343,5 +341,15 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", red
   pick("hump");
 })();
 </script>
+<style>
+.rs-pager{max-width:980px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
+  display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;
+  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rs-pager a{color:inherit;text-decoration:none;opacity:.8}
+.rs-pager a:hover,.rs-pager a:focus-visible{opacity:1;text-decoration:underline}
+.rs-pager .rs-up{opacity:.6}
+.rs-pager .rs-next{font-weight:600;margin-left:auto}
+</style>
+<nav class="rs-pager" aria-label="Beat 2 pages"><a href="../hilltop/index.html">&larr; Falling off a hilltop</a><a class="rs-up" href="../beat2/index.html">Back to Beat 2</a><a class="rs-next" href="../index.html">Back to the start &rarr;</a></nav>
 </body>
 </html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beat 2: Balls in bowls, balls on hilltops</title>
+<meta name="description" content="A mixture that separates: what a step-by-step simulation can find, what it can never find, and how a PINN fills the gap.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--soon:#8a8f99;--road:#3b4250;--line:#c2410c;--ref:#9aa3b2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380;--road:#262d39;--line:#fb923c;--ref:#5f6878}}
+:root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380;--road:#262d39;--line:#fb923c;--ref:#5f6878}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 Georgia,"Iowan Old Style",serif}
+main{max-width:760px;margin:0 auto;padding:36px 16px 56px}
+.eyebrow{font:600 .8rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 12px}
+h2{font-size:1.35rem;line-height:1.25;margin:0 0 8px}
+p{margin:0 0 14px;max-width:62ch}
+.lede{color:var(--mut);font-size:1.05rem}
+section{border-top:1px solid var(--grid);padding:26px 0 6px}
+figure{margin:18px 0 8px}
+canvas{width:100%;display:block}
+#speed{aspect-ratio:16/8}
+#road{height:46px;margin-top:6px;border-radius:6px}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:12px 0 4px;font:.9rem system-ui,sans-serif}
+.row label{display:flex;align-items:center;gap:8px}
+input[type=range]{flex:1 1 200px;accent-color:var(--accent)}
+.row .grow{flex:1 1 200px;display:flex;gap:8px;align-items:center}
+button,select{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+figcaption{font:.88rem/1.5 system-ui,sans-serif;color:var(--mut);margin-top:8px}
+figcaption b{color:var(--fg)}
+.stat{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:baseline;background:var(--card);border:1px solid var(--grid);
+  border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;margin:4px 0 16px;max-width:62ch}
+.stat .n{font:700 1.7rem/1.1 system-ui,sans-serif;color:var(--accent);white-space:nowrap}
+.stat .c{font:.9rem/1.45 system-ui,sans-serif;color:var(--mut)}
+.stat.good{border-left-color:#15803d}.stat.good .n{color:#15803d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .stat.good{border-left-color:#4ade80}:root:not([data-theme="light"]) .stat.good .n{color:#4ade80}}
+:root[data-theme="dark"] .stat.good{border-left-color:#4ade80}:root[data-theme="dark"] .stat.good .n{color:#4ade80}
+.takeaway{font-size:1.08rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:8px 0 16px;counter-reset:cd}
+a.card{display:block;background:var(--card);border:1px solid var(--grid);border-radius:10px;padding:14px 16px;color:inherit;text-decoration:none;counter-increment:cd}
+a.card:hover{border-color:var(--accent)}
+a.card h3{font:600 1rem system-ui,sans-serif;margin:0 0 4px}
+a.card h3::before{content:counter(cd) ". ";color:var(--accent)}
+a.card p{font:.88rem/1.45 system-ui,sans-serif;color:var(--mut);margin:0}
+details{font:.9rem/1.55 system-ui,sans-serif;color:var(--mut);margin:8px 0 0}
+details summary{cursor:pointer;color:var(--fg);font-weight:600}
+details p{max-width:66ch}
+details a{color:var(--accent)}
+.next{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--grid);margin-top:24px;padding-top:16px;font:.95rem system-ui,sans-serif}
+.next a{color:var(--accent);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Beat 2</p>
+  <h1>Balls in bowls, balls on hilltops</h1>
+  <p class="lede">A mixture of two liquids, like oil and vinegar, slowly separates into patches. Some arrangements of
+    those patches are stable, like a ball resting in a bowl. Others are unstable, like a ball balanced on a hilltop:
+    perfectly still, until the smallest nudge sends it rolling.</p>
+
+  <section>
+    <p class="eyebrow">Try it yourself</p>
+    <h2>Three demos, in story order</h2>
+    <div class="cards">
+      <a class="card" href="../allen-cahn/index.html"><h3>The step-by-step simulator</h3><p>A traditional simulation
+        always rolls downhill, so it can only ever settle into a stable state. Try the S-shape with a tiny nudge.</p></a>
+      <a class="card" href="../hilltop/index.html"><h3>Falling off a hilltop</h3><p>Balance the mixture on a hilltop,
+        nudge it, and time the fall. A 10&times; smaller nudge only buys about 1.5 more time units.</p></a>
+      <a class="card" href="../correction/index.html"><h3>Fixing the PINN's guesses</h3><p>We hand the PINN's rough
+        answers to the simulator: the stable one settles into place, the unstable one falls off.</p></a>
+    </div>
+  </section>
+
+  <section>
+    <h2>So far</h2>
+    <p>The simulator matches all five known resting states, and how strongly each one pulls nearby shapes in or pushes
+      them away. But because it always rolls downhill, it can never stop on a hilltop. A PINN can aim at those hilltop
+      states directly. Each tool wins a different problem.</p>
+  </section>
+
+  <div class="next"><a href="../beat1/index.html">&larr; Beat 1: The wall of brake lights</a><a href="../index.html">Home</a></div>
+</main>
+</body>
+</html>

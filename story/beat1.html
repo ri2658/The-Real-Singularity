@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beat 1: The wall of brake lights</title>
+<meta name="description" content="Can an AI that only knows the rules of traffic predict a sudden wall of brake lights? Where PINNs shine, where they break, and why their own score can't tell.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--soon:#8a8f99;--road:#3b4250;--line:#c2410c;--ref:#9aa3b2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380;--road:#262d39;--line:#fb923c;--ref:#5f6878}}
+:root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380;--road:#262d39;--line:#fb923c;--ref:#5f6878}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 Georgia,"Iowan Old Style",serif}
+main{max-width:760px;margin:0 auto;padding:36px 16px 56px}
+.eyebrow{font:600 .8rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 12px}
+h2{font-size:1.35rem;line-height:1.25;margin:0 0 8px}
+p{margin:0 0 14px;max-width:62ch}
+.lede{color:var(--mut);font-size:1.05rem}
+section{border-top:1px solid var(--grid);padding:26px 0 6px}
+figure{margin:18px 0 8px}
+canvas{width:100%;display:block}
+#speed{aspect-ratio:16/8}
+#road{height:46px;margin-top:6px;border-radius:6px}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:12px 0 4px;font:.9rem system-ui,sans-serif}
+.row label{display:flex;align-items:center;gap:8px}
+input[type=range]{flex:1 1 200px;accent-color:var(--accent)}
+.row .grow{flex:1 1 200px;display:flex;gap:8px;align-items:center}
+button,select{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+figcaption{font:.88rem/1.5 system-ui,sans-serif;color:var(--mut);margin-top:8px}
+figcaption b{color:var(--fg)}
+.stat{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:baseline;background:var(--card);border:1px solid var(--grid);
+  border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;margin:4px 0 16px;max-width:62ch}
+.stat .n{font:700 1.7rem/1.1 system-ui,sans-serif;color:var(--accent);white-space:nowrap}
+.stat .c{font:.9rem/1.45 system-ui,sans-serif;color:var(--mut)}
+.stat.good{border-left-color:#15803d}.stat.good .n{color:#15803d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .stat.good{border-left-color:#4ade80}:root:not([data-theme="light"]) .stat.good .n{color:#4ade80}}
+:root[data-theme="dark"] .stat.good{border-left-color:#4ade80}:root[data-theme="dark"] .stat.good .n{color:#4ade80}
+.takeaway{font-size:1.08rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:8px 0 16px;counter-reset:cd}
+a.card{display:block;background:var(--card);border:1px solid var(--grid);border-radius:10px;padding:14px 16px;color:inherit;text-decoration:none;counter-increment:cd}
+a.card:hover{border-color:var(--accent)}
+a.card h3{font:600 1rem system-ui,sans-serif;margin:0 0 4px}
+a.card h3::before{content:counter(cd) ". ";color:var(--accent)}
+a.card p{font:.88rem/1.45 system-ui,sans-serif;color:var(--mut);margin:0}
+details{font:.9rem/1.55 system-ui,sans-serif;color:var(--mut);margin:8px 0 0}
+details summary{cursor:pointer;color:var(--fg);font-weight:600}
+details p{max-width:66ch}
+details a{color:var(--accent)}
+.next{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--grid);margin-top:24px;padding-top:16px;font:.95rem system-ui,sans-serif}
+.next a{color:var(--accent);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Beat 1</p>
+  <h1>The wall of brake lights</h1>
+  <p class="lede">You're on the freeway at full speed. Up ahead, traffic is crawling. At first the slowdown is gradual:
+    cars ease off a little, then a little more. But as more cars arrive from behind, that gentle slowdown gets squeezed
+    into a sudden wall of brake lights.</p>
+
+  <figure>
+    <canvas id="speed" aria-label="Car speed along the road"></canvas>
+    <canvas id="road" aria-label="Cars on the road"></canvas>
+    <div class="row">
+      <button id="play">Play</button>
+      <span class="grow">time <input id="t" type="range" min="0" max="1" step="0.002" value="0" aria-label="time"></span>
+      <label>drivers <select id="nu">
+        <option value="0.01">ease off early</option>
+        <option value="0.003">normal</option>
+        <option value="0.001" selected>brake at the last second</option>
+      </select></label>
+    </div>
+    <figcaption><b>What to notice:</b> traffic moves left to right. The top chart is the speed of the cars at each point
+      on the road; the dashed line is where it started. Press Play: the gentle slope in the middle turns into a cliff,
+      and the cars below bunch up and turn red as they hit it.</figcaption>
+  </figure>
+
+  <section>
+    <h2>Traffic, treated like a fluid</h2>
+    <p>Since the 1950s, traffic engineers have described traffic not car by car, but like a fluid flowing down the road.
+      That math predicts exactly what you just saw: a smooth slowdown that sharpens into a wall. It is the same equation
+      we use on every page of this beat.</p>
+    <p>So here is our question. Suppose an AI learns only the rules of traffic, with no examples of real jams. Can it
+      predict where that wall forms, and how sharp it gets? The kind of AI we test is a <b>PINN</b>: a neural network
+      trained to obey the equation itself.</p>
+  </section>
+
+  <section>
+    <h2>When drivers ease off early, the AI is excellent</h2>
+    <p>If drivers start slowing down well ahead of the jam, the slowdown stays gentle. Here the PINN is genuinely
+      impressive. After about 20 minutes of training, it draws the whole picture instantly.</p>
+    <div class="stat good"><span class="n">0.05%</span><span class="c">how far the PINN's answer is from the exact one,
+      when the slowdown is gentle</span></div>
+  </section>
+
+  <section>
+    <h2>When drivers brake at the last second, it breaks</h2>
+    <p>Now the wall gets sharp, and the PINN is off by about 40%. We tried giving it extra practice right at the wall.
+      That helps when the wall is only moderately sharp, but at the sharpest wall it was still off by more than 40%.</p>
+    <div class="stat"><span class="n">~40%</span><span class="c">how far off the PINN is when the wall is sharp, with or
+      without extra practice at the wall</span></div>
+  </section>
+
+  <section>
+    <h2>Worse, the AI couldn't tell</h2>
+    <p>While it trains, a PINN grades itself on how well it follows the rules. In one of our runs that grade improved
+      more than 200 times, yet the answer stayed 35% wrong. On a real road there is no answer key to compare against,
+      so that grade is all you would have.</p>
+    <div class="stat"><span class="n">200&times; / 35%</span><span class="c">the PINN's own score got 200 times better;
+      its answer was still 35% wrong</span></div>
+  </section>
+
+  <section>
+    <h2>Meanwhile, the traditional method</h2>
+    <p>The kind of method engineers have used for decades, which steps forward in time across a grid, gets the sharp
+      wall almost exactly, in a blink and with no training.</p>
+    <div class="stat good"><span class="n">0.2% in 0.06 s</span><span class="c">the traditional method on the sharpest
+      wall, running in your browser</span></div>
+  </section>
+
+  <section>
+    <h2>What this tells us</h2>
+    <p class="takeaway">This AI is not useless: on smooth problems it is fast and accurate. But sharp changes trip it up,
+      and its own score can't warn you when that happens. Someone still has to check its answer against something
+      outside the AI. Keep that in mind; it comes back later.</p>
+  </section>
+
+  <section>
+    <p class="eyebrow">Try it yourself</p>
+    <h2>Five demos, in story order</h2>
+    <div class="cards">
+      <a class="card" href="../shock/index.html"><h3>How the wall forms</h3><p>The full animation, plus the paths that
+        "slow down" signals take along the road.</p></a>
+      <a class="card" href="../pinn/index.html"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws
+        its answer instantly.</p></a>
+      <a class="card" href="../viscosity/index.html"><h3>The breaking point</h3><p>Slide from gentle to sharp and watch
+        where the PINN stops matching the exact answer.</p></a>
+      <a class="card" href="../loss-vs-truth/index.html"><h3>The score that lies</h3><p>The PINN's own score and its real
+        error, side by side over training.</p></a>
+      <a class="card" href="../race/index.html"><h3>The race</h3><p>The PINN against the traditional method, head to
+        head.</p></a>
+    </div>
+    <p style="font:.88rem system-ui,sans-serif;color:var(--mut)">The demos use the physics name for the same thing:
+      thick fluid means drivers who ease off early, thin fluid means drivers who brake at the last second.</p>
+
+    <details>
+      <summary>The math, for the curious</summary>
+      <p>The traffic model is the Lighthill–Whitham–Richards model (1955–56): road density ρ obeys
+        ρ<sub>t</sub> + (ρ(1 − ρ))<sub>x</sub> = 0 when car speed falls linearly from full speed (ρ = 0) to a standstill
+        (ρ = 1). Writing u = 1 − 2ρ turns it into Burgers' equation, u<sub>t</sub> + u u<sub>x</sub> = 0. Car speed is
+        then (1 + u)/2, which is what the chart above plots.</p>
+      <p>Our runs add a small smoothing term ν u<sub>xx</sub>. You can think of it as how far ahead drivers look; that
+        reading is our analogy, not part of the basic traffic model. "Ease off early", "normal" and "last second" are
+        ν = 0.01/π, 0.003/π and 0.001/π. The starting state is u = −sin(πx) on a road that wraps around, so the cars
+        leaving on the right come back on the left. The chart is the exact solution (Cole–Hopf); the cars move at the
+        local speed and are an illustration.</p>
+      <p>Numbers: 0.05% is the relative L2 error of our live model at ν = 0.01/π; about 40% is at ν = 0.001/π
+        (median of three training seeds, uniform or shock-focused training points); 200&times; and 35% are one training
+        run at ν = 0.003/π; 0.2% and 0.06 s are the finite-volume solver at ν = 0.001/π.</p>
+      <p>Source: <a href="https://nbviewer.org/github/clawpack/riemann_book/blob/master/Traffic_flow.ipynb">LeVeque et
+        al., Riemann Problems and Jupyter Solutions: Traffic flow</a>.</p>
+    </details>
+  </section>
+
+  <div class="next"><a href="../index.html">&larr; Home</a><a href="../beat2/index.html">Beat 2: Balls in bowls &rarr;</a></div>
+</main>
+<script>
+const PI = Math.PI, N_CARS = 44;
+const $ = id => document.getElementById(id);
+const tIn = $('t'), nuSel = $('nu');
+const col = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const dark = () => matchMedia('(prefers-color-scheme: dark)').matches &&
+  document.documentElement.dataset.theme !== 'light' || document.documentElement.dataset.theme === 'dark';
+
+// Burgers u(x,t) for u0 = -sin(pi x), exact viscous solution by Cole-Hopf (log-sum-exp for stability).
+function burgers(x, t, nu) {
+  if (t < 1e-4) return -Math.sin(PI * x);
+  const L = 8 * Math.sqrt(2 * nu * t), M = 600, h = 2 * L / M;
+  let mx = -Infinity; const e = new Float64Array(M + 1);
+  for (let i = 0; i <= M; i++) { const s = -L + i * h; e[i] = -Math.cos(PI * (x - s)) / (2 * PI * nu) - s * s / (4 * nu * t); if (e[i] > mx) mx = e[i]; }
+  let num = 0, den = 0;
+  for (let i = 0; i <= M; i++) { const s = -L + i * h, w = Math.exp(e[i] - mx); num += -Math.sin(PI * (x - s)) * w; den += w; }
+  return num / den;
+}
+const carSpeed = (x, t, nu) => (1 + burgers(x, t, nu)) / 2;   // 0 = stopped, 1 = full speed
+const wrap = x => ((x + 1) % 2 + 2) % 2 - 1;                   // road wraps around on [-1, 1)
+
+// Starting car positions: spaced by the starting density rho0 = (1 + sin(pi x)) / 2.
+function startCars() {
+  const mass = x => (x + 1) / 2 - (Math.cos(PI * x) + 1) / (2 * PI);   // cumulative density from -1
+  const cars = [];
+  for (let k = 0; k < N_CARS; k++) {
+    const target = (k + 0.5) / N_CARS;
+    let lo = -1, hi = 1;
+    for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; mass(m) < target ? lo = m : hi = m; }
+    cars.push((lo + hi) / 2);
+  }
+  return cars;
+}
+
+let cars = startCars(), carT = 0;
+function advanceCars(t, nu) {
+  if (t < carT) { cars = startCars(); carT = 0; }
+  const dt = 0.01;
+  while (carT < t - 1e-9) {
+    const step = Math.min(dt, t - carT);
+    cars = cars.map(x => wrap(x + step * carSpeed(x, carT + step / 2, nu)));
+    carT += step;
+  }
+}
+
+function setup(c) {
+  const d = devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  c.width = Math.round(w * d); c.height = Math.round(h * d);
+  const g = c.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h);
+  return { g, w, h };
+}
+const speedColor = v => `hsl(${Math.round(120 * Math.max(0, Math.min(1, v)))},${dark() ? 70 : 75}%,${dark() ? 55 : 42}%)`;
+
+function draw() {
+  const t = +tIn.value, nu = +nuSel.value / PI;
+  advanceCars(t, nu);
+
+  // speed chart
+  let { g, w, h } = setup($('speed'));
+  const m = { l: 62, r: 10, t: 10, b: 26 };
+  const X = x => m.l + (x + 1) / 2 * (w - m.l - m.r);
+  const Y = v => h - m.b - v * (h - m.t - m.b);
+  g.font = '12px system-ui,sans-serif'; g.lineWidth = 1;
+  g.strokeStyle = col('--grid'); g.fillStyle = col('--mut'); g.textAlign = 'right';
+  for (const [v, lab] of [[0, 'stopped'], [0.5, 'half'], [1, 'full speed']]) {
+    g.beginPath(); g.moveTo(m.l, Y(v)); g.lineTo(w - m.r, Y(v)); g.stroke();
+    g.fillText(lab, m.l - 6, Y(v) + 4);
+  }
+  g.textAlign = 'center';
+  g.fillText('position along the road  →  traffic moves this way', (m.l + w - m.r) / 2, h - 6);
+
+  const curve = (tt, style, width, dash) => {
+    g.beginPath(); g.setLineDash(dash); g.strokeStyle = style; g.lineWidth = width;
+    for (let i = 0; i <= 200; i++) { const x = -1 + i / 100, v = carSpeed(x, tt, nu); i ? g.lineTo(X(x), Y(v)) : g.moveTo(X(x), Y(v)); }
+    g.stroke(); g.setLineDash([]);
+  };
+  curve(0, col('--ref'), 1.5, [5, 4]);
+  curve(t, col('--line'), 2.5, []);
+
+  // road with cars
+  ({ g, w, h } = setup($('road')));
+  g.fillStyle = col('--road'); g.beginPath(); g.roundRect(0, 0, w, h, 6); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.setLineDash([10, 10]); g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke(); g.setLineDash([]);
+  const RX = x => m.l + (x + 1) / 2 * (w - m.l - m.r);
+  g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '11px system-ui,sans-serif'; g.textAlign = 'left';
+  g.fillText('cars', 8, h / 2 + 4);
+  for (const x of cars) {
+    const v = carSpeed(x, t, nu);
+    g.fillStyle = speedColor(v);
+    g.beginPath(); g.roundRect(RX(x) - 5, h / 2 - 5, 10, 10, 2); g.fill();
+  }
+}
+
+let raf = null, last = 0;
+$('play').onclick = () => {
+  if (raf) { cancelAnimationFrame(raf); raf = null; $('play').textContent = 'Play'; return; }
+  if (+tIn.value >= 1) tIn.value = 0;
+  $('play').textContent = 'Pause'; last = 0;
+  const step = now => {
+    if (last) tIn.value = Math.min(1, +tIn.value + (now - last) / 6000);
+    last = now; draw();
+    if (+tIn.value >= 1) { raf = null; $('play').textContent = 'Play'; return; }
+    raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
+};
+tIn.oninput = draw;
+nuSel.onchange = () => { cars = startCars(); carT = 0; draw(); };
+addEventListener('resize', draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script>
+</body>
+</html>
