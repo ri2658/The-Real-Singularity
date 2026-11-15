@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Beat 2: Balls in bowls, balls on hilltops</title>
-<meta name="description" content="A mixture that separates: what a step-by-step simulation can find, what it can never find, and how a PINN fills the gap.">
+<meta name="description" content="A rod of tiny magnets: what a step-by-step simulation can find, what it can never find, and how a PINN fills the gap.">
 <style>
 :root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--soon:#8a8f99;--road:#3b4250;--line:#c2410c;--ref:#9aa3b2}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380;--road:#262d39;--line:#fb923c;--ref:#5f6878}}
@@ -50,15 +50,105 @@ details p{max-width:66ch}
 details a{color:var(--accent)}
 .next{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--grid);margin-top:24px;padding-top:16px;font:.95rem system-ui,sans-serif}
 .next a{color:var(--accent);text-decoration:none;font-weight:600}
+/* Beat 2 figures */
+.key{display:flex;flex-wrap:wrap;gap:4px 16px;font:.82rem system-ui,sans-serif;color:var(--mut);margin-top:6px}
+.key i{display:inline-block;width:20px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:6px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.pair{grid-template-columns:1fr}}
+.panel-t{font:600 .78rem system-ui,sans-serif;color:var(--mut);margin:0 0 4px}
+.states{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media (max-width:760px){.states{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:460px){.states{grid-template-columns:repeat(2,1fr)}}
+.state{background:var(--card);border:1px solid var(--grid);border-radius:8px;padding:8px}
+.state .tag{font:600 .75rem system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.state .tag.bowl{color:#15803d}.state .tag.hill{color:var(--accent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .state .tag.bowl{color:#4ade80}}
+:root[data-theme="dark"] .state .tag.bowl{color:#4ade80}
+.state .nm{font:.85rem system-ui,sans-serif;margin:2px 0 4px}
+.state .en{font:.75rem system-ui,sans-serif;color:var(--mut)}
+svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
+.nudge-out{font:.88rem system-ui,sans-serif;color:var(--mut);min-height:1.5em;margin:6px 0 0}
+.sofar{margin:0 0 14px;padding-left:1.2em;max-width:62ch}
+.sofar li{margin:0 0 8px}
 </style>
 </head>
 <body>
 <main>
   <p class="eyebrow">Beat 2</p>
   <h1>Balls in bowls, balls on hilltops</h1>
-  <p class="lede">A mixture of two liquids, like oil and vinegar, slowly separates into patches. Some arrangements of
-    those patches are stable, like a ball resting in a bowl. Others are unstable, like a ball balanced on a hilltop:
-    perfectly still, until the smallest nudge sends it rolling.</p>
+  <p class="lede">Some answers to an equation are stable, like a ball in a bowl. Others are unstable, like a ball on a hilltop:
+    still, until the smallest nudge sends it rolling. Which tools can find each kind?</p>
+
+  <section>
+    <h2>Why hilltops matter: how things change shape</h2>
+    <p>Many things in nature work by switching between two stable shapes. Proteins, the cell's molecular machines, are
+      the classic example. Every switch must climb an energy barrier, and the easiest route crosses exactly one
+      unstable shape: a mountain pass called the <em>transition state</em>. Its height decides how often the switch
+      happens.</p>
+    <p>Simulations struggle here: they spend almost all their time jiggling in one bowl, so catching a single switch
+      can take months of computing. In 2025, researchers trained a physics-informed network to draw the path over the
+      pass directly. For a protein of over 3,500 atoms, it found the same shape change in minutes on an ordinary
+      graphics card, instead of weeks on a computing cluster.</p>
+    <figure>
+      <canvas id="pathProt" height="180"></canvas>
+      <div class="row"><button id="protPlay">Pause</button>
+        <input id="protPos" type="range" min="0" max="239" value="0" aria-label="Position along the switch"></div>
+      <figcaption><b>A cartoon protein switching shape</b> (not a real one). Going from closed to open, it must strain through a
+        half-open shape: its transition state, at the top of the energy pass. The glow and strain bar show how high it
+        has climbed.</figcaption>
+    </figure>
+    <p>To see why that pass is hard to find, we turn to something far simpler, where we know every answer: a rod of
+      tiny magnets.</p>
+  </section>
+
+  <section>
+    <h2>A rod of tiny magnets</h2>
+    <p>Picture a thin rod lined with tiny magnets, like compass needles. Each wants to point fully up or down, and the
+      same way as its neighbours; the two ends are held pointing neither way. Left alone, the rod settles into a
+      <em>resting shape</em> that no longer changes. The equation behind this, Allen&ndash;Cahn, works like a
+      landscape: every arrangement has an energy, a height, and the rod always moves downhill. Resting shapes are the
+      flat spots.</p>
+    <p>Our rod has exactly five, all computed precisely: a <b>hump</b> (the middle points up), an <b>S-shape</b> (left
+      half up, right half down), each of these flipped, and every magnet stuck in between.</p>
+    <figure>
+      <div class="states" id="fStates"></div>
+      <figcaption><b>The five resting shapes.</b> The curve shows which way the magnets point (up at the top, down at the bottom);
+        the needles show the same as arrows. Exact solutions, computed with Newton's method.</figcaption>
+    </figure>
+    <p>Only two survive. The humps sit in bowls: nudge one and it settles back. The S-shapes and the in-between state
+      sit on hilltops: the smallest nudge sends them rolling into a hump. Since heat keeps every needle jiggling, you
+      never see a hilltop shape for long.</p>
+    <p>To watch this, we use a step-by-step simulator built on the classic <em>forward Euler</em> method: it splits the
+      rod into 128 small pieces and moves time forward in tiny steps, each one going downhill in energy. The exact
+      resting shapes above come from a different classic solver, <em>Newton's method</em>, which solves directly for
+      shapes that don't change.</p>
+    <figure>
+      <div class="row"><button id="nHump">Nudge a hump</button><button id="nS">Nudge an S-shape</button></div>
+      <canvas id="fNudge" height="200"></canvas>
+      <div class="key">
+        <span><i style="border-color:var(--ref);border-top-style:dashed"></i>where it started</span>
+        <span><i style="border-color:var(--accent)"></i>now</span>
+      </div>
+      <p class="nudge-out" id="nOut">Press a button to nudge a shape and watch what the equation does with it.</p>
+      <figcaption><b>Try it.</b> The hump gets a visible push and shrugs it off. The S-shape gets a push of 0.001, too small to
+        see, and still falls.</figcaption>
+    </figure>
+    <p>The rod can switch like the protein: the two humps play its two shapes, and the lowest route between them
+      crosses one pass, the S-shape.</p>
+    <figure>
+      <div class="pair">
+        <div><p class="panel-t" id="pathName">The rod along the path</p><canvas id="pathU" height="210"></canvas></div>
+        <div><p class="panel-t">Energy along the path</p><canvas id="pathE" height="210"></canvas></div>
+      </div>
+      <div class="row"><button id="pathPlay">Pause</button>
+        <input id="pathPos" type="range" min="0" max="239" value="0" aria-label="Position along the path"></div>
+      <figcaption><b>The same switch, on our rod.</b> The lowest-energy path from the flipped hump to the hump peaks exactly at
+        the S-shape, 2.05 above either hump: the barrier. Found by starting on the S and rolling downhill both ways; it
+        runs in step with the cartoon above.</figcaption>
+    </figure>
+    <p>A simulation can never stop on that pass, yet the pass decides how the rod switches. That is why a tool that can
+      aim at hilltops, like a PINN, is useful, as long as something checks what it finds. The demos below show both.</p>
+  </section>
 
   <section>
     <p class="eyebrow">Try it yourself</p>
@@ -66,7 +156,7 @@ details a{color:var(--accent)}
     <div class="cards">
       <a class="card" href="../allen-cahn/index.html"><h3>The step-by-step simulator</h3><p>A traditional simulation
         always rolls downhill, so it can only ever settle into a stable state. Try the S-shape with a tiny nudge.</p></a>
-      <a class="card" href="../hilltop/index.html"><h3>Falling off a hilltop</h3><p>Balance the mixture on a hilltop,
+      <a class="card" href="../hilltop/index.html"><h3>Falling off a hilltop</h3><p>Balance the rod on a hilltop,
         nudge it, and time the fall. A 10&times; smaller nudge only buys about 1.5 more time units.</p></a>
       <a class="card" href="../correction/index.html"><h3>Fixing the PINN's guesses</h3><p>We hand the PINN's rough
         answers to the simulator: the stable one settles into place, the unstable one falls off.</p></a>
@@ -75,12 +165,388 @@ details a{color:var(--accent)}
 
   <section>
     <h2>So far</h2>
-    <p>The simulator matches all five known resting states, and how strongly each one pulls nearby shapes in or pushes
-      them away. But because it always rolls downhill, it can never stop on a hilltop. A PINN can aim at those hilltop
-      states directly. Each tool wins a different problem.</p>
+    <ul class="sofar">
+      <li><b>The simulator</b> (forward Euler) finds all five resting shapes, and how strongly each pulls nearby shapes in
+        or pushes them away, with no training.</li>
+      <li><b>But it only rolls downhill,</b> so it can never stop on a hilltop.</li>
+      <li><b>A PINN can aim at a hilltop directly:</b> told to look for an S-shape, it lands within about 6% of it.</li>
+      <li><b>PINN limit 1: it can't tell a bowl from a hilltop.</b> Its score is just as good for both; only running its
+        answer through the simulator shows the S falls off.</li>
+      <li><b>PINN limit 2: a near-perfect score can mean a useless answer,</b> such as a flat, in-between shape that is
+        neither S-shape nor hump.</li>
+      <li><b>So</b> each tool does a different job, and a PINN's answer always needs an outside check.</li>
+    </ul>
+  </section>
+
+  <section>
+    <p class="eyebrow">Going deeper: PINNs and blow-ups</p>
+    <h2>From a steep wall to a blow-up</h2>
+    <p>For the curious: the same bowl-and-hilltop idea sits at the centre of one of the biggest open questions in
+      mathematics.</p>
+    <p>In Beat 1, the later drivers braked, the steeper the wall of brake lights. The thinner the fluid, the closer
+      that wall comes to vertical; with no thickness at all, its steepness becomes infinite. That is a
+      <em>blow-up</em>, and it is where our PINN failed, about 40% off. No surprise: a PINN is built from smooth
+      pieces, so it can never draw an infinite slope.</p>
+    <figure>
+      <div class="pair">
+        <div><p class="panel-t">The whole road, thin fluid, end of the run</p><canvas id="fWallFull" height="200"></canvas></div>
+        <div><p class="panel-t">Zoomed in on the wall (x from &minus;0.05 to 0.05)</p><canvas id="fWallZoom" height="200"></canvas></div>
+      </div>
+      <div class="key">
+        <span><i style="border-color:var(--ref)"></i>thick fluid</span>
+        <span><i style="border-color:var(--mut)"></i>medium</span>
+        <span><i style="border-color:var(--fg)"></i>thin</span>
+        <span><i style="border-color:var(--accent);border-top-style:dashed"></i>our PINN, thin fluid</span>
+      </div>
+      <figcaption><b>The wall gets steeper; the PINN can't follow.</b> Exact answers at the end of Beat 1's run. Each 10&times;
+        thinner fluid makes the wall steeper (steepest slope 84, 279, 767); with no thickness it would be infinite. Our
+        PINN puts the thin-fluid wall in the wrong place.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Why blow-ups matter</h2>
+    <p>The Navier&ndash;Stokes equations of fluid flow underlie weather forecasts, aircraft design and blood-flow
+      models. Yet nobody knows whether they always give a sensible answer: could a smooth flow of water or air spin
+      itself up until its speed becomes infinite? If so, the equations are incomplete; if not, they never break down.</p>
+    <div class="stat"><span class="n">$1,000,000</span><span class="c">the prize for settling it either way: one of
+      the seven Millennium Prize Problems</span></div>
+  </section>
+
+  <section>
+    <h2>Two kinds of blow-up</h2>
+    <p>Blow-ups come in two kinds. A <em>stable</em> one is a ball in a bowl: change the starting flow slightly and it
+      still blows up the same way, so a simulation can find it. An <em>unstable</em> one is a ball on a hilltop: it
+      needs a perfectly tuned start, and the tiniest error knocks a simulation off it.</p>
+    <figure>
+      <svg class="bh" viewBox="0 0 640 170" role="img" aria-label="Left: a ball in a bowl rolls back after a nudge. Right: a ball on a hilltop rolls away after a nudge.">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <path d="M30,40 Q160,200 290,40" fill="none" stroke="currentColor" stroke-width="3"/>
+        <circle cx="160" cy="105" r="13" fill="var(--accent)"/>
+        <path d="M200,92 Q186,104 178,104" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/>
+        <text x="160" y="160" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="currentColor">Stable: nudge it, it comes back</text>
+        <path d="M350,130 Q480,-30 610,130" fill="none" stroke="currentColor" stroke-width="3"/>
+        <circle cx="480" cy="37" r="13" fill="var(--accent)"/>
+        <path d="M500,44 Q530,58 548,82" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/>
+        <text x="480" y="160" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="currentColor">Unstable: nudge it, it never comes back</text>
+      </svg>
+    </figure>
+    <p>Some mathematicians suspect any Navier&ndash;Stokes blow-up would be unstable. In 2025, mathematicians and
+      Google DeepMind researchers trained physics-informed networks to find such fragile blow-ups directly, and found
+      new ones in simpler fluid equations. That doesn't solve the million-dollar problem, but it shows what PINNs
+      might be good for. Our rod's S-shape is the same story in miniature.</p>
   </section>
 
   <div class="next"><a href="../beat1/index.html">&larr; Beat 1: The wall of brake lights</a><a href="../index.html">Home</a></div>
 </main>
+<script>
+(() => {
+const WALL = {"x":[-0.05,-0.0495,-0.049,-0.0485,-0.048,-0.0475,-0.047,-0.0465,-0.046,-0.0455,-0.045,-0.0445,-0.044,-0.0435,-0.043,-0.0425,-0.042,-0.0415,-0.041,-0.0405,-0.04,-0.0395,-0.039,-0.0385,-0.038,-0.0375,-0.037,-0.0365,-0.036,-0.0355,-0.035,-0.0345,-0.034,-0.0335,-0.033,-0.0325,-0.032,-0.0315,-0.031,-0.0305,-0.03,-0.0295,-0.029,-0.0285,-0.028,-0.0275,-0.027,-0.0265,-0.026,-0.0255,-0.025,-0.0245,-0.024,-0.0235,-0.023,-0.0225,-0.022,-0.0215,-0.021,-0.0205,-0.02,-0.0195,-0.019,-0.0185,-0.018,-0.0175,-0.017,-0.0165,-0.016,-0.0155,-0.015,-0.0145,-0.014,-0.0135,-0.013,-0.0125,-0.012,-0.0115,-0.011,-0.0105,-0.01,-0.0095,-0.009,-0.0085,-0.008,-0.0075,-0.007,-0.0065,-0.006,-0.0055,-0.005,-0.0045,-0.004,-0.0035,-0.003,-0.0025,-0.002,-0.0015,-0.001,-0.0005,0.0,0.0005,0.001,0.0015,0.002,0.0025,0.003,0.0035,0.004,0.0045,0.005,0.0055,0.006,0.0065,0.007,0.0075,0.008,0.0085,0.009,0.0095,0.01,0.0105,0.011,0.0115,0.012,0.0125,0.013,0.0135,0.014,0.0145,0.015,0.0155,0.016,0.0165,0.017,0.0175,0.018,0.0185,0.019,0.0195,0.02,0.0205,0.021,0.0215,0.022,0.0225,0.023,0.0235,0.024,0.0245,0.025,0.0255,0.026,0.0265,0.027,0.0275,0.028,0.0285,0.029,0.0295,0.03,0.0305,0.031,0.0315,0.032,0.0325,0.033,0.0335,0.034,0.0345,0.035,0.0355,0.036,0.0365,0.037,0.0375,0.038,0.0385,0.039,0.0395,0.04,0.0405,0.041,0.0415,0.042,0.0425,0.043,0.0435,0.044,0.0445,0.045,0.0455,0.046,0.0465,0.047,0.0475,0.048,0.0485,0.049,0.0495,0.05],"curves":{"0.01":[0.70003,0.70037,0.70071,0.70105,0.70139,0.70173,0.70207,0.70241,0.70275,0.70309,0.70342,0.70376,0.7041,0.70443,0.70477,0.7051,0.70543,0.70576,0.70609,0.70642,0.70675,0.70707,0.70739,0.70771,0.70803,0.70834,0.70865,0.70896,0.70926,0.70956,0.70985,0.71013,0.71041,0.71068,0.71094,0.7112,0.71144,0.71167,0.71188,0.71208,0.71226,0.71243,0.71257,0.71269,0.71278,0.71284,0.71286,0.71285,0.71279,0.71269,0.71253,0.71231,0.71203,0.71166,0.71122,0.71067,0.71002,0.70925,0.70835,0.7073,0.70608,0.70468,0.70306,0.70122,0.69911,0.69672,0.694,0.69093,0.68745,0.68354,0.67914,0.67419,0.66864,0.66244,0.6555,0.64776,0.63915,0.62958,0.61897,0.60722,0.59426,0.57997,0.56427,0.54708,0.52829,0.50783,0.48562,0.46162,0.43576,0.40803,0.37843,0.34698,0.31373,0.27878,0.24223,0.20424,0.16499,0.1247,0.08359,0.04194,0.0,-0.04194,-0.08359,-0.1247,-0.16499,-0.20424,-0.24223,-0.27878,-0.31373,-0.34698,-0.37843,-0.40803,-0.43576,-0.46162,-0.48562,-0.50783,-0.52829,-0.54708,-0.56427,-0.57997,-0.59426,-0.60722,-0.61897,-0.62958,-0.63915,-0.64776,-0.6555,-0.66244,-0.66864,-0.67419,-0.67914,-0.68354,-0.68745,-0.69093,-0.694,-0.69672,-0.69911,-0.70122,-0.70306,-0.70468,-0.70608,-0.7073,-0.70835,-0.70925,-0.71002,-0.71067,-0.71122,-0.71166,-0.71203,-0.71231,-0.71253,-0.71269,-0.71279,-0.71285,-0.71286,-0.71284,-0.71278,-0.71269,-0.71257,-0.71243,-0.71226,-0.71208,-0.71188,-0.71167,-0.71144,-0.7112,-0.71094,-0.71068,-0.71041,-0.71013,-0.70985,-0.70956,-0.70926,-0.70896,-0.70865,-0.70834,-0.70803,-0.70771,-0.70739,-0.70707,-0.70675,-0.70642,-0.70609,-0.70576,-0.70543,-0.7051,-0.70477,-0.70443,-0.7041,-0.70376,-0.70342,-0.70309,-0.70275,-0.70241,-0.70207,-0.70173,-0.70139,-0.70105,-0.70071,-0.70037,-0.70003],"0.003":[0.70156,0.70191,0.70225,0.7026,0.70294,0.70329,0.70363,0.70398,0.70432,0.70467,0.70501,0.70535,0.7057,0.70604,0.70639,0.70673,0.70707,0.70742,0.70776,0.70811,0.70845,0.70879,0.70914,0.70948,0.70982,0.71017,0.71051,0.71085,0.7112,0.71154,0.71188,0.71223,0.71257,0.71291,0.71326,0.7136,0.71394,0.71429,0.71463,0.71497,0.71531,0.71566,0.716,0.71634,0.71668,0.71703,0.71737,0.71771,0.71805,0.71839,0.71874,0.71908,0.71942,0.71976,0.7201,0.72045,0.72079,0.72113,0.72147,0.72181,0.72215,0.7225,0.72284,0.72318,0.72352,0.72386,0.7242,0.72454,0.72488,0.72522,0.72555,0.72589,0.72622,0.72654,0.72686,0.72717,0.72747,0.72774,0.72799,0.72818,0.72831,0.72834,0.72822,0.72789,0.72724,0.72614,0.72435,0.72159,0.71738,0.71109,0.70179,0.68819,0.66852,0.64044,0.60103,0.54694,0.47484,0.3824,0.26954,0.13966,0.0,-0.13966,-0.26954,-0.3824,-0.47484,-0.54694,-0.60103,-0.64044,-0.66852,-0.68819,-0.70179,-0.71109,-0.71738,-0.72159,-0.72435,-0.72614,-0.72724,-0.72789,-0.72822,-0.72834,-0.72831,-0.72818,-0.72799,-0.72774,-0.72747,-0.72717,-0.72686,-0.72654,-0.72622,-0.72589,-0.72555,-0.72522,-0.72488,-0.72454,-0.7242,-0.72386,-0.72352,-0.72318,-0.72284,-0.7225,-0.72215,-0.72181,-0.72147,-0.72113,-0.72079,-0.72045,-0.7201,-0.71976,-0.71942,-0.71908,-0.71874,-0.71839,-0.71805,-0.71771,-0.71737,-0.71703,-0.71668,-0.71634,-0.716,-0.71566,-0.71531,-0.71497,-0.71463,-0.71429,-0.71394,-0.7136,-0.71326,-0.71291,-0.71257,-0.71223,-0.71188,-0.71154,-0.7112,-0.71085,-0.71051,-0.71017,-0.70982,-0.70948,-0.70914,-0.70879,-0.70845,-0.70811,-0.70776,-0.70742,-0.70707,-0.70673,-0.70639,-0.70604,-0.7057,-0.70535,-0.70501,-0.70467,-0.70432,-0.70398,-0.70363,-0.70329,-0.70294,-0.7026,-0.70225,-0.70191,-0.70156],"0.001":[0.70199,0.70234,0.70268,0.70303,0.70337,0.70372,0.70406,0.70441,0.70475,0.7051,0.70544,0.70578,0.70613,0.70647,0.70682,0.70716,0.70751,0.70785,0.7082,0.70854,0.70888,0.70923,0.70957,0.70992,0.71026,0.71061,0.71095,0.71129,0.71164,0.71198,0.71232,0.71267,0.71301,0.71336,0.7137,0.71404,0.71439,0.71473,0.71507,0.71542,0.71576,0.7161,0.71645,0.71679,0.71713,0.71747,0.71782,0.71816,0.7185,0.71885,0.71919,0.71953,0.71987,0.72022,0.72056,0.7209,0.72124,0.72158,0.72193,0.72227,0.72261,0.72295,0.7233,0.72364,0.72398,0.72432,0.72466,0.725,0.72535,0.72569,0.72603,0.72637,0.72671,0.72705,0.72739,0.72774,0.72808,0.72842,0.72876,0.7291,0.72944,0.72978,0.73012,0.73046,0.7308,0.73114,0.73148,0.73183,0.73216,0.7325,0.73283,0.73314,0.73339,0.73342,0.73278,0.73002,0.72061,0.69077,0.60296,0.38353,0.0,-0.38353,-0.60296,-0.69077,-0.72061,-0.73002,-0.73278,-0.73342,-0.73339,-0.73314,-0.73283,-0.7325,-0.73216,-0.73183,-0.73148,-0.73114,-0.7308,-0.73046,-0.73012,-0.72978,-0.72944,-0.7291,-0.72876,-0.72842,-0.72808,-0.72774,-0.72739,-0.72705,-0.72671,-0.72637,-0.72603,-0.72569,-0.72535,-0.725,-0.72466,-0.72432,-0.72398,-0.72364,-0.7233,-0.72295,-0.72261,-0.72227,-0.72193,-0.72158,-0.72124,-0.7209,-0.72056,-0.72022,-0.71987,-0.71953,-0.71919,-0.71885,-0.7185,-0.71816,-0.71782,-0.71747,-0.71713,-0.71679,-0.71645,-0.7161,-0.71576,-0.71542,-0.71507,-0.71473,-0.71439,-0.71404,-0.7137,-0.71336,-0.71301,-0.71267,-0.71232,-0.71198,-0.71164,-0.71129,-0.71095,-0.71061,-0.71026,-0.70992,-0.70957,-0.70923,-0.70888,-0.70854,-0.7082,-0.70785,-0.70751,-0.70716,-0.70682,-0.70647,-0.70613,-0.70578,-0.70544,-0.7051,-0.70475,-0.70441,-0.70406,-0.70372,-0.70337,-0.70303,-0.70268,-0.70234,-0.70199]}};
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const $ = (id) => document.getElementById(id);
+
+// "../../data/" reaches site/data/ on the live site (paths stop at the site root) and data/ from website-update/story/.
+async function getData(rel) {
+  for (const base of ["../../data/", "../data/"]) {
+    try { const r = await fetch(base + rel); if (r.ok) return await r.json(); } catch (e) { /* try next */ }
+  }
+  throw new Error("could not load " + rel);
+}
+
+function setup(c) {
+  const d = window.devicePixelRatio || 1;
+  if (!c._h) c._h = +c.getAttribute("height");
+  const w = c.clientWidth, h = c._h;
+  c.width = Math.round(w * d); c.height = Math.round(h * d); c.style.height = h + "px";
+  const g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h);
+  return { g, w, h };
+}
+function axes(g, w, h, m, xr, yr, xt, yt, xl, yl) {
+  const X = (v) => m.l + (v - xr[0]) / (xr[1] - xr[0]) * (w - m.l - m.r);
+  const Y = (v) => h - m.b - (v - yr[0]) / (yr[1] - yr[0]) * (h - m.t - m.b);
+  g.strokeStyle = css("--grid"); g.lineWidth = 1; g.fillStyle = css("--mut"); g.font = "11px system-ui,sans-serif";
+  g.textAlign = "right"; g.textBaseline = "middle";
+  for (const v of yt) { g.beginPath(); g.moveTo(m.l, Y(v)); g.lineTo(w - m.r, Y(v)); g.stroke(); g.fillText((yl || String)(v), m.l - 5, Y(v)); }
+  g.textAlign = "center"; g.textBaseline = "top";
+  for (const v of xt) g.fillText((xl || String)(v), X(v), h - m.b + 5);
+  return { X, Y };
+}
+function line(g, xs, ys, X, Y, color, width, dash) {
+  g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash || []); g.beginPath();
+  for (let i = 0; i < xs.length; i++) i ? g.lineTo(X(xs[i]), Y(ys[i])) : g.moveTo(X(xs[i]), Y(ys[i]));
+  g.stroke(); g.setLineDash([]);
+}
+const fmt = (v) => String(v).replace("-", "−");
+
+// ---------- Figure 1a: the wall ----------
+let refThin = null, pinnThin = null;
+function drawWall() {
+  if (refThin && pinnThin) {
+    const { g, w, h } = setup($("fWallFull"));
+    const { X, Y } = axes(g, w, h, { l: 30, r: 6, t: 6, b: 20 }, [-1, 1], [-1, 1], [-1, -0.5, 0, 0.5, 1], [-1, 0, 1], null, fmt);
+    const last = refThin.u.length - 1;
+    line(g, refThin.x, refThin.u[last], X, Y, css("--fg"), 2);
+    line(g, pinnThin.x, pinnThin.u[last], X, Y, css("--accent"), 2.2, [6, 4]);
+  }
+  const { g, w, h } = setup($("fWallZoom"));
+  const { X, Y } = axes(g, w, h, { l: 30, r: 18, t: 6, b: 20 }, [-0.05, 0.05], [-1, 1], [-0.05, 0, 0.05], [-1, 0, 1], fmt, fmt);
+  line(g, WALL.x, WALL.curves["0.01"], X, Y, css("--ref"), 2.2);
+  line(g, WALL.x, WALL.curves["0.003"], X, Y, css("--mut"), 2.2);
+  line(g, WALL.x, WALL.curves["0.001"], X, Y, css("--fg"), 2.2);
+  if (refThin && pinnThin) {          // PINN samples on the reference grid inside the window
+    const last = pinnThin.u.length - 1, xs = [], ys = [];
+    pinnThin.x.forEach((v, i) => { if (Math.abs(v) <= 0.05) { xs.push(v); ys.push(pinnThin.u[last][i]); } });
+    line(g, xs, ys, X, Y, css("--accent"), 2.2, [6, 4]);
+  }
+}
+
+// ---------- Allen-Cahn: grid and forward Euler (same setup as the simulator: mu = 6, N = 128, dt = 0.4 h^2) ----------
+const MU = 6, N = 128, H = Math.PI / N, DT = 0.4 * H * H, NI = N - 1;
+const XS = Array.from({ length: NI }, (_, i) => (i + 1) * H);
+function step(U, F) {
+  for (let i = 0; i < NI; i++) {
+    const l = i ? U[i - 1] : 0, r = i < NI - 1 ? U[i + 1] : 0, u = U[i];
+    F[i] = (l - 2 * u + r) / (H * H) + MU * (u - u * u * u);
+  }
+  for (let i = 0; i < NI; i++) U[i] += DT * F[i];
+}
+const maxDiff = (a, b) => { let m = 0; for (let i = 0; i < a.length; i++) m = Math.max(m, Math.abs(a[i] - b[i])); return m; };
+let EQ = null;
+
+// ---------- Figure 4a: the five resting shapes, with needles ----------
+const STATES = [
+  { key: "hump", name: "Hump", kind: "bowl" }, { key: "minus_hump", name: "Hump, flipped", kind: "bowl" },
+  { key: "S", name: "S-shape", kind: "hill" }, { key: "minus_S", name: "S-shape, flipped", kind: "hill" },
+  { key: "zero", name: "In between", kind: "hill" },
+];
+function buildStates() {
+  const box = $("fStates"); box.innerHTML = "";
+  for (const s of STATES) {
+    const e = EQ.states[s.key].energy;
+    const d = document.createElement("div"); d.className = "state";
+    d.innerHTML = `<div class="tag ${s.kind}">${s.kind === "bowl" ? "Bowl" : "Hilltop"}</div><div class="nm">${s.name}</div>` +
+      `<canvas height="110" data-key="${s.key}"></canvas><div class="en">energy ${fmt(e.toFixed(2))}</div>`;
+    box.appendChild(d);
+  }
+  drawStates();
+}
+function drawStates() {
+  if (!EQ) return;
+  for (const c of document.querySelectorAll("#fStates canvas")) {
+    const U = EQ.states[c.dataset.key].U;
+    const { g, w, h } = setup(c);
+    const plotH = 66, X = (x) => 4 + x / Math.PI * (w - 8), Y = (u) => 4 + (1 - (u + 1.1) / 2.2) * (plotH - 8);
+    g.strokeStyle = css("--grid"); g.lineWidth = 1; g.beginPath(); g.moveTo(4, Y(0)); g.lineTo(w - 4, Y(0)); g.stroke();
+    line(g, [0, ...XS, Math.PI], [0, ...U, 0], X, Y, css("--fg"), 2);
+    // the rod and its needles: angle from horizontal = u * 90 degrees (up = +1, down = -1, sideways = in between)
+    const ry = plotH + 22, n = 9, len = 9;
+    g.strokeStyle = css("--mut"); g.lineWidth = 1; g.beginPath(); g.moveTo(4, ry); g.lineTo(w - 4, ry); g.stroke();
+    for (let k = 0; k < n; k++) {
+      const i = Math.round((k + 0.5) / n * (NI - 1)), u = U[i], a = u * Math.PI / 2, cx = X(XS[i]);
+      const dx = Math.cos(a) * len, dy = -Math.sin(a) * len;
+      g.strokeStyle = css("--accent"); g.fillStyle = css("--accent"); g.lineWidth = 2;
+      g.beginPath(); g.moveTo(cx - dx, ry - dy); g.lineTo(cx + dx, ry + dy); g.stroke();
+      g.beginPath(); g.arc(cx + dx, ry + dy, 2.4, 0, 2 * Math.PI); g.fill();      // the needle's north tip
+    }
+  }
+}
+
+// ---------- Figure 4c: nudge it ----------
+let anim = null;
+function drawNudge(U, U0) {
+  const { g, w, h } = setup($("fNudge"));
+  const { X, Y } = axes(g, w, h, { l: 30, r: 8, t: 8, b: 20 }, [0, Math.PI], [-1.1, 1.1], [0, Math.PI / 2, Math.PI], [-1, 0, 1],
+    (v) => (v === 0 ? "0" : v < 2 ? "π/2" : "π"), fmt);
+  if (U0) line(g, [0, ...XS, Math.PI], [0, ...U0, 0], X, Y, css("--ref"), 2, [6, 4]);
+  if (U) line(g, [0, ...XS, Math.PI], [0, ...U, 0], X, Y, css("--accent"), 2.5);
+}
+function nudge(which) {
+  if (!EQ) return;
+  cancelAnimationFrame(anim);
+  const base = Float64Array.from(EQ.states[which].U), hump = Float64Array.from(EQ.states.hump.U);
+  const U = Float64Array.from(base), F = new Float64Array(NI);
+  const big = which === "hump";
+  for (let i = 0; i < NI; i++) U[i] += big ? -0.45 * Math.sin(3 * XS[i]) : 1e-3 * Math.sin(XS[i]);
+  const U0 = Float64Array.from(U), rate = big ? 0.6 : 2.5, tEnd = big ? 2 : 12;   // time units per second, run length
+  let t = 0, last = performance.now(), done = false, tBack = null;
+  const frame = (now) => {
+    const n = Math.max(1, Math.round(Math.min(0.05, (now - last) / 1000) * rate / DT)); last = now;
+    for (let k = 0; k < n; k++) step(U, F);
+    t += n * DT;
+    const dBase = maxDiff(U, base), dHump = Math.min(maxDiff(U, hump), maxDiff(U, hump.map((v) => -v)));
+    if (big) { if (tBack === null && dBase < 1e-3) tBack = t;
+      $("nOut").textContent = tBack !== null ? `Back in the bowl by time ${tBack.toFixed(1)}: the push died away.` : `Time ${t.toFixed(2)}: settling back…`; }
+    else if (dHump < 1e-2) { $("nOut").textContent = `Fell off the hilltop: it is a hump now (time ${t.toFixed(1)}).`; done = true; }
+    else $("nOut").textContent = dBase < 0.05 ? `Time ${t.toFixed(1)}: still looks like an S…` : `Time ${t.toFixed(1)}: rolling off…`;
+    drawNudge(U, U0);
+    if (t < tEnd && !done) anim = requestAnimationFrame(frame);
+  };
+  anim = requestAnimationFrame(frame);
+}
+
+
+// ---------- Switching path: hump (flipped) -> S -> hump, the lowest-energy route ----------
+function energyOf(U) {
+  let g = 0, prev = 0, pot = 0;
+  for (let i = 0; i < NI; i++) { const d = U[i] - prev; g += d * d; prev = U[i]; const u2 = U[i] * U[i]; pot += 0.5 * u2 - 0.25 * u2 * u2; }
+  g += prev * prev;
+  return 0.5 * g / H - H * MU * pot;
+}
+let PATH = null, pathIdx = 0, pathTimer = null, pathPlaying = true, pathHold = 0;
+function buildPath() {
+  const S = Float64Array.from(EQ.states.S.U), F = new Float64Array(NI);
+  const leg = (sign) => {           // start on the S, nudge, and roll downhill (forward Euler)
+    const U = S.map((v, i) => v + sign * 1e-4 * Math.sin(XS[i])), out = [Float64Array.from(U)];
+    for (let k = 0; k < 1300; k++) { for (let j = 0; j < 50; j++) step(U, F); out.push(Float64Array.from(U)); }
+    return out;
+  };
+  const snaps = [...leg(-1).reverse(), ...leg(+1)];             // flipped hump ... S ... hump
+  const s = [0];                                               // distance travelled along the path
+  for (let k = 1; k < snaps.length; k++) {
+    let d = 0; for (let i = 0; i < NI; i++) d += (snaps[k][i] - snaps[k - 1][i]) ** 2;
+    s.push(s[k - 1] + Math.sqrt(H * d));
+  }
+  const frames = [], n = 240, total = s[s.length - 1];
+  for (let f = 0, k = 0; f < n; f++) {                          // evenly spaced along the path
+    const target = total * f / (n - 1);
+    while (k < snaps.length - 1 && s[k] < target) k++;
+    const k0 = Math.max(0, k - 1), span = s[k] - s[k0], t = span > 0 ? Math.min(1, Math.max(0, (target - s[k0]) / span)) : 0;
+    const U = snaps[k0].map((v, i) => v + t * (snaps[k][i] - v));        // blend between neighbouring snapshots
+    frames.push({ U, E: energyOf(U), p: f / (n - 1) });
+  }
+  PATH = { frames, top: frames.reduce((a, b) => (b.E > a.E ? b : a)) };
+}
+function drawPath() {
+  if (!PATH) return;
+  const fr = PATH.frames[pathIdx], hump = EQ.states.hump.energy, Ssh = EQ.states.S.energy;
+  // left: the rod, with needles
+  { const { g, w, h } = setup($("pathU"));
+    const plotH = h - 40, X = (x) => 30 + x / Math.PI * (w - 38), Y = (u) => 6 + (1 - (u + 1.1) / 2.2) * (plotH - 12);
+    g.strokeStyle = css("--grid"); g.lineWidth = 1; g.fillStyle = css("--mut"); g.font = "11px system-ui,sans-serif";
+    g.textAlign = "right"; g.textBaseline = "middle";
+    for (const v of [-1, 0, 1]) { g.beginPath(); g.moveTo(30, Y(v)); g.lineTo(w - 8, Y(v)); g.stroke(); g.fillText(fmt(v), 25, Y(v)); }
+    line(g, [0, ...XS, Math.PI], [0, ...EQ.states.S.U, 0], X, Y, css("--ref"), 1.5, [5, 4]);
+    line(g, [0, ...XS, Math.PI], [0, ...fr.U, 0], X, Y, css("--accent"), 2.6);
+    const ry = h - 16, nN = 13, len = 8;
+    g.strokeStyle = css("--mut"); g.beginPath(); g.moveTo(30, ry); g.lineTo(w - 8, ry); g.stroke();
+    for (let k = 0; k < nN; k++) {
+      const i = Math.round((k + 0.5) / nN * (NI - 1)), a = fr.U[i] * Math.PI / 2, cx = X(XS[i]);
+      const dx = Math.cos(a) * len, dy = -Math.sin(a) * len;
+      g.strokeStyle = css("--accent"); g.fillStyle = css("--accent"); g.lineWidth = 2;
+      g.beginPath(); g.moveTo(cx - dx, ry - dy); g.lineTo(cx + dx, ry + dy); g.stroke();
+      g.beginPath(); g.arc(cx + dx, ry + dy, 2.2, 0, 2 * Math.PI); g.fill();
+    }
+  }
+  // right: energy along the path
+  { const { g, w, h } = setup($("pathE"));
+    const m = { l: 40, r: 10, t: 14, b: 22 };
+    const X = (p) => m.l + p * (w - m.l - m.r), Y = (e) => m.t + (-0.1 - e) / (-0.1 + 2.55) * (h - m.t - m.b);
+    g.font = "11px system-ui,sans-serif"; g.textBaseline = "middle"; g.textAlign = "right";
+    for (const [e, lab] of [[Ssh, "−0.35"], [hump, "−2.40"]]) {
+      g.strokeStyle = css("--grid"); g.setLineDash([3, 4]); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(m.l, Y(e)); g.lineTo(w - m.r, Y(e)); g.stroke(); g.setLineDash([]);
+      g.fillStyle = css("--mut"); g.fillText(lab, m.l - 5, Y(e));
+    }
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText("flipped hump", m.l, h - m.b + 6); g.textAlign = "right"; g.fillText("hump", w - m.r, h - m.b + 6);
+    g.textAlign = "center"; g.fillText("S-shape (the pass)", X(PATH.top.p), h - m.b + 6);
+    line(g, PATH.frames.map((f) => f.p), PATH.frames.map((f) => f.E), X, Y, css("--fg"), 2);
+    // barrier arrow
+    const bx = X(PATH.top.p) + 34;
+    g.strokeStyle = css("--mut"); g.fillStyle = css("--mut"); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(bx, Y(Ssh) + 3); g.lineTo(bx, Y(hump) - 3); g.stroke();
+    for (const [yy, d] of [[Y(Ssh) + 3, 1], [Y(hump) - 3, -1]]) { g.beginPath(); g.moveTo(bx, yy); g.lineTo(bx - 4, yy + 7 * d); g.lineTo(bx + 4, yy + 7 * d); g.closePath(); g.fill(); }
+    g.textAlign = "left"; g.textBaseline = "middle"; g.fillStyle = css("--fg");
+    g.fillText("barrier " + (Ssh - hump).toFixed(2), bx + 7, (Y(Ssh) + Y(hump)) / 2);
+    g.fillStyle = css("--accent"); g.strokeStyle = css("--card"); g.lineWidth = 2;
+    g.beginPath(); g.arc(X(fr.p), Y(fr.E), 6, 0, 2 * Math.PI); g.fill(); g.stroke();
+  }
+  const near = (a) => Math.abs(fr.p - a) < 0.025;
+  $("pathName").textContent = fr.p < 0.03 ? "The rod: flipped hump (stable)" : fr.p > 0.97 ? "The rod: hump (stable)"
+    : near(PATH.top.p) ? "The rod: S-shape, the top of the pass" : fr.p < PATH.top.p ? "The rod: climbing to the pass" : "The rod: rolling down the other side";
+  $("pathPos").value = pathIdx; $("protPos").value = pathIdx;
+  drawProtein(fr, performance.now());
+}
+
+// ---------- Cartoon protein: two bead arms on a hinge, closed -> strained -> open, synced to the path ----------
+function drawProtein(fr, now) {
+  const c = $("pathProt"); if (!c) return;
+  const { g, w, h } = setup(c);
+  const hump = EQ.states.hump.energy, top = PATH.top.E;
+  const strain = Math.max(0, Math.min(1, (fr.E - hump) / (top - hump)));         // 0 in a bowl, 1 at the pass
+  const atEnd = fr.p < 0.03 || fr.p > 0.97;
+  const jig = atEnd ? 0.035 * Math.sin(now / 90) + 0.02 * Math.sin(now / 37) : 0;   // heat jiggle inside the bowl
+  const closed = 0.22, open = 1.75;                                                // hinge angle, radians
+  const ang = closed + (open - closed) * fr.p + jig;
+  // hinge low and arms sized so the fully open arm (about 100 degrees, plus its bend) stays inside the frame
+  const hx = w * 0.42, hy = h * 0.84, L = Math.min(w * 0.34, (hy - 14) / 1.12, 210), r = Math.max(4.5, Math.min(8, L / 16));
+  const blue = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light" ? "#5b9bea" : "#2a78d6";
+  // glow at the hinge, brightest at the transition state
+  if (strain > 0.02) {
+    const gr = g.createRadialGradient(hx, hy, 2, hx, hy, 70);
+    gr.addColorStop(0, `rgba(235, 104, 52, ${0.55 * strain})`); gr.addColorStop(1, "rgba(235, 104, 52, 0)");
+    g.fillStyle = gr; g.beginPath(); g.arc(hx, hy, 70, 0, 2 * Math.PI); g.fill();
+  }
+  // an arm = beads along a gently curved line leaving the hinge at angle a (measured upward from the right)
+  const arm = (a, bend, color, n) => {
+    const pts = [];
+    for (let i = 1; i <= n; i++) {
+      const t = i / n, d = t * L, off = bend * Math.sin(Math.PI * t) * L * 0.18;
+      pts.push([hx + Math.cos(a) * d - Math.sin(a) * off, hy - Math.sin(a) * d - Math.cos(a) * off]);
+    }
+    g.strokeStyle = color; g.lineWidth = 3; g.globalAlpha = 0.45; g.beginPath(); g.moveTo(hx, hy);
+    for (const [x, y] of pts) g.lineTo(x, y); g.stroke(); g.globalAlpha = 1;
+    pts.forEach(([x, y], i) => {
+      g.fillStyle = color; g.strokeStyle = css("--card"); g.lineWidth = 1.5;
+      g.beginPath(); g.arc(x, y, i === n - 1 ? r * 1.35 : r, 0, 2 * Math.PI); g.fill(); g.stroke();
+    });
+  };
+  arm(0, -1, css("--accent"), 9);                 // lower arm stays put
+  arm(ang, 1, blue, 9);                            // upper arm swings open
+  g.fillStyle = css("--fg"); g.beginPath(); g.arc(hx, hy, r * 1.1, 0, 2 * Math.PI); g.fill();   // the hinge
+  // labels
+  g.font = "12px system-ui,sans-serif"; g.textBaseline = "middle"; g.textAlign = "left"; g.fillStyle = css("--mut");
+  const narrow = w < 480;
+  const lab = fr.p < 0.03 ? "closed (stable)" : fr.p > 0.97 ? "open (stable)"
+    : strain > 0.9 ? (narrow ? "transition state" : "transition state: strained, half-open")
+    : fr.p < PATH.top.p ? "straining to open…" : "snapping open…";
+  g.textAlign = "right"; g.fillText(lab, w - 8, 16);
+  const bar = (x, y, wd) => { g.fillStyle = css("--grid"); g.fillRect(x, y, wd, 6); g.fillStyle = css("--accent"); g.fillRect(x, y, wd * strain, 6); };
+  g.fillStyle = css("--mut"); g.textAlign = "left"; g.fillText("strain", 8, h - 12); bar(52, h - 15, Math.min(140, w * 0.3));
+}
+
+function pathTick() {
+  if (!PATH) return;
+  if (pathPlaying) {
+    if (pathHold > 0) pathHold--;
+    else { pathIdx = (pathIdx + 1) % PATH.frames.length; if (pathIdx === 0 || pathIdx === PATH.frames.length - 1 || pathIdx === PATH.frames.indexOf(PATH.top)) pathHold = 35; }
+    drawPath();
+  } else if (PATH) drawProtein(PATH.frames[pathIdx], performance.now());
+  pathTimer = requestAnimationFrame(pathTick);
+}
+
+function drawAll() { drawWall(); drawStates(); drawPath(); }
+window.addEventListener("resize", drawAll);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
+$("nHump").onclick = () => nudge("hump");
+$("nS").onclick = () => nudge("S");
+// The cartoon protein and the rod share one timeline, so either set of controls drives both.
+const setPathPlaying = (on) => { pathPlaying = on; for (const id of ["pathPlay", "protPlay"]) $(id).textContent = on ? "Pause" : "Play"; };
+for (const id of ["pathPlay", "protPlay"]) $(id).onclick = () => setPathPlaying(!pathPlaying);
+for (const id of ["pathPos", "protPos"]) $(id).oninput = () => { setPathPlaying(false); pathIdx = +$(id).value; drawPath(); };
+
+drawAll();
+drawNudge(null, null);
+getData("allen_cahn/equilibria.json").then((d) => {
+    EQ = d; buildStates(); drawNudge(null, Float64Array.from(d.states.hump.U));
+    buildPath();
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { setPathPlaying(false); }
+    drawPath(); pathTimer = requestAnimationFrame(pathTick);
+  })
+  .catch((e) => { $("nOut").textContent = "Couldn't load the resting shapes (" + e.message + "). Open this page through a web server."; });
+Promise.all([getData("reference_json/ref_nu0.001pi.json"), getData("viscosity/pinn_uniform_nu0.001pi.json")])
+  .then(([r, p]) => { refThin = r; pinnThin = p; drawWall(); }).catch(() => {});
+})();
+</script>
 </body>
 </html>

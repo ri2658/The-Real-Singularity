@@ -198,8 +198,8 @@ async function run() {
     const info = pinnIndex[nu];
     pinnU = p.rows;
     $('p-time').textContent = fmtMs(p.ms);
-    $('p-err').textContent = relL2(p.flat, refFlat).toExponential(2);
-    $('p-errt').textContent = relL2(p.flat.subarray(last * nx), refFlat.subarray(last * nx)).toExponential(2);
+    $('p-err').textContent = pct(relL2(p.flat, refFlat));
+    $('p-errt').textContent = pct(relL2(p.flat.subarray(last * nx), refFlat.subarray(last * nx)));
     $('p-train').textContent = `${(info.train_seconds / 60).toFixed(1)} min of training`;
     $('pnote').innerHTML = `PINN: run <code>${info.run}</code>, trained once for this ν only. One batch of ${ref.x.length * ref.t.length} points, ` +
       `timed after a one-point warm-up, so model loading isn't counted. Its answer doesn't depend on N.` +
