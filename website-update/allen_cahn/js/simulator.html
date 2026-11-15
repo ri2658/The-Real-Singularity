@@ -71,6 +71,11 @@
   .lede { color: var(--muted); max-width: 70ch; margin: 0 0 6px; }
   .grid { margin-top: 4px; }
   .card .notice { margin-top: 8px; }
+  /* energy ladder (section 2) */
+  .ladder { margin: 6px 0 18px; }
+  .ladder canvas { width: 100%; display: block; }
+  .ladder .cap { font-size: 13px; color: var(--muted); margin: 8px 0 0; max-width: 72ch; }
+  .ladder .cap b { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -78,15 +83,23 @@
   <h1>The step-by-step simulator</h1>
   <p class="lede">This is how a traditional simulation works, and the one thing it can never do.</p>
 
-  <h2 class="step"><span class="n">1</span>A mixture that separates</h2>
-  <p class="prose">Picture a thin rod filled with a mixture of two materials, like oil and water. The curve shows the mix
-    along the rod: near +1 is mostly one material, near −1 mostly the other, and 0 is half and half. Over time the
-    materials separate and the curve settles into a <b>resting state</b>, a shape that no longer changes.</p>
+  <h2 class="step"><span class="n">1</span>A rod of tiny magnets</h2>
+  <p class="prose">Picture a thin rod lined with tiny magnets, like compass needles. The curve shows which way they point
+    along the rod: +1 is straight up, −1 straight down, and 0 is pointing neither way. Each magnet wants to point fully
+    up or down and to match its neighbours, so over time they line up into patches and the curve settles into a
+    <b>resting state</b>, a shape that no longer changes.</p>
 
   <h2 class="step"><span class="n">2</span>The rule: always roll downhill</h2>
   <p class="prose">This simulator works the traditional way: it moves forward in time with many small steps. Each step can
     only lower the energy, like a ball that can only roll downhill. So it settles into stable resting states, the
     <b>bowls</b>, and can never stay on an unstable one, a <b>hilltop</b>.</p>
+  <div class="card ladder">
+    <p class="label">The five resting shapes, placed at their real energies</p>
+    <canvas id="ladder" height="340"></canvas>
+    <p class="cap"><b>Always downhill.</b> Arrows show where a nudge can send each shape; nothing ever climbs back up,
+      so every run ends in one of the two humps (green). Only the heights are real: the left&ndash;right positions are just
+      for drawing, since the true landscape has 127 directions, one for each point along the rod.</p>
+  </div>
 
   <h2 class="step"><span class="n">3</span>Try it</h2>
   <p class="try">Press <b>Play</b> with random noise: it always settles into one hump. Then pick <b>S-shape (a hilltop)</b>
@@ -96,7 +109,7 @@
   <div class="grid">
     <div>
       <div class="card">
-        <p class="label">The mix along the rod: now (blue), at the start (gray)</p>
+        <p class="label">Which way the magnets point along the rod: now (blue), at the start (gray)</p>
         <canvas id="plotU" height="300"></canvas>
         <p class="notice">from any random start, the blue curve ends as one hump (or the same hump upside down). The
           S-shape only lasts while it is perfectly balanced.</p>
@@ -364,6 +377,69 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", dra
 updateLabels();
 reset();
 loadJsonCurves();
+</script>
+<script>
+// Energy ladder for section 2: the five exact resting shapes (Michelle's equilibria.json) at their real energies.
+(() => {
+  const cv = document.getElementById("ladder");
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const N = 128, H = Math.PI / N, XS = Array.from({ length: N - 1 }, (_, i) => (i + 1) * H);
+  let EQ = null;
+  async function load() {
+    // "../../../data/" stops at the site root, so it reaches data/ on the live site, in the repo and in website-update/.
+    for (const base of ["../../../data/", "../../data/", "../data/"]) {
+      try { const r = await fetch(base + "allen_cahn/equilibria.json"); if (r.ok) return await r.json(); } catch (e) { /* next */ }
+    }
+    return null;
+  }
+  function bowlColor() { return matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light" ? "#4ade80" : "#15803d"; }
+  function draw() {
+    if (!EQ) return;
+    const d = window.devicePixelRatio || 1, w = cv.clientWidth, h = +cv.getAttribute("height");
+    cv.width = Math.round(w * d); cv.height = Math.round(h * d); cv.style.height = h + "px";
+    const g = cv.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h);
+    const m = { l: 52, r: 10, t: 22, b: 22 };
+    const Y = (e) => m.t + (0.25 - e) / (0.25 + 2.65) * (h - m.t - m.b);
+    const X = (f) => m.l + f * (w - m.l - m.r);
+    g.font = "11px system-ui,sans-serif"; g.textAlign = "right"; g.textBaseline = "middle";
+    for (const [k, lab] of [["zero", "0"], ["S", "−0.35"], ["hump", "−2.40"]]) {
+      const e = EQ.states[k].energy;
+      g.strokeStyle = css("--line"); g.setLineDash([3, 4]); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(m.l, Y(e)); g.lineTo(w - m.r, Y(e)); g.stroke(); g.setLineDash([]);
+      g.fillStyle = css("--muted"); g.fillText(lab, m.l - 6, Y(e));
+    }
+    g.save(); g.translate(12, (m.t + h - m.b) / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText("energy (height)", 0, 0); g.restore();
+    const pos = { zero: 0.5, S: 0.32, minus_S: 0.68, hump: 0.12, minus_hump: 0.88 };
+    const bw = Math.min(64, (w - m.l - m.r) * 0.16), bh = 28;
+    const at = (k) => [X(pos[k]), Y(EQ.states[k].energy)];
+    const arrow = (a, b) => {
+      const [x1, y1] = at(a), [x2, y2] = at(b), sy = y1 + bh / 2 + 2, ey = y2 - bh / 2 - 4;
+      g.strokeStyle = css("--muted"); g.fillStyle = css("--muted"); g.lineWidth = 1.2;
+      g.beginPath(); g.moveTo(x1, sy); g.lineTo(x2, ey); g.stroke();
+      const ang = Math.atan2(ey - sy, x2 - x1);
+      g.beginPath(); g.moveTo(x2, ey); g.lineTo(x2 - 8 * Math.cos(ang - 0.4), ey - 8 * Math.sin(ang - 0.4));
+      g.lineTo(x2 - 8 * Math.cos(ang + 0.4), ey - 8 * Math.sin(ang + 0.4)); g.closePath(); g.fill();
+    };
+    for (const b of ["S", "minus_S", "hump", "minus_hump"]) arrow("zero", b);
+    for (const a of ["S", "minus_S"]) for (const b of ["hump", "minus_hump"]) arrow(a, b);
+    for (const k of Object.keys(pos)) {
+      const [cx, cy] = at(k), U = EQ.states[k].U;
+      g.fillStyle = css("--panel"); g.strokeStyle = k.includes("hump") ? bowlColor() : css("--accent"); g.lineWidth = 1.5;
+      g.beginPath(); g.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, 6); g.fill(); g.stroke();
+      g.strokeStyle = css("--ink"); g.lineWidth = 1.6; g.beginPath();
+      [0, ...XS, Math.PI].forEach((x, i) => {
+        const u = i === 0 || i === N ? 0 : U[i - 1];
+        const px = cx - bw / 2 + 5 + x / Math.PI * (bw - 10), py = cy - (u / 1.1) * (bh / 2 - 4);
+        i ? g.lineTo(px, py) : g.moveTo(px, py);
+      });
+      g.stroke();
+    }
+  }
+  window.addEventListener("resize", draw);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+  load().then((d) => { EQ = d; if (d) draw(); else cv.closest(".ladder").hidden = true; });
+})();
 </script>
 </body>
 </html>
