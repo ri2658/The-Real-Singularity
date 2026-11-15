@@ -4,44 +4,62 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Real Singularity</title>
-<meta name="description" content="What AI physics models (PINNs) can and can't do: three popular claims, tested with demos you can play with.">
+<meta name="description" content="AI that learns physics is powerful, but its own score can't tell when it is wrong. We test physics-informed neural networks (PINNs) and show why a human still has to check the answer.">
 <style>
-:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--soon:#8a8f99}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380}}
-:root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--soon:#6b7380}
+:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--good:#15803d;--ink2:#2a6f97}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--good:#4ade80;--ink2:#6cb4e4}}
+:root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--good:#4ade80;--ink2:#6cb4e4}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 Georgia,"Iowan Old Style",serif}
-main{max-width:820px;margin:0 auto;padding:40px 16px 56px}
-h1{font-size:2.1rem;line-height:1.15;margin:0 0 10px}
-.lede{color:var(--mut);max-width:60ch;margin:0 0 36px}
-.beat{border-top:1px solid var(--grid);padding:28px 0 8px}
-.num{font:600 .8rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 4px}
-h2{font-size:1.45rem;margin:0 0 10px}
-.myth{font-style:italic;margin:0 0 14px}
-.myth b{font-style:normal;font:600 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-right:6px}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:0 0 16px}
-a.card,div.card{display:block;background:var(--card);border:1px solid var(--grid);border-radius:10px;padding:14px 16px;color:inherit;text-decoration:none}
-a.card:hover,a.card:focus-visible{border-color:var(--accent);outline:none}
-.card h3{font:600 1rem system-ui,sans-serif;margin:0 0 4px}
-.card p{font:.88rem/1.45 system-ui,sans-serif;color:var(--mut);margin:0}
-div.card{border-style:dashed;background:transparent}
-div.card h3{color:var(--soon)}
-.tag{font:600 .7rem system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--soon);margin-left:6px}
-.reality{font-size:.95rem;color:var(--mut);max-width:64ch;margin:0 0 8px}
-.reality b{color:var(--fg);font-weight:600}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:0 0 8px;padding:0;list-style:none;counter-reset:st}
-.steps li{counter-increment:st;font:.9rem/1.45 system-ui,sans-serif;color:var(--mut)}
-.steps li::before{content:counter(st);display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
-  background:var(--accent);color:var(--bg);font-weight:700;font-size:.85rem;margin:0 0 6px}
-.steps b{display:block;color:var(--fg);font-weight:600;margin-bottom:2px}
-.tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:4px}
-.tags span{font:600 .66rem system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);
-  border:1px solid var(--grid);border-radius:999px;padding:2px 7px}
-.tags span.weak{color:var(--accent);border-color:var(--accent)}
-.findings{margin:0 0 8px;padding-left:1.2em;max-width:64ch}
-.findings li{margin:0 0 8px}
-.findings b{font-weight:600}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 Georgia,"Iowan Old Style",serif}
+main{max-width:780px;margin:0 auto;padding:40px 16px 56px}
+h1{font-size:2.3rem;line-height:1.12;margin:0 0 14px}
+h2{font-size:1.45rem;line-height:1.25;margin:0 0 10px}
+h3{font:600 1.05rem system-ui,sans-serif;margin:0 0 6px}
+p{margin:0 0 14px;max-width:64ch}
+a{color:var(--accent)}
+.lede{font-size:1.12rem}
+.mut{color:var(--mut)}
+.num{font:600 .8rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+section{border-top:1px solid var(--grid);padding:30px 0 10px}
+.thesis{background:var(--card);border:1px solid var(--grid);border-left:4px solid var(--accent);border-radius:10px;
+  padding:16px 18px;margin:8px 0 18px}
+.thesis p{margin:0;font-size:1.05rem}
+.thesis b{color:var(--accent)}
+figure{margin:10px 0 18px}
+figure svg{width:100%;height:auto;display:block;max-width:640px}
+figcaption{font:.86rem/1.5 system-ui,sans-serif;color:var(--mut);margin-top:6px;max-width:64ch}
+svg text{font-family:system-ui,sans-serif;fill:var(--fg)}
+svg .m{fill:var(--mut)}
+svg .box{fill:var(--card);stroke:var(--grid);stroke-width:1.5}
+svg .hl{fill:var(--card);stroke:var(--accent);stroke-width:2}
+svg .ln{stroke:var(--mut);stroke-width:1.6;fill:none}
+svg .acc{stroke:var(--accent);stroke-width:2;fill:none}
+svg .dot{fill:var(--accent)}
+svg .curve{stroke:var(--ink2);stroke-width:2.5;fill:none}
+.beats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin:6px 0 10px}
+a.beat{display:block;background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:18px 18px 16px;color:inherit;text-decoration:none}
+a.beat:hover,a.beat:focus-visible{border-color:var(--accent);outline:none}
+a.beat .num{margin-bottom:2px}
+a.beat h2{font-size:1.25rem;margin:0 0 8px}
+a.beat p{font:.92rem/1.5 system-ui,sans-serif;color:var(--mut);margin:0 0 10px}
+a.beat .row{font:.86rem/1.45 system-ui,sans-serif;margin:0 0 6px;padding-left:10px;border-left:3px solid var(--grid)}
+a.beat .row b{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+a.beat .row.good b{color:var(--good)}a.beat .row.bad b{color:var(--accent)}a.beat .row.human b{color:var(--ink2)}
+a.beat .go{font:600 .9rem system-ui,sans-serif;color:var(--accent);margin-top:10px;display:block}
+.cmp{width:100%;border-collapse:collapse;font:.9rem/1.45 system-ui,sans-serif;margin:6px 0 16px}
+.cmp th,.cmp td{border-bottom:1px solid var(--grid);padding:9px 8px;text-align:left;vertical-align:top}
+.cmp thead th{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+.cmp tbody th{font-weight:600;width:28%}
+.cmp td.h{color:var(--ink2);font-weight:600}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:4px 0 16px}
+.two div{background:var(--card);border:1px solid var(--grid);border-radius:10px;padding:14px 16px}
+.two h3.good{color:var(--good)}.two h3.bad{color:var(--accent)}
+.two ul{margin:0;padding-left:1.1em;font:.92rem/1.5 system-ui,sans-serif;color:var(--mut)}
+.two li{margin:0 0 6px}
+.sources{font:.82rem/1.55 system-ui,sans-serif;color:var(--mut)}
+.sources ol{padding-left:1.2em;margin:6px 0 0}
 footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.82rem/1.5 system-ui,sans-serif;color:var(--mut)}
+@media (max-width:520px){h1{font-size:1.9rem}.cmp{font-size:.84rem}.cmp th,.cmp td{padding:8px 5px}}
 </style>
 </head>
 <body>
@@ -60,74 +78,181 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
 <!-- /NAV -->
 <main>
   <h1>The Real Singularity</h1>
-  <p class="lede">A <b>PINN</b> (physics-informed neural network) is an AI model that learns to obey a physics equation,
-    instead of copying answers someone already computed. PINNs are often pitched as a replacement for the traditional
-    simulation programs scientists have used for decades. We put three popular claims to the test with demos you can
-    play with in your browser. No math background needed.</p>
+  <p class="lede">In September 2026, OpenAI announced that its AI, in an 88-hour run, had settled one of the Millennium
+    Prize Problems: a $1,000,000 question about whether the equations of fluid flow can break down.<sup><a href="#s1">1</a></sup>
+    It can seem like AI can do anything these days, even the hardest problems in mathematical physics.</p>
 
-  <section class="beat">
-    <p class="num">How to explore</p>
-    <ol class="steps">
-      <li><b>Go in order</b>Start with Part 1 and use the bar at the top to move to the next page.</li>
-      <li><b>Try the suggestion</b>Each page has a "Try this" box: one setting to change first.</li>
-      <li><b>Look for "What to notice"</b>Under each chart, one sentence on what it is showing you.</li>
-      <li><b>Read the takeaway</b>Each page ends with the PINN weakness it reveals. The math is folded away at the bottom.</li>
+  <section>
+    <p class="num">How physics is really done with AI</p>
+    <h2>Have you wondered how AI actually solves physics problems?</h2>
+    <p>Headlines like that one are about proofs on paper. Day to day, scientists and engineers use AI for physics in a
+      more down-to-earth way: training neural networks to predict how fluids, traffic or materials behave. One popular
+      approach is the <b>physics-informed neural network</b>, or <b>PINN</b>, which learns from the laws of physics
+      themselves instead of from piles of worked examples.</p>
+    <p>We built PINNs, tested them on two problems where we know the exact answers, and checked every result. Along the
+      way we found where they are truly impressive, where they fail, and why the failures are hard to see.</p>
+    <div class="thesis"><p>Our thread: <b>an AI's own score is not the same as being right.</b> PINNs fail in a
+      systematic way: the number they train on can look excellent while the answer is wrong. Someone has to set up
+      the question, check the score against something independent, and decide what the answer means. For now, that
+      person is a part of the loop nothing in our experiments could replace.</p></div>
+    <p class="mut">At the end we come back to AI-written math proofs, a very different tool, and find the same theme
+      continuing there.</p>
+  </section>
+
+  <section>
+    <p class="num">Step 1 · Neural networks in one minute</p>
+    <h2>A formula with thousands of knobs</h2>
+    <p>A neural network is a big adjustable formula. Give it numbers, for us a position on a road and a moment in time,
+      and it returns a number, such as the speed of traffic there. Inside are knobs: our networks have about 3,000.</p>
+    <p>Training means: let it guess, <b>score</b> how bad the guess is, turn every knob a little to make the score better,
+      and repeat thousands of times. The network never "understands" the problem. It just drives the score as low as
+      it can, so everything depends on what the score measures.</p>
+    <figure>
+      <svg viewBox="0 0 640 200" role="img" aria-label="Position and time go into a network of knobs, which outputs a speed; a score of the output feeds back to adjust the knobs.">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--mut)"/></marker>
+        <marker id="ara" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs>
+        <rect class="box" x="8" y="40" width="130" height="70" rx="10"/>
+        <text x="73" y="70" text-anchor="middle" font-size="15">position</text>
+        <text x="73" y="92" text-anchor="middle" font-size="15">time</text>
+        <line class="ln" x1="140" y1="75" x2="200" y2="75" marker-end="url(#ar)"/>
+        <rect class="hl" x="204" y="22" width="220" height="106" rx="12"/>
+        <text x="314" y="46" text-anchor="middle" font-size="14" font-weight="600">network</text>
+        <g style="stroke:var(--mut);stroke-width:1.4;fill:none">
+          <circle cx="244" cy="85" r="15"/><line x1="244" y1="85" x2="253" y2="74"/>
+          <circle cx="294" cy="85" r="15"/><line x1="294" y1="85" x2="282" y2="76"/>
+          <circle cx="344" cy="85" r="15"/><line x1="344" y1="85" x2="356" y2="90"/>
+          <circle cx="394" cy="85" r="15"/><line x1="394" y1="85" x2="394" y2="71"/>
+        </g>
+        <text x="314" y="120" text-anchor="middle" font-size="12" class="m">about 3,000 knobs</text>
+        <line class="ln" x1="426" y1="75" x2="486" y2="75" marker-end="url(#ar)"/>
+        <rect class="box" x="490" y="40" width="140" height="70" rx="10"/>
+        <text x="560" y="72" text-anchor="middle" font-size="15">speed of</text>
+        <text x="560" y="92" text-anchor="middle" font-size="15">traffic there</text>
+        <path class="acc" d="M560,112 C560,180 314,180 314,134" marker-end="url(#ara)"/>
+        <text x="437" y="190" text-anchor="middle" font-size="13" style="fill:var(--accent)">score the guess, nudge the knobs, repeat</text>
+      </svg>
+    </figure>
+  </section>
+
+  <section>
+    <p class="num">Step 2 · How a PINN learns physics</p>
+    <h2>The score is the physics</h2>
+    <p>An ordinary network is scored by comparing it with answers someone already computed. A PINN's score is different:
+      at thousands of points it checks whether the network's answer <b>obeys the physics rule</b> (the equation), and
+      whether it <b>starts in the right state</b>. No answer key needed. That is the big promise: write down the
+      physics, get the answer.</p>
+    <figure>
+      <svg viewBox="0 0 640 190" role="img" aria-label="A curve checked at many points against the physics rule, plus a check of the starting state, add up to the PINN's score.">
+        <rect class="box" x="8" y="10" width="300" height="170" rx="10"/>
+        <path class="curve" d="M24,140 C70,40 110,40 150,95 S240,150 292,60"/>
+        <g class="dot">
+          <circle cx="40" cy="104" r="4"/><circle cx="70" cy="62" r="4"/><circle cx="100" cy="58" r="4"/><circle cx="130" cy="78" r="4"/>
+          <circle cx="160" cy="104" r="4"/><circle cx="190" cy="124" r="4"/><circle cx="220" cy="128" r="4"/><circle cx="250" cy="110" r="4"/><circle cx="280" cy="74" r="4"/>
+        </g>
+        <text x="158" y="170" text-anchor="middle" font-size="12" class="m">the network's answer, checked at many points</text>
+        <text x="330" y="52" font-size="15">score =</text>
+        <rect class="hl" x="330" y="64" width="300" height="44" rx="8"/>
+        <text x="345" y="91" font-size="14">how badly it breaks the rule at the dots</text>
+        <text x="472" y="128" text-anchor="middle" font-size="16">+</text>
+        <rect class="hl" x="330" y="136" width="300" height="44" rx="8"/>
+        <text x="345" y="163" font-size="14">how far it starts from the right state</text>
+      </svg>
+    </figure>
+    <p>But notice what that score measures: how well the answer follows the rule <i>where we checked</i>, not how close
+      it is to the truth. Most of the time the two agree. Our two beats show what happens when they don't.</p>
+  </section>
+
+  <section>
+    <p class="num">Step 3 · What we tested</p>
+    <h2>Two problems, two kinds of failure</h2>
+    <p class="mut">Each beat opens with a short story, then lets you try the demos yourself. Start with Beat 1.</p>
+    <div class="beats">
+      <a class="beat" href="beat1/index.html">
+        <p class="num">Beat 1</p>
+        <h2>The wall of brake lights</h2>
+        <p>Freeway traffic slows into a sudden wall of brake lights. Can a PINN that only knows the rules of traffic
+          predict it?</p>
+        <div class="row good"><b>Truly impressive</b>On a gentle slowdown it is within 0.05% of the exact answer, and
+          answers instantly once trained.</div>
+        <div class="row bad"><b>Where it fails</b>On a sharp wall it is about 40% off. Its own score improved 200&times;
+          while the answer stayed 35% wrong.</div>
+        <div class="row human"><b>Where a human stepped in</b>Only comparing with the exact answer, which real problems
+          don't have, revealed the error.</div>
+        <span class="go">Read Beat 1 &rarr;</span>
+      </a>
+      <a class="beat" href="beat2/index.html">
+        <p class="num">Beat 2</p>
+        <h2>Balls in bowls, balls on hilltops</h2>
+        <p>A rod of tiny magnets settles into resting shapes. Some are stable like a ball in a bowl; others balance on a
+          hilltop.</p>
+        <div class="row good"><b>Truly impressive</b>A PINN can aim straight at hilltop shapes that a step-by-step
+          simulation can never stop on.</div>
+        <div class="row bad"><b>Where it fails</b>Its score is just as good for a bowl as a hilltop, and nearly perfect
+          for a useless flat answer.</div>
+        <div class="row human"><b>Where a human stepped in</b>We had to run its answers through a simulator to see which
+          ones hold up.</div>
+        <span class="go">Read Beat 2 &rarr;</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <p class="num">Step 4 · Back to the headline</p>
+    <h2>The same theme, one level up</h2>
+    <p>OpenAI's result is a proof, not a simulation, and an AI that writes proofs is a very different tool from a PINN.
+      We are <b>not</b> saying it will fail the way PINNs do. What carries over is the theme: a machine check that passes
+      is not the same as an answer people have confirmed.</p>
+    <p>OpenAI released its proof together with a version for <b>Lean</b>, software that checks every step of a proof
+      mechanically. In October, mathematicians at Cambridge showed that the Lean version checks a slightly different
+      statement from the proof written for people: in one step, the written proof uses four derivatives where the checked
+      one needs five.<sup><a href="#s2">2</a></sup> They do not claim the result is false. But passing the computer check
+      did not, by itself, confirm the proof people read. The Clay Mathematics Institute, which awards the prize, requires
+      peer review by mathematicians first, and has not awarded it.<sup><a href="#s1">1</a></sup></p>
+    <table class="cmp">
+      <thead><tr><th></th><th>Our PINNs</th><th>AI-written proofs</th></tr></thead>
+      <tbody>
+        <tr><th>The machine's own check</th><td>The training score: how well the answer follows the rule</td><td>Lean
+          accepts every step</td></tr>
+        <tr><th>What that check can't tell you</th><td>Whether the answer is close to the truth</td><td>Whether what was
+          checked is what we meant</td></tr>
+        <tr><th>Who closes the gap</th><td class="h">A person comparing with an exact answer or a simulator</td><td class="h">
+          Mathematicians reading it, then peer review</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <p class="num">Conclusion</p>
+    <h2>What AI really changes, and what it doesn't</h2>
+    <div class="two">
+      <div><h3 class="good">Truly revolutionary</h3><ul>
+        <li>A trained PINN answers instantly and needs no answer key, just the physics.</li>
+        <li>It can aim at unstable states that classical simulation can never reach.</li>
+        <li>AI systems can now produce long, machine-checkable arguments on research-level problems.</li>
+      </ul></div>
+      <div><h3 class="bad">Often overstated</h3><ul>
+        <li>That a great training score means a right answer.</li>
+        <li>That AI replaces the traditional methods: on sharp changes, a decades-old solver still wins.</li>
+        <li>That a passing machine check settles what a result means.</li>
+      </ul></div>
+    </div>
+    <p class="lede">AI is a remarkable new instrument for physics and math. But in both, the loop still runs through a
+      person: someone has to decide what to ask, check the AI's score against something independent, and interpret what
+      the answer means. That is the real singularity we found: not the moment AI stops needing us, but the places where it
+      clearly still does.</p>
+  </section>
+
+  <section class="sources">
+    <p class="num">Sources</p>
+    <ol>
+      <li id="s1"><a href="https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_priority_controversy">Navier–Stokes priority
+        controversy</a>, Wikipedia (claim, 88-hour run, Clay Institute's position);
+        <a href="https://www.cnbc.com/2026/09/09/openai-navier-stokes-math-problem-solved.html">CNBC, Sept 9, 2026</a>.</li>
+      <li id="s2">Bastounis, Circelli and Hansen, <a href="https://www.alphaxiv.org/abs/2610.08144">"Navier-Stokes lost in
+        translation: Why Lean verification of AI autoformalisation does not guarantee correct natural language proofs"</a>,
+        Oct 2026; see also <a href="https://techcrunch.com/2026/10/08/openais-math-solutions-arent-meeting-the-fields-standards-yet/">TechCrunch,
+        Oct 8, 2026</a>.</li>
     </ol>
-  </section>
-
-  <section class="beat">
-    <p class="num">Part 1 · A wave that turns into a cliff</p>
-    <h2>Sharp edges, misleading scores, and the race</h2>
-    <p class="myth"><b>Myth</b>"PINNs replace traditional solvers." "A good training score means a right answer." "More computing power fixes it."</p>
-    <div class="cards">
-      <a class="card" href="shock/index.html"><h3>How a cliff forms</h3><p>Fast-moving fluid catches up with slow fluid and piles into a sudden jump, called a shock. Press Play and watch it happen.</p><div class="tags"><span>Background</span></div></a>
-      <a class="card" href="race/index.html"><h3>The race</h3><p>The traditional method, running live in your browser. See how fast it is and how close it gets to the exact answer.</p><div class="tags"><span>Traditional solver</span></div></a>
-      <a class="card" href="pinn/index.html"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws its answer instantly.</p><div class="tags"><span>PINN</span></div></a>
-      <a class="card" href="viscosity/index.html"><h3>The breaking point</h3><p>Slide from thick fluid to thin. The PINN matches the gentle cliff to within 0.05% and misses the sharp one by about 40%.</p><div class="tags"><span class="weak">PINN weakness</span></div></a>
-      <a class="card" href="loss-vs-truth/index.html"><h3>The score that lies</h3><p>A PINN grades itself with one score while it trains. That score can improve 200&times; while the answer stays 35% wrong.</p><div class="tags"><span class="weak">PINN weakness</span></div></a>
-    </div>
-    <p class="reality"><b>So far:</b> when the fluid is thick and the cliff is gentle, the PINN is very accurate (off by about 0.05%).
-      Make the fluid 10&times; thinner so the cliff turns sharp, and the PINN is off by about 40%, even when we give it extra
-      practice right at the cliff. The traditional solver gets within 0.2% in a few hundredths of a second.</p>
-  </section>
-
-  <section class="beat">
-    <p class="num">Part 2 · A mixture that separates</p>
-    <h2>Balls in bowls, balls on hilltops</h2>
-    <p class="myth"><b>Myth</b>"PINNs are just worse solvers."</p>
-    <div class="cards">
-      <a class="card" href="allen-cahn/index.html"><h3>The step-by-step simulator</h3><p>A traditional simulation always rolls downhill, so it can only ever settle into a stable state. Try the S-shape with a tiny nudge.</p><div class="tags"><span>Traditional solver</span></div></a>
-      <a class="card" href="hilltop/index.html"><h3>Falling off a hilltop</h3><p>Balance the mixture on a hilltop, nudge it, and time the fall. A 10&times; smaller nudge only buys about 1.5 more time units.</p><div class="tags"><span>Simulation's blind spot</span></div></a>
-      <div class="card"><h3>Ball and bowl<span class="tag">Coming</span></h3><p>Stability in one picture: a ball in a bowl stays put, a ball on a hilltop rolls off.</p></div>
-      <a class="card" href="correction/index.html"><h3>Fixing the PINN's guesses</h3><p>We hand the PINN's rough answers to the simulator: the stable one settles into place, the unstable one falls off.</p><div class="tags"><span>PINN + simulator</span></div></a>
-    </div>
-    <p class="reality"><b>So far:</b> the simulator matches all five known resting states, and how strongly each one pulls
-      nearby shapes in or pushes them away. But because it always rolls downhill, it can never stop on a hilltop.
-      A PINN can find those hilltop states directly. Each tool wins a different problem.</p>
-  </section>
-
-  <section class="beat">
-    <p class="num">Part 3 · The hardest problem</p>
-    <h2>Did AI crack the equations of fluid flow?</h2>
-    <p class="myth"><b>Myth</b>"AI solved Navier–Stokes." <span style="font-style:normal;color:var(--mut)">Navier–Stokes are the equations of fluid flow; whether their answers can blow up to infinity is a famous unsolved math problem.</span></p>
-    <div class="cards">
-      <div class="card"><h3>The difficulty ladder<span class="tag">Coming</span></h3><p>Three cases where an equation's answer shoots to infinity, from easiest to hardest to find, including one disputed claim.</p></div>
-    </div>
-  </section>
-
-  <section class="beat">
-    <p class="num">The short version</p>
-    <h2>What PINNs get wrong, and what they get right</h2>
-    <ul class="findings">
-      <li><b>Sharp edges break them.</b> On a gentle wave the PINN is off by about 0.05%; make the fluid 10&times; thinner so
-        the wave turns into a cliff, and it is off by about 40%.</li>
-      <li><b>Their own score can't warn you.</b> The number a PINN trains on can improve 200&times; while the answer stays
-        35% wrong, and in a real problem there is no exact answer to check against.</li>
-      <li><b>The traditional method still wins the race.</b> On the same sharp cliff, the classical solver lands within
-        0.2% in a few hundredths of a second.</li>
-      <li><b>But they are not just worse solvers.</b> A step-by-step simulation can never stop on a hilltop state; a PINN
-        aims at the resting shape directly, so it can find states that simulation never reaches.</li>
-    </ul>
   </section>
 
   <footer>
