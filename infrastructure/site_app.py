@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CDK app for the Burgers page only. Does not deploy the PlantDex API."""
+"""CDK app that deploys the Burgers PINN site."""
 
 import aws_cdk as cdk
 

@@ -1,3 +1,5 @@
-# Add project dependencies here
-pandas
 numpy
+torch
+matplotlib
+onnxruntime
+boto3
