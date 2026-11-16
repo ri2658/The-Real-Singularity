@@ -1,23 +1,26 @@
 # Infra
 
-AWS CDK stack for the PlantDex backend (Lambda + HTTP API + DynamoDB cache + Secrets Manager).
+AWS CDK stack that hosts the site: a private S3 bucket behind CloudFront (`burgers_site_stack.py`, created from `site_app.py`).
 
-## Deploy
-
-Use the SSO profile (do not use long-lived access keys):
+## One-time setup
 
 ```bash
-aws sso login --profile plantdex
 cd infrastructure
+python3 -m venv .venv
 source .venv/bin/activate
-AWS_PROFILE=plantdex cdk deploy
+pip install -r requirements.txt
+npm install -g aws-cdk
+cdk bootstrap
+cdk deploy BurgersSiteStack
 ```
 
-This stack is the PlantDex API only. It does not serve the Burgers page. That site is `burgers_site_stack.py`, deployed with `site_app.py`. Steps are in [`../web/README.md`](../web/README.md).
+The stack outputs `BucketName`, `DistributionId` and `SiteUrl`.
 
-After deploy, set the frontend env var to the stack output `PlantDexApiUrl`:
+## Publishing updates
+
+From the repo root, pass the bucket and distribution from the stack outputs:
 
 ```bash
-# frontend/.env.local
-NEXT_PUBLIC_PLANTDEX_API_URL=https://....execute-api.us-west-2.amazonaws.com
+python scripts/build_site.py
+python scripts/publish_site.py --bucket BUCKET --distribution DIST_ID
 ```

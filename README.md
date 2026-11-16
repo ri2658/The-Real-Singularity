@@ -1,50 +1,35 @@
-# PlantDex
+# The Real Singularity
 
-PlantDex is a plant **discovery** site built as a UI and index over the [Trefle](https://trefle.io) plant API. Search a familiar common name (or a scientific one), open rich species profiles, explore related plants by taxonomy and traits, compare a few side by side, and skim a short AI overview — without accounts or personal collections.
+A website that explains how a physics-informed neural network (PINN) works, using the viscous Burgers' equation as the running example:
 
-The product goal is botanical context, not identification from photos or garden tracking. Searching “blueberry,” for example, should help you see related *Vaccinium* species and Ericaceae relatives, not just a single shopping card.
-
-See [`DesignDoc.md`](./DesignDoc.md) for full product scope, API surface, and architecture.
-
-## What you can do
-
-- **Search** plants by common or scientific name, with paginated “load more” results
-- **Profiles** with taxonomy, traits, distribution chips, and a globe for native + introduced ranges
-- **Related discovery** by genus, family, distribution, edible part, growth habit, fruit color, and more
-- **Compare** 2–4 plants in a local tray / compare page (browser storage only)
-- **AI overviews** (summary text) on search results and profiles — imperfect; treat as a starting point
-- **Report / correct** Trefle data through the app (API token stays on the server)
+$$
+\frac{\partial u}{\partial t} + u \frac{\partial u}{\partial x} = \nu \frac{\partial^2 u}{\partial x^2}
+$$
 
 ## Structure
 
-- `frontend/` — Next.js app (Vercel)
-- `src/` — Python Lambda handlers + Trefle similarity helpers
-- `infrastructure/` — AWS CDK (API Gateway, Lambda, DynamoDB, Secrets Manager)
-- `notebooks/` / `tests/` — exploration and notebooks
+- `pinn/`: the Burgers' PINN package (model, sampling, losses, exact reference, training, run logging). See [`pinn/README.md`](./pinn/README.md).
+- `scripts/`: training runs, ONNX and data exports, and the site build and publish scripts
+- `runs/`: saved training runs (config, history, checkpoints)
+- `notebooks/`: the PINN tutorial and the reference / L2 error notebook
+- `data/`: Burgers reference solutions and the JSON data the site pages read
+- `results/` and `model performance/`: viscosity sweep and loss-vs-error plots
+- `Finite volume solver/`: the finite-volume Burgers solver and its JS port for the race page
+- `shock viewer/`, `burgers/js/`: shock-formation viewer, loss-vs-truth and viscosity pages
+- `allen_cahn/`: Allen-Cahn simulator, equilibria, hilltop and correction pages
+- `site/`: the assembled site, built by `scripts/build_site.py`
+- `infrastructure/`: AWS CDK stack that hosts the site (S3 + CloudFront). See [`infrastructure/README.md`](./infrastructure/README.md).
 
-## Frontend
-
-```bash
-cd frontend
-cp .env.example .env.local
-# set NEXT_PUBLIC_PLANTDEX_API_URL and OPENAI_API_KEY (server-only)
-npm install
-npm run dev
-```
-
-Deploy on Vercel with:
-
-- **Root Directory:** `frontend`
-- **Production branch:** `main`
-- **Env:** `NEXT_PUBLIC_PLANTDEX_API_URL` and `OPENAI_API_KEY` (Production + Preview; never `NEXT_PUBLIC_` for the OpenAI key)
-
-## Backend
+## Setup
 
 ```bash
-aws sso login --profile plantdex
-cd infrastructure
-source .venv/bin/activate
-AWS_PROFILE=plantdex cdk deploy
+pip install -r requirements.txt
 ```
 
-The Lambda stack proxies Trefle reads/writes, caches responses in DynamoDB, and keeps the Trefle token in Secrets Manager.
+## Build and publish the site
+
+```bash
+python scripts/build_site.py
+python scripts/publish_site.py --dry-run
+python scripts/publish_site.py --bucket BUCKET --distribution DIST_ID
+```
