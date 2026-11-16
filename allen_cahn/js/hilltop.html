@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaving a Hilltop</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
+    --curve: #2a78d6; --ghost: #a9a79f; --point: #eb6834; --theory: #1c2330;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+      --curve: #5b9bea; --ghost: #6b7380; --point: #fb923c; --theory: #e6e9ef;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+    --curve: #5b9bea; --ghost: #6b7380; --point: #fb923c; --theory: #e6e9ef;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font: 700 1.6rem/1.2 Georgia, "Iowan Old Style", serif; margin: 0 0 6px; }
+  .lede { color: var(--muted); max-width: 70ch; margin: 0 0 18px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .label { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  canvas { width: 100%; display: block; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 14px 0 6px; }
+  .controls label { font-size: 13px; color: var(--muted); }
+  .controls input[type=range] { width: 220px; max-width: 60vw; }
+  .eps { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 6ch; display: inline-block; }
+  button { padding: 7px 14px; font: inherit; font-size: 14px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+  button.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  button:disabled { opacity: .5; cursor: default; }
+  .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .explain { color: var(--muted); max-width: 72ch; margin-top: 18px; font-size: 14px; }
+  .explain b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Leaving a hilltop</h1>
+  <p class="lede">The S-shaped state of the Allen–Cahn equation is a balance point, like a ball resting on a hilltop.
+    Push it by a tiny amount ε and it eventually rolls off toward the stable hump. Theory says each tenfold smaller
+    push buys the same extra waiting time: <b>1.5056</b> time units. Pick a push, run it, and see where the point lands.</p>
+
+  <div class="grid">
+    <div class="card">
+      <p class="label">The curve u(x): S state (gray), current curve (blue)</p>
+      <canvas id="plotU" height="260"></canvas>
+    </div>
+    <div class="card">
+      <p class="label">Escape time vs. push size: theory line and your runs</p>
+      <canvas id="plotT" height="260"></canvas>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label for="k">Push size ε = <span class="eps" id="epsVal"></span></label>
+    <input id="k" type="range" min="2" max="11" step="1" value="6">
+    <button id="run">Run</button>
+    <button id="runAll" class="secondary">Run every ε (fast)</button>
+    <button id="clear" class="secondary">Clear points</button>
+  </div>
+
+  <div class="readout">
+    <div class="stat"><div class="k">time t</div><div class="v" id="sT">0.000</div></div>
+    <div class="stat"><div class="k">distance from S</div><div class="v" id="sD">0</div></div>
+    <div class="stat"><div class="k">predicted escape time</div><div class="v" id="sPred">–</div></div>
+    <div class="stat"><div class="k">measured escape time</div><div class="v" id="sMeas">–</div></div>
+  </div>
+
+  <p class="explain"><b>Why 1.5056?</b> Near S, a push grows like ε·e<sup>λ₁t</sup>, where λ₁ ≈ 1.5294 is the one unstable
+    growth rate of the S state. The curve counts as "escaped" once it is 0.1 away from S, so the escape time is about
+    ln(0.1/ε)/λ₁. Making ε ten times smaller adds ln(10)/λ₁ ≈ 1.5056. The simulator is plain forward Euler; it never
+    sees this formula, yet its points fall on the line.</p>
+</main>
+
+<script src="allen_cahn.js"></script>
+<script src="hilltop.js"></script>
+<script>
+const AC = AllenCahn, H = Hilltop;
+const $ = (id) => document.getElementById(id);
+const DELTA = 0.1;                       // escape threshold (max |U - S|)
+const LAMBDA_THEORY = 1.5293821131006693;
+const K_MIN = 2, K_MAX = 11;
+const grid = AC.makeGrid();
+let S = null, mode = null, sim = null, running = false, current = null;
+const points = [];                        // { k, T }
+
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const predicted = (k) => Math.log(DELTA * 10 ** k) / LAMBDA_THEORY;
+
+// ---------- data: S from Michelle's Newton solve, or from the simulator ----------
+async function loadS() {
+  for (const p of ["../data/allen_cahn/equilibria.json", "../../data/allen_cahn/equilibria.json"]) {
+    try {
+      const r = await fetch(p);
+      if (!r.ok) continue;
+      const eq = await r.json();
+      return Float64Array.from(eq.states ? eq.states.S.U : eq.S);
+    } catch (e) { /* try the next path */ }
+  }
+  return AC.simulate(AC.initialCurve("S-like", grid.x), [8]).snaps[0];
+}
+
+// ---------- drawing ----------
+function setupCanvas(c) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!c._h) c._h = c.height;
+  const w = c.clientWidth, h = c._h;
+  c.width = w * dpr; c.height = h * dpr;
+  const ctx = c.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+
+function axisText(ctx, txt, x, y, align, base) {
+  ctx.fillStyle = css("--muted"); ctx.font = "11px system-ui, sans-serif";
+  ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(txt, x, y);
+}
+
+function hline(ctx, y, x0, x1) {
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+}
+
+function drawCurve() {
+  const { ctx, w, h } = setupCanvas($("plotU"));
+  const pad = { l: 34, r: 8, t: 8, b: 22 };
+  const X = (v) => pad.l + (v / Math.PI) * (w - pad.l - pad.r);
+  const Y = (v) => pad.t + (1 - (v + 1.1) / 2.2) * (h - pad.t - pad.b);
+  for (const v of [-1, 0, 1]) { hline(ctx, Y(v), pad.l, w - pad.r); axisText(ctx, String(v).replace("-", "−"), pad.l - 6, Y(v), "right", "middle"); }
+  axisText(ctx, "0", X(0), h - pad.b + 6, "center", "top");
+  axisText(ctx, "π/2", X(Math.PI / 2), h - pad.b + 6, "center", "top");
+  axisText(ctx, "π", X(Math.PI), h - pad.b + 6, "center", "top");
+  const draw = (U, color, width, dash) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(0));
+    for (let i = 0; i < U.length; i++) ctx.lineTo(X(grid.x[i]), Y(U[i]));
+    ctx.lineTo(X(Math.PI), Y(0)); ctx.stroke(); ctx.setLineDash([]);
+  };
+  if (S) draw(S, css("--ghost"), 2, [5, 4]);
+  if (sim) draw(sim.U, css("--curve"), 2.5);
+}
+
+function drawChart() {
+  const { ctx, w, h } = setupCanvas($("plotT"));
+  const pad = { l: 34, r: 10, t: 10, b: 24 };
+  const tMax = Math.ceil(predicted(K_MAX) + 1);
+  const X = (k) => pad.l + ((k - K_MIN) / (K_MAX - K_MIN)) * (w - pad.l - pad.r);
+  const Y = (t) => pad.t + (1 - t / tMax) * (h - pad.t - pad.b);
+  for (let t = 0; t <= tMax; t += 4) { hline(ctx, Y(t), pad.l, w - pad.r); axisText(ctx, String(t), pad.l - 6, Y(t), "right", "middle"); }
+  for (let k = K_MIN; k <= K_MAX; k += (w < 420 ? 3 : 1)) {
+    const align = k === K_MIN ? "left" : k >= K_MAX - (w < 420 ? 2 : 0) ? "right" : "center";
+    axisText(ctx, `1e-${k}`, X(k), h - pad.b + 6, align, "top");
+  }
+  // Theory line.
+  ctx.strokeStyle = css("--theory"); ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(X(K_MIN), Y(predicted(K_MIN))); ctx.lineTo(X(K_MAX), Y(predicted(K_MAX))); ctx.stroke();
+  ctx.setLineDash([]);
+  axisText(ctx, "theory: +1.5056 per decade", X(K_MIN) + 4, Y(predicted(K_MAX)) + 2, "left", "top");
+  // Points.
+  for (const p of points) {
+    ctx.fillStyle = css("--point"); ctx.strokeStyle = css("--panel"); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(X(p.k), Y(p.T), 5.5, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+  }
+  // Live marker for the running push.
+  if (running && current) {
+    ctx.strokeStyle = css("--point"); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(X(current.k), Y(Math.min(sim.t, tMax)), 5.5, 0, 2 * Math.PI); ctx.stroke();
+  }
+}
+
+function updateStats() {
+  const k = +$("k").value;
+  $("epsVal").textContent = `1e-${k}`;
+  $("sPred").textContent = predicted(k).toFixed(3);
+  if (sim) {
+    $("sT").textContent = sim.t.toFixed(3);
+    $("sD").textContent = AC.maxAbsDiff(sim.U, S).toExponential(1);
+  }
+}
+
+function redraw() { drawCurve(); drawChart(); updateStats(); }
+
+// ---------- running ----------
+function startAt(k) {
+  sim = AC.createSimulator();
+  const U0 = new Float64Array(S.length);
+  for (let i = 0; i < S.length; i++) U0[i] = S[i] + 10 ** -k * mode.v[i];
+  sim.set(U0);
+}
+
+function addPoint(k, T) {
+  const i = points.findIndex((p) => p.k === k);
+  if (i >= 0) points.splice(i, 1);
+  points.push({ k, T });
+}
+
+function setButtons(disabled) { for (const id of ["run", "runAll", "clear", "k"]) $(id).disabled = disabled; }
+
+function run() {
+  const k = +$("k").value;
+  startAt(k);
+  current = { k };
+  running = true; setButtons(true); $("sMeas").textContent = "running…";
+  // Aim for about 4 seconds of animation regardless of the push size.
+  const stepsPerFrame = Math.max(1, Math.ceil(predicted(k) / sim.dt / 240));
+  const frame = () => {
+    for (let s = 0; s < stepsPerFrame; s++) {
+      sim.advance(1);
+      if (AC.maxAbsDiff(sim.U, S) > DELTA) {
+        running = false;
+        addPoint(k, sim.t);
+        $("sMeas").textContent = `${sim.t.toFixed(3)}  (${(sim.t - predicted(k) >= 0 ? "+" : "")}${(sim.t - predicted(k)).toFixed(3)})`;
+        setButtons(false); redraw();
+        return;
+      }
+    }
+    redraw();
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+function runAll() {
+  setButtons(true);
+  let k = K_MIN;
+  const next = () => {
+    if (k > K_MAX) { setButtons(false); $("sMeas").textContent = `all ${K_MAX - K_MIN + 1} pushes done`; redraw(); return; }
+    const r = H.escapeTime(S, mode.v, 10 ** -k, { delta: DELTA });
+    startAt(k); sim.advance(r.steps);                   // show the curve at its escape moment
+    addPoint(k, r.T);
+    $("sMeas").textContent = `ε = 1e-${k}: ${r.T.toFixed(3)}`;
+    k++; redraw();
+    setTimeout(next, 30);                               // let the page repaint between runs
+  };
+  next();
+}
+
+$("run").onclick = run;
+$("runAll").onclick = runAll;
+$("clear").onclick = () => { points.length = 0; redraw(); };
+$("k").oninput = () => { if (!running) { startAt(+$("k").value); redraw(); } };
+window.onresize = redraw;
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
+
+(async () => {
+  setButtons(true);
+  S = await loadS();
+  mode = H.unstableMode(S);
+  startAt(+$("k").value);
+  setButtons(false);
+  redraw();
+})();
+</script>
+</body>
+</html>

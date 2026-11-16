@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The step-by-step simulator</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
+    --curve: #2a78d6; --ghost: #a9a79f; --energy: #eb6834; --warn: #b3261e; --accent: #c2410c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+      --curve: #5b9bea; --ghost: #6b7380; --energy: #fb923c; --warn: #f87171; --accent: #fb923c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
+    --curve: #5b9bea; --ghost: #6b7380; --energy: #fb923c; --warn: #f87171; --accent: #fb923c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font: 700 1.6rem/1.2 Georgia, "Iowan Old Style", serif; margin: 0 0 6px; }
+  .sub { color: var(--muted); max-width: 70ch; margin: 0 0 14px; }
+  details.sub summary { cursor: pointer; }
+  .grid { display: grid; grid-template-columns: 1fr 280px; gap: 14px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  canvas { width: 100%; display: block; }
+  .label { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  .controls label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 3px; }
+  .controls select, .controls input[type=number] { width: 100%; padding: 5px 6px; font: inherit;
+         border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+  .controls input[type=range] { width: 100%; }
+  .row { display: flex; gap: 8px; margin-top: 12px; }
+  button { flex: 1; padding: 7px 14px; font: inherit; font-size: 14px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+  button.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  .stats { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin-top: 14px;
+           font-variant-numeric: tabular-nums; }
+  .stats dt { color: var(--muted); } .stats dd { margin: 0; text-align: right; }
+  .warn { color: var(--warn); font-weight: 600; min-height: 1.4em; margin-top: 8px; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+
+  h2.step { font: 700 1.15rem/1.3 Georgia, "Iowan Old Style", serif; margin: 30px 0 8px; }
+  h2.step .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+               background: var(--accent); color: var(--bg); font: 700 13px system-ui, sans-serif;
+               margin-right: 8px; vertical-align: 2px; }
+  .prose { color: var(--muted); max-width: 70ch; margin: 0 0 12px; }
+  .prose b { color: var(--ink); font-weight: 600; }
+  .try { border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 8px 8px 0;
+         padding: 10px 14px; margin: 12px 0 14px; max-width: 72ch; color: var(--ink); font-size: 14px; }
+  .try::before { content: "Try this"; display: block; font: 600 11px system-ui, sans-serif; letter-spacing: .06em;
+                 text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .notice { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+  .notice::before { content: "What to notice: "; font-weight: 600; color: var(--ink); }
+  .takeaways { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px;
+               margin: 14px 0; max-width: 76ch; }
+  .takeaways ul { margin: 0; padding-left: 1.2em; }
+  .takeaways li { margin: 0 0 8px; }
+  .takeaways li:last-child { margin-bottom: 0; }
+  .takeaways .weak { color: var(--accent); font-weight: 600; }
+  details.math { color: var(--muted); max-width: 72ch; margin: 22px 0 0; font-size: 14px; }
+  details.math summary { cursor: pointer; color: var(--ink); }
+  .lede { color: var(--muted); max-width: 70ch; margin: 0 0 6px; }
+  .grid { margin-top: 4px; }
+  .card .notice { margin-top: 8px; }
+  /* energy ladder (section 2) */
+  .ladder { margin: 6px 0 18px; }
+  .ladder canvas { width: 100%; display: block; }
+  .ladder .cap { font-size: 13px; color: var(--muted); margin: 8px 0 0; max-width: 72ch; }
+  .ladder .cap b { color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>The step-by-step simulator</h1>
+  <p class="lede">This is how a traditional simulation works, and the one thing it can never do.</p>
+
+  <h2 class="step"><span class="n">1</span>A rod of tiny magnets</h2>
+  <p class="prose">Picture a thin rod lined with tiny magnets, like compass needles. The curve shows which way they point
+    along the rod: +1 is straight up, −1 straight down, and 0 is pointing neither way. Each magnet wants to point fully
+    up or down and to match its neighbours, so over time they line up into patches and the curve settles into a
+    <b>resting state</b>, a shape that no longer changes.</p>
+
+  <h2 class="step"><span class="n">2</span>The rule: always roll downhill</h2>
+  <p class="prose">This simulator works the traditional way: it moves forward in time with many small steps. Each step can
+    only lower the energy, like a ball that can only roll downhill. So it settles into stable resting states, the
+    <b>bowls</b>, and can never stay on an unstable one, a <b>hilltop</b>.</p>
+  <div class="card ladder">
+    <p class="label">The five resting shapes, placed at their real energies</p>
+    <canvas id="ladder" height="340"></canvas>
+    <p class="cap"><b>Always downhill.</b> Arrows show where a nudge can send each shape; nothing ever climbs back up,
+      so every run ends in one of the two humps (green). Only the heights are real: the left&ndash;right positions are just
+      for drawing, since the true landscape has 127 directions, one for each point along the rod.</p>
+  </div>
+
+  <h2 class="step"><span class="n">3</span>Try it</h2>
+  <p class="try">Press <b>Play</b> with random noise: it always settles into one hump. Then pick <b>S-shape (a hilltop)</b>
+    and press Play. It balances for a while, then the computer's own rounding errors (about 0.0000000000000001) tip it off,
+    a little after time 20. Pick <b>S-shape + tiny nudge at time 8</b> and it falls sooner.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <p class="label">Which way the magnets point along the rod: now (blue), at the start (gray)</p>
+        <canvas id="plotU" height="300"></canvas>
+        <p class="notice">from any random start, the blue curve ends as one hump (or the same hump upside down). The
+          S-shape only lasts while it is perfectly balanced.</p>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <p class="label">Energy over time: it can only go down, as long as the time step is small enough (values above 1 are cut off)</p>
+        <canvas id="plotE" height="160"></canvas>
+        <p class="notice">the orange line never goes up. On the S-shape it sits flat at −0.35, then drops to the one-hump
+          level, −2.40, once the curve rolls off the hilltop.</p>
+      </div>
+    </div>
+
+    <div class="card controls">
+      <label for="start">Starting curve</label>
+      <select id="start">
+        <option value="random">random noise</option>
+        <option value="hump-like">one hump</option>
+        <option value="S-like">S-shape (a hilltop)</option>
+        <option value="S-push">S-shape + tiny nudge at time 8</option>
+        <option value="flat-push">flat + tiny nudge</option>
+      </select>
+      <label for="amp">Starting height</label>
+      <input id="amp" type="number" value="0.5" step="0.1">
+      <label for="seed">Random seed (changes the random noise)</label>
+      <input id="seed" type="number" value="0" step="1">
+
+      <label for="dt">Time step size: <span id="dtVal"></span> × the safe limit (above 1 blows up)</label>
+      <input id="dt" type="range" min="0.1" max="1.1" step="0.01" value="0.8">
+      <label for="speed">Speed (steps per frame): <span id="speedVal"></span></label>
+      <input id="speed" type="range" min="1" max="400" step="1" value="40">
+
+      <div class="row">
+        <button id="play">Play</button>
+        <button id="reset" class="secondary">Reset</button>
+      </div>
+
+      <dl class="stats">
+        <dt>time</dt><dd id="sT"></dd>
+        <dt>steps</dt><dd id="sSteps"></dd>
+        <dt>energy</dt><dd id="sE"></dd>
+        <dt>height of the curve</dt><dd id="sMax"></dd>
+        <dt>how far from resting</dt><dd id="sRes"></dd>
+      </dl>
+      <div class="warn" id="warn"></div>
+      <p class="note">Known answers to check against: the one-hump resting state has energy −2.4036 and height 0.9825;
+        the S-shape has energy −0.3541 and height 0.6601. The menu also lists the five exact resting states and the PINN's guesses.</p>
+    </div>
+  </div>
+
+  <h2 class="step"><span class="n">4</span>Key takeaways</h2>
+  <div class="takeaways"><ul>
+    <li>A step-by-step simulation can only go downhill in energy, so it always ends in a stable resting state.</li>
+    <li>That makes it reliable: from almost any start it finds the bowls on its own, with no training.</li>
+    <li>Its blind spot: it can never stay on a hilltop state like the S-shape. Even rounding errors tip it off.</li>
+    <li><span class="weak">Where PINNs help:</span> a PINN aims at the resting shape directly instead of stepping forward in
+      time, so it can land on a hilltop. Here it is not just a worse solver; it does a job the simulation cannot.</li>
+  </ul></div>
+
+  <details class="math"><summary>The math, for the curious</summary>
+    <p>Allen–Cahn equation u<sub>t</sub> = u<sub>xx</sub> + μ(u − u³) on (0, π), u = 0 at both ends, μ = 6,
+    N = 128 grid cells, forward Euler time steps (stable for Δt ≤ h²/2). Forward Euler here is gradient descent on the
+    discrete energy E<sub>h</sub>, which is why the energy can only go down.</p>
+  </details>
+</main>
+
+<script src="allen_cahn.js"></script>
+<script>
+const AC = AllenCahn;
+const $ = (id) => document.getElementById(id);
+const jsonCurves = {};                     // name -> Float64Array, from data/allen_cahn/*.json
+let sim, startCurve, energyTrace, running = false, pushed = false;
+
+// ---------- curves from JSON files (optional) ----------
+// Small or large numbers as "1.2 × 10⁻⁵".
+const SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+function sci(v) {
+  if (v === 0) return "0";
+  const p = Math.floor(Math.log10(v));
+  if (p >= -2 && p <= 3) return v.toPrecision(2);
+  return `${(v / 10 ** p).toFixed(1)} × 10${[...String(p)].map((c) => SUP[c]).join("")}`;
+}
+
+// Menu names for the curves in the JSON files.
+const CURVE_NAMES = {
+  zero: "Resting state: flat (unstable)",
+  hump: "Resting state: one hump (stable)",
+  minus_hump: "Resting state: one hump, upside down (stable)",
+  S: "Resting state: S-shape (unstable)",
+  minus_S: "Resting state: S-shape, flipped (unstable)",
+  hump_guess: "PINN's guess: one hump",
+  S_guess: "PINN's guess: S-shape",
+  zero_guess: "PINN's guess: flat",
+};
+
+async function loadJsonCurves() {
+  const files = ["equilibria.json", "pinn_rough_w1e4_adam2000.json"];
+  for (const f of files) {
+    try {
+      // site/allen-cahn/ keeps data one level up; allen_cahn/js/ in the repo, two levels up.
+      let res = await fetch(`../data/allen_cahn/${f}`);
+      if (!res.ok) res = await fetch(`../../data/allen_cahn/${f}`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      // Curves sit at the top level ({ hump_guess: [...] }) or, in equilibria.json,
+      // under states ({ states: { hump: { U: [...] } } }).
+      const entries = Object.entries(data);
+      if (data.states) for (const [k, v] of Object.entries(data.states)) entries.push([k, v.U]);
+      for (const [key, val] of entries) {
+        if (key !== "x" && Array.isArray(val) && val.length === AC.AC_DEFAULTS.N - 1 && typeof val[0] === "number") {
+          const name = `${f.replace(".json", "")}: ${key}`;
+          jsonCurves[name] = Float64Array.from(val);
+          const opt = document.createElement("option");
+          opt.value = "json:" + name;
+          opt.textContent = CURVE_NAMES[key] || name;
+          $("start").appendChild(opt);
+        }
+      }
+    } catch (e) { /* file not there yet: page still works with the built-in curves */ }
+  }
+}
+
+// ---------- simulation state ----------
+function reset() {
+  const dtFactor = parseFloat($("dt").value) * 0.5;
+  sim = AC.createSimulator({ dtFactor });
+  const kind = $("start").value;
+  const amp = parseFloat($("amp").value);
+  const seed = parseInt($("seed").value, 10) || 0;
+  if (kind.startsWith("json:")) startCurve = Float64Array.from(jsonCurves[kind.slice(5)]);
+  else if (kind === "S-push") startCurve = AC.initialCurve("S-like", sim.x, { amp });
+  // Flat is a hilltop too, but exact zeros never round, so it only moves if nudged.
+  // 1e-10 * sin(x): sits still until t ~ 4, in the hump by t ~ 5 (escape rate 5 vs 1.53 for the S).
+  else if (kind === "flat-push") startCurve = sim.x.map((v) => 1e-10 * Math.sin(v));
+  else startCurve = AC.initialCurve(kind, sim.x, { amp, seed });
+  sim.set(startCurve);
+  pushed = false;
+  energyTrace = [[0, sim.energy()]];
+  $("warn").textContent = "";
+  draw();
+}
+
+function frame() {
+  if (!running) return;
+  const n = parseInt($("speed").value, 10);
+  for (let k = 0; k < n; k++) {
+    sim.advance(1);
+    if ($("start").value === "S-push" && !pushed && sim.t >= 8) {
+      for (let i = 0; i < sim.U.length; i++) sim.U[i] += 1e-8 * Math.sin(sim.x[i]);
+      pushed = true;
+    }
+  }
+  if (sim.blewUp()) {
+    running = false;
+    $("play").textContent = "Play";
+    $("warn").textContent = "Blew up: the time step is too big for the simulation to stay stable.";
+  } else {
+    energyTrace.push([sim.t, sim.energy()]);
+  }
+  draw();
+  if (running) requestAnimationFrame(frame);
+}
+
+// ---------- drawing ----------
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function setupCanvas(c) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = c.clientWidth, h = c.height / (c._dpr || 1);
+  c._dpr = dpr;
+  c.width = w * dpr; c.height = h * dpr;
+  const ctx = c.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+function axes(ctx, w, h, pad, yTicks, yMap, xTicks, xMap) {
+  ctx.strokeStyle = css("--line"); ctx.fillStyle = css("--muted"); ctx.lineWidth = 1;
+  ctx.font = "11px system-ui, sans-serif";
+  for (const [v, txt] of yTicks) {
+    const y = yMap(v);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(txt, pad.l - 6, y);
+  }
+  xTicks.forEach(([v, txt], i) => {
+    ctx.textAlign = i === xTicks.length - 1 && i > 0 && xMap(v) > w - pad.r - 30 ? "right" : "center";
+    ctx.textBaseline = "top"; ctx.fillText(txt, xMap(v), h - pad.b + 6);
+  });
+}
+
+function line(ctx, xs, ys, xMap, yMap, color, width, dash) {
+  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  for (let i = 0; i < xs.length; i++) {
+    const X = xMap(xs[i]), Y = yMap(ys[i]);
+    i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function withEnds(U) {               // add the boundary zeros for plotting
+  const out = new Float64Array(U.length + 2);
+  out.set(U, 1);
+  return out;
+}
+
+function draw() {
+  const xs = withEnds(sim.x); xs[xs.length - 1] = Math.PI;
+
+  // u(x)
+  {
+    const { ctx, w, h } = setupCanvas($("plotU"));
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 40, r: 10, t: 10, b: 24 };
+    const lim = Math.max(1.1, Math.min(10, AC.maxAbs(startCurve) * 1.1));
+    const xMap = (v) => pad.l + (v / Math.PI) * (w - pad.l - pad.r);
+    const yMap = (v) => pad.t + (1 - (v + lim) / (2 * lim)) * (h - pad.t - pad.b);
+    axes(ctx, w, h, pad, [[-1, "−1"], [0, "0"], [1, "1"]], yMap,
+         [[0, "0"], [Math.PI / 2, "π/2"], [Math.PI, "π"]], xMap);
+    line(ctx, xs, withEnds(startCurve), xMap, yMap, css("--ghost"), 1.5, [4, 4]);
+    const U = withEnds(sim.U).map((v) => Math.max(-lim, Math.min(lim, v)));
+    line(ctx, xs, U, xMap, yMap, css("--curve"), 2.5);
+  }
+
+  // energy vs time
+  {
+    const { ctx, w, h } = setupCanvas($("plotE"));
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 100, r: 10, t: 8, b: 22 };
+    const ts = energyTrace.map((p) => p[0]), es = energyTrace.map((p) => p[1]);
+    const tMax = Math.max(1, ts[ts.length - 1]);
+    // Fixed window around the interesting range: random starts begin near E = 400,
+    // which would squash the equilibrium levels into one line. Larger values are clipped.
+    const eMin = -2.7, eMax = 1;
+    const xMap = (v) => pad.l + (v / tMax) * (w - pad.l - pad.r);
+    const yMap = (v) => pad.t + (1 - (v - eMin) / (eMax - eMin)) * (h - pad.t - pad.b);
+    const yT = [[-2.4036, "one hump −2.40"], [-0.3541, "S-shape −0.35"], [0, "flat 0"]];
+    axes(ctx, w, h, pad, yT, yMap, [[0, "0"], [tMax, `t = ${tMax.toFixed(1)}`]], xMap);
+    line(ctx, ts, es.map((e) => Math.min(e, eMax)), xMap, yMap, css("--energy"), 2);
+  }
+
+  $("sT").textContent = sim.t.toFixed(3);
+  $("sSteps").textContent = sim.steps.toLocaleString();
+  $("sE").textContent = sim.energy().toFixed(4);
+  $("sMax").textContent = AC.maxAbs(sim.U).toFixed(4);
+  $("sRes").textContent = sci(sim.residual());
+}
+
+// ---------- controls ----------
+function updateLabels() {
+  $("dtVal").textContent = parseFloat($("dt").value).toFixed(2);
+  $("speedVal").textContent = $("speed").value;
+}
+$("play").onclick = () => {
+  running = !running;
+  $("play").textContent = running ? "Pause" : "Play";
+  if (running) requestAnimationFrame(frame);
+};
+$("reset").onclick = reset;
+for (const id of ["start", "amp", "seed"]) $(id).onchange = reset;
+$("dt").oninput = () => { updateLabels(); sim.setDtFactor(parseFloat($("dt").value) * 0.5); };
+$("speed").oninput = updateLabels;
+window.onresize = draw;
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+
+updateLabels();
+reset();
+loadJsonCurves();
+</script>
+<script>
+// Energy ladder for section 2: the five exact resting shapes (Michelle's equilibria.json) at their real energies.
+(() => {
+  const cv = document.getElementById("ladder");
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const N = 128, H = Math.PI / N, XS = Array.from({ length: N - 1 }, (_, i) => (i + 1) * H);
+  let EQ = null;
+  async function load() {
+    // "../../../data/" stops at the site root, so it reaches data/ on the live site, in the repo and in website-update/.
+    for (const base of ["../../../data/", "../../data/", "../data/"]) {
+      try { const r = await fetch(base + "allen_cahn/equilibria.json"); if (r.ok) return await r.json(); } catch (e) { /* next */ }
+    }
+    return null;
+  }
+  function bowlColor() { return matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light" ? "#4ade80" : "#15803d"; }
+  function draw() {
+    if (!EQ) return;
+    const d = window.devicePixelRatio || 1, w = cv.clientWidth, h = +cv.getAttribute("height");
+    cv.width = Math.round(w * d); cv.height = Math.round(h * d); cv.style.height = h + "px";
+    const g = cv.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h);
+    const m = { l: 52, r: 10, t: 22, b: 22 };
+    const Y = (e) => m.t + (0.25 - e) / (0.25 + 2.65) * (h - m.t - m.b);
+    const X = (f) => m.l + f * (w - m.l - m.r);
+    g.font = "11px system-ui,sans-serif"; g.textAlign = "right"; g.textBaseline = "middle";
+    for (const [k, lab] of [["zero", "0"], ["S", "−0.35"], ["hump", "−2.40"]]) {
+      const e = EQ.states[k].energy;
+      g.strokeStyle = css("--line"); g.setLineDash([3, 4]); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(m.l, Y(e)); g.lineTo(w - m.r, Y(e)); g.stroke(); g.setLineDash([]);
+      g.fillStyle = css("--muted"); g.fillText(lab, m.l - 6, Y(e));
+    }
+    g.save(); g.translate(12, (m.t + h - m.b) / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText("energy (height)", 0, 0); g.restore();
+    const pos = { zero: 0.5, S: 0.32, minus_S: 0.68, hump: 0.12, minus_hump: 0.88 };
+    const bw = Math.min(64, (w - m.l - m.r) * 0.16), bh = 28;
+    const at = (k) => [X(pos[k]), Y(EQ.states[k].energy)];
+    const arrow = (a, b) => {
+      const [x1, y1] = at(a), [x2, y2] = at(b), sy = y1 + bh / 2 + 2, ey = y2 - bh / 2 - 4;
+      g.strokeStyle = css("--muted"); g.fillStyle = css("--muted"); g.lineWidth = 1.2;
+      g.beginPath(); g.moveTo(x1, sy); g.lineTo(x2, ey); g.stroke();
+      const ang = Math.atan2(ey - sy, x2 - x1);
+      g.beginPath(); g.moveTo(x2, ey); g.lineTo(x2 - 8 * Math.cos(ang - 0.4), ey - 8 * Math.sin(ang - 0.4));
+      g.lineTo(x2 - 8 * Math.cos(ang + 0.4), ey - 8 * Math.sin(ang + 0.4)); g.closePath(); g.fill();
+    };
+    for (const b of ["S", "minus_S", "hump", "minus_hump"]) arrow("zero", b);
+    for (const a of ["S", "minus_S"]) for (const b of ["hump", "minus_hump"]) arrow(a, b);
+    for (const k of Object.keys(pos)) {
+      const [cx, cy] = at(k), U = EQ.states[k].U;
+      g.fillStyle = css("--panel"); g.strokeStyle = k.includes("hump") ? bowlColor() : css("--accent"); g.lineWidth = 1.5;
+      g.beginPath(); g.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, 6); g.fill(); g.stroke();
+      g.strokeStyle = css("--ink"); g.lineWidth = 1.6; g.beginPath();
+      [0, ...XS, Math.PI].forEach((x, i) => {
+        const u = i === 0 || i === N ? 0 : U[i - 1];
+        const px = cx - bw / 2 + 5 + x / Math.PI * (bw - 10), py = cy - (u / 1.1) * (bh / 2 - 4);
+        i ? g.lineTo(px, py) : g.moveTo(px, py);
+      });
+      g.stroke();
+    }
+  }
+  window.addEventListener("resize", draw);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+  load().then((d) => { EQ = d; if (d) draw(); else cv.closest(".ladder").hidden = true; });
+})();
+</script>
+</body>
+</html>

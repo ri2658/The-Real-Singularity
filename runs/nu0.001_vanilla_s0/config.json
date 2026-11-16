@@ -1,0 +1,29 @@
+{
+ "nu": 0.0003183098861837907,
+ "depth": 8,
+ "width": 20,
+ "init": "xavier",
+ "n_ic": 100,
+ "n_bc": 100,
+ "n_col": 10000,
+ "sampling": "uniform",
+ "shock_frac": 0.5,
+ "shock_width": 0.05,
+ "adam_steps": 2000,
+ "lr": 0.001,
+ "weights": {
+  "pde": 0.1,
+  "ic": 0.1,
+  "bc": 0.1
+ },
+ "lbfgs_steps": 15000,
+ "lbfgs_history": 50,
+ "lbfgs_patience": 1000,
+ "seed": 0,
+ "log_every": 50,
+ "print_every": 500,
+ "device": "cpu",
+ "run_name": "nu0.001_vanilla_s0",
+ "runs_dir": "runs",
+ "ckpt_every": 500
+}
