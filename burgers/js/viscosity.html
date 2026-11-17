@@ -92,7 +92,7 @@
   <div class="card">
     <p class="label">\(u(x)\) at the chosen time</p>
     <canvas id="plotU" height="280"></canvas>
-    <p class="label" style="margin-top:8px">Pointwise error \(|\,\text{PINN} - \text{exact}\,|\)</p>
+    <p class="label" style="margin-top:8px">Error at each point, \(|\,\text{PINN} - \text{exact}\,|\), on a wave of height 1</p>
     <canvas id="plotE" height="90"></canvas>
     <div class="key">
       <span><i style="border-color:var(--ref)"></i>exact (Cole–Hopf reference)</span>
@@ -102,7 +102,7 @@
 
   <div class="readout">
     <div class="stat"><div class="k">error at this time</div><div class="v" id="eT">–</div></div>
-    <div class="stat"><div class="k">largest pointwise error</div><div class="v" id="eMax">–</div></div>
+    <div class="stat"><div class="k">largest error at one point</div><div class="v" id="eMax">–</div></div>
     <div class="stat"><div class="k">error over the whole run</div><div class="v" id="eAll">–</div></div>
     <div class="stat"><div class="k">trained run</div><div class="v" id="run" style="font-size:14px">–</div></div>
   </div>
@@ -194,7 +194,7 @@ function drawE(x, err, scaleMax) {
   const Y = (v) => pad.t + (1 - Math.min(v, scaleMax) / scaleMax) * (h - pad.t - pad.b);
   hline(ctx, Y(0), pad.l, w - pad.r); hline(ctx, Y(scaleMax), pad.l, w - pad.r);
   axisText(ctx, "0", pad.l - 6, Y(0), "right", "middle");
-  axisText(ctx, scaleMax >= 0.1 ? scaleMax.toFixed(1) : scaleMax.toExponential(0).replace("-", "−"), pad.l - 6, Y(scaleMax), "right", "middle");
+  axisText(ctx, String(+scaleMax.toPrecision(1)), pad.l - 6, Y(scaleMax), "right", "middle");
   ctx.fillStyle = css("--errfill"); ctx.strokeStyle = css("--pinn"); ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(X(x[0]), Y(0));
   err.forEach((v, i) => ctx.lineTo(X(x[i]), Y(v)));
@@ -211,7 +211,8 @@ function caseScale(pinn, ref) {
   return (pinn._scale = niceMax(Math.max(m, 1e-6)));
 }
 
-const pct = (e) => (e >= 0.01 ? `${(100 * e).toFixed(e >= 0.1 ? 0 : 1)}%` : e.toExponential(1).replace("-", "−"));
+// Errors as percentages with two significant digits: 0.49 -> 49%, 0.013 -> 1.3%, 5.5e-4 -> 0.055%.
+const pct = (e) => { const v = 100 * e; return `${v >= 10 ? Math.round(v) : +v.toPrecision(2)}%`; };
 
 async function redraw() {
   let d;
@@ -229,15 +230,15 @@ async function redraw() {
   drawE(ref.x, err, caseScale(pinn, ref));
   $("tVal").textContent = ref.t[tIdx].toFixed(2);
   $("eT").textContent = pct(eT);
-  $("eMax").textContent = eMax.toFixed(eMax < 0.01 ? 4 : 2);
+  $("eMax").textContent = pct(eMax);
   $("eAll").textContent = pct(c.rel_l2);
   $("run").textContent = c.run;
   const tier = c.rel_l2 < GOOD ? "good" : c.rel_l2 < CLOSE ? "mid" : "bad";
   $("verdict").className = "verdict" + (tier === "good" ? "" : ` ${tier}`);
   $("verdict").textContent = {
     good: `Matches: over the whole run the PINN is within ${pct(c.rel_l2)} of the exact solution.`,
-    mid: `Close: ${pct(c.rel_l2)} error over the whole run, most of it near the shock at x = 0.`,
-    bad: `Misses the shock: ${pct(c.rel_l2)} error over the whole run. Look near x = 0 at late times.`,
+    mid: `Close: ${pct(c.rel_l2)} error over the whole run, most of it near the shock at \\(x = 0\\).`,
+    bad: `Misses the shock: ${pct(c.rel_l2)} error over the whole run. Look near \\(x = 0\\) at late times.`,
   }[tier];
   document.querySelectorAll("#summary td[data-key]").forEach((td) => td.classList.toggle("cur", td.dataset.key === `${c.sampling}|${c.nu_pi}`));
 }
