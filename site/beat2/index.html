@@ -71,6 +71,25 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
 .sofar{margin:0 0 14px;padding-left:1.2em;max-width:62ch}
 .sofar li{margin:0 0 8px}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.renderMathInElement) return;
+  var opts = { delimiters: [{ left: "\\[", right: "\\]", display: true },
+                            { left: "\\(", right: "\\)", display: false }],
+               ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+               throwOnError: false };
+  renderMathInElement(document.body, opts);
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (el && el.isConnected && el.textContent.indexOf("\\(") >= 0) renderMathInElement(el, opts);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+});
+</script>
 </head>
 <body>
 <style>
@@ -201,7 +220,7 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
     <figure>
       <div class="pair">
         <div><p class="panel-t">The whole road, thin fluid, end of the run</p><canvas id="fWallFull" height="200"></canvas></div>
-        <div><p class="panel-t">Zoomed in on the wall (x from &minus;0.05 to 0.05)</p><canvas id="fWallZoom" height="200"></canvas></div>
+        <div><p class="panel-t">Zoomed in on the wall (\(x\) from \(-0.05\) to \(0.05\))</p><canvas id="fWallZoom" height="200"></canvas></div>
       </div>
       <div class="key">
         <span><i style="border-color:var(--ref)"></i>thick fluid</span>

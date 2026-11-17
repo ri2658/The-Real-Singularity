@@ -52,6 +52,25 @@
   .explain b { color: var(--ink); font-weight: 600; }
   .err { color: var(--guess); }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.renderMathInElement) return;
+  var opts = { delimiters: [{ left: "\\[", right: "\\]", display: true },
+                            { left: "\\(", right: "\\)", display: false }],
+               ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+               throwOnError: false };
+  renderMathInElement(document.body, opts);
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (el && el.isConnected && el.textContent.indexOf("\\(") >= 0) renderMathInElement(el, opts);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+});
+</script>
 </head>
 <body>
 <style>
@@ -85,16 +104,16 @@
 
   <div class="grid">
     <div class="card">
-      <p class="label">The curve u(x)</p>
+      <p class="label">The curve \(u(x)\)</p>
       <canvas id="plotU" height="260"></canvas>
       <div class="key">
         <span><i style="border-color:var(--ghost);border-top-style:dashed"></i><span id="keyExact">exact hump</span></span>
-        <span><i style="border-color:var(--guess);border-top-style:dotted"></i>PINN guess (t = 0)</span>
+        <span><i style="border-color:var(--guess);border-top-style:dotted"></i>PINN guess (\(t = 0\))</span>
         <span><i style="border-color:var(--curve)"></i>solver, now</span>
       </div>
     </div>
     <div class="card">
-      <p class="label">Distance from the exact state, max |U − exact| (log scale)</p>
+      <p class="label">Distance from the exact state, \(\max |U - \text{exact}|\) (log scale)</p>
       <canvas id="plotD" height="260"></canvas>
       <div class="key">
         <span><i style="border-color:var(--curve)"></i><span id="keyD1">distance to the hump</span></span>
@@ -104,9 +123,9 @@
   </div>
 
   <div class="readout">
-    <div class="stat"><div class="k">time t</div><div class="v" id="sT">0.00</div></div>
+    <div class="stat"><div class="k">time \(t\)</div><div class="v" id="sT">0.00</div></div>
     <div class="stat"><div class="k" id="sDk">distance to the hump</div><div class="v" id="sD">–</div></div>
-    <div class="stat"><div class="k">energy E</div><div class="v" id="sE">–</div></div>
+    <div class="stat"><div class="k">energy \(E\)</div><div class="v" id="sE">–</div></div>
     <div class="stat"><div class="k">PINN guess was off by</div><div class="v" id="sG">–</div></div>
   </div>
   <p class="status" id="status">Loading…</p>
@@ -236,29 +255,34 @@ function drawChart() {
   if (which === "S") line("dHump", css("--hump"));
 }
 
-function fmt(d) { return d < 1e-13 ? "< 1e−13" : d.toExponential(1).replace("-", "−"); }
+// Distance as LaTeX for the readouts and status text, e.g. 3.2e-5 -> 3.2 \times 10^{-5}.
+function tex(d) {
+  if (d < 1e-13) return "< 10^{-13}";
+  const [m, e] = d.toExponential(1).split("e");
+  return `${m} \\times 10^{${+e}}`;
+}
 
 function updateStats() {
   if (!sim) return;
   const d = distances(sim.U);
   $("sT").textContent = sim.t.toFixed(2);
-  $("sD").textContent = fmt(d.dExact);
+  $("sD").textContent = `\\(${tex(d.dExact)}\\)`;
   $("sE").textContent = sim.energy().toFixed(4);
-  $("sG").textContent = fmt(AC.maxAbsDiff(guess(), d.exact));
+  $("sG").textContent = `\\(${tex(AC.maxAbsDiff(guess(), d.exact))}\\)`;
   $("status").textContent = statusText(d);
 }
 
 function statusText(d) {
   if (which === "hump") {
-    if (healedAt !== null) return `Healed: within 1e−8 of the exact hump at t = ${healedAt.toFixed(2)}. ` +
-      `The guess started ${fmt(history[0].dExact)} away; the solver removed the PINN's error.`;
+    if (healedAt !== null) return `Healed: within \\(10^{-8}\\) of the exact hump at \\(t = ${healedAt.toFixed(2)}\\). ` +
+      `The guess started \\(${tex(history[0].dExact)}\\) away; the solver removed the PINN's error.`;
     if (sim.t === 0) return "The PINN's hump guess, about 2.5% off the exact hump. Press Run.";
     return "Healing: the gap shrinks about 6,000× per time unit.";
   }
   if (landed !== null) return `Fell off: the curve left S and settled on the ${d.humpSign}hump ` +
-    `(within 1e−3 at t = ${landed.toFixed(2)}). Closest approach to S was ${fmt(closest.d)} at t = ${closest.t.toFixed(2)}.`;
+    `(within \\(10^{-3}\\) at \\(t = ${landed.toFixed(2)}\\)). Closest approach to S was \\(${tex(closest.d)}\\) at \\(t = ${closest.t.toFixed(2)}\\).`;
   if (sim.t === 0) return "The PINN's S guess, about 6% off the exact S. Press Run.";
-  if (closest && d.dExact > 3 * closest.d) return `Leaving S: it got within ${fmt(closest.d)} at t = ${closest.t.toFixed(2)}, ` +
+  if (closest && d.dExact > 3 * closest.d) return `Leaving S: it got within \\(${tex(closest.d)}\\) at \\(t = ${closest.t.toFixed(2)}\\), ` +
     "and now the one unstable direction is growing.";
   return "Correcting toward S: the solver removes the PINN's error in every stable direction.";
 }

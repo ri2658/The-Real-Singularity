@@ -61,6 +61,25 @@
   .explain b { color: var(--ink); font-weight: 600; }
   .err { color: var(--bad); }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.renderMathInElement) return;
+  var opts = { delimiters: [{ left: "\\[", right: "\\]", display: true },
+                            { left: "\\(", right: "\\)", display: false }],
+               ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+               throwOnError: false };
+  renderMathInElement(document.body, opts);
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (el && el.isConnected && el.textContent.indexOf("\\(") >= 0) renderMathInElement(el, opts);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+});
+</script>
 </head>
 <body>
 <style>
@@ -76,15 +95,15 @@
 <nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html">Beat 2</a></div></div></nav>
 <main>
   <h1>Where a PINN breaks</h1>
-  <p class="lede">Burgers' equation u<sub>t</sub> + u u<sub>x</sub> = ν u<sub>xx</sub> starts from a smooth sine wave and
-    steepens into a shock at x = 0. The smaller the viscosity ν, the sharper the shock. Our PINN, trained the same way
-    each time, nails the smooth case and falls apart as the shock sharpens. Slide ν and t to see where.</p>
+  <p class="lede">Burgers' equation \(u_t + u\,u_x = \nu\, u_{xx}\) starts from a smooth sine wave and
+    steepens into a shock at \(x = 0\). The smaller the viscosity \(\nu\), the sharper the shock. Our PINN, trained the same way
+    each time, nails the smooth case and falls apart as the shock sharpens. Slide \(\nu\) and \(t\) to see where.</p>
 
   <div class="controls">
-    <label for="nu">Viscosity ν</label>
+    <label for="nu">Viscosity \(\nu\)</label>
     <div class="nu">
       <input id="nu" type="range" min="0" max="2" step="1" value="0" aria-describedby="nuTicks">
-      <div class="ticks" id="nuTicks"><span>0.01/π (smooth)</span><span>0.003/π</span><span>0.001/π (sharp)</span></div>
+      <div class="ticks" id="nuTicks"><span>\(0.01/\pi\) (smooth)</span><span>\(0.003/\pi\)</span><span>\(0.001/\pi\) (sharp)</span></div>
     </div>
     <label>Training points</label>
     <div class="row">
@@ -93,7 +112,7 @@
         <button id="sShock" aria-pressed="false">Shock-focused</button>
       </div>
     </div>
-    <label for="t">Time t = <span class="tv" id="tVal"></span></label>
+    <label for="t">Time \(t =\) <span class="tv" id="tVal"></span></label>
     <div class="row">
       <input id="t" class="time" type="range" min="0" max="99" step="1" value="99">
       <button id="play">Play</button>
@@ -101,9 +120,9 @@
   </div>
 
   <div class="card">
-    <p class="label">u(x) at the chosen time</p>
+    <p class="label">\(u(x)\) at the chosen time</p>
     <canvas id="plotU" height="280"></canvas>
-    <p class="label" style="margin-top:8px">Pointwise error |PINN − exact|</p>
+    <p class="label" style="margin-top:8px">Pointwise error \(|\,\text{PINN} - \text{exact}\,|\)</p>
     <canvas id="plotE" height="90"></canvas>
     <div class="key">
       <span><i style="border-color:var(--ref)"></i>exact (Cole–Hopf reference)</span>
@@ -120,17 +139,17 @@
   <p class="verdict" id="verdict">Loading…</p>
 
   <h2>All six trained PINNs</h2>
-  <p class="label">Relative L² error over the whole (x, t) grid; median of three seeds, except the uniform ν = 0.01/π model,
+  <p class="label">Relative \(L^2\) error over the whole \((x, t)\) grid; median of three seeds, except the uniform \(\nu = 0.01/\pi\) model,
     which is the one behind the live PINN page.</p>
-  <table id="summary"><thead><tr><th>Training points</th><th>0.01/π</th><th>0.003/π</th><th>0.001/π</th></tr></thead><tbody></tbody></table>
+  <table id="summary"><thead><tr><th>Training points</th><th>\(0.01/\pi\)</th><th>\(0.003/\pi\)</th><th>\(0.001/\pi\)</th></tr></thead><tbody></tbody></table>
 
   <p class="explain"><b>Why the shock is hard.</b> A PINN is a smooth function (tanh layers) trained only to make the
-    equation's residual small at sample points. At ν = 0.001/π the solution drops by about 1.5 over a width of a
+    equation's residual small at sample points. At \(\nu = 0.001/\pi\) the solution drops by about 1.5 over a width of a
     less than a thousandth, narrower than the spacing of the grid we compare on. The network can't bend that sharply without huge derivatives. A shock that is smeared, or sits
     slightly in the wrong place, still makes the residual small almost everywhere, so training settles on the wrong
-    answer: in the uniform run, the PINN's jump at t = 1 sits a few hundredths to the right of the true one.</p>
-  <p class="explain"><b>Why more points at the shock isn't enough.</b> Putting half the training points near x = 0 rescues
-    ν = 0.003/π, from about 49% error down to about 1.3%, but not ν = 0.001/π: still about 45%. A finite-volume solver gets
+    answer: in the uniform run, the PINN's jump at \(t = 1\) sits a few hundredths to the right of the true one.</p>
+  <p class="explain"><b>Why more points at the shock isn't enough.</b> Putting half the training points near \(x = 0\) rescues
+    \(\nu = 0.003/\pi\), from about 49% error down to about 1.3%, but not \(\nu = 0.001/\pi\): still about 45%. A finite-volume solver gets
     the same shock to about 0.1% error (see the race page).</p>
 </main>
 

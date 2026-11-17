@@ -190,9 +190,9 @@ async function run() {
     $('p-err').textContent = pct(relL2(p.flat, refFlat));
     $('p-errt').textContent = pct(relL2(p.flat.subarray(last * nx), refFlat.subarray(last * nx)));
     $('p-train').textContent = `${(info.train_seconds / 60).toFixed(1)} min of training`;
-    $('pnote').innerHTML = `PINN: run <code>${info.run}</code>, trained once for this ν only. One batch of ${ref.x.length * ref.t.length} points, ` +
+    $('pnote').innerHTML = `PINN: run <code>${info.run}</code>, trained once for this \\(\\nu\\) only. One batch of ${ref.x.length * ref.t.length} points, ` +
       `timed after a one-point warm-up, so model loading isn't counted. Its answer doesn't depend on N.` +
-      (nu === 'nu0.01pi' ? '' : ' At this ν the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html">Where a PINN breaks</a>.');
+      (nu === 'nu0.01pi' ? '' : ' At this \\(\\nu\\) the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html">Where a PINN breaks</a>.');
   } catch (e) { clearPinn(`PINN not available here (${e.message}).`); }
 
   // Replay the solution in time (about 4 seconds).

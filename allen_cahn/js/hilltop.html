@@ -129,9 +129,11 @@
   </ul></div>
 
   <details class="math"><summary>The math, for the curious</summary>
-    <p>Near the S state of the Allen–Cahn equation, a push of size ε grows like ε·e<sup>λ₁t</sup>, where λ₁ ≈ 1.5294 is the
-    one unstable growth rate of S. The curve counts as "escaped" once it is 0.1 away from S, so the escape time is about
-    ln(0.1/ε)/λ₁. Making ε ten times smaller adds ln(10)/λ₁ ≈ 1.5056. The simulator is plain forward Euler.</p>
+    <p>Near the S state of the Allen–Cahn equation, a push of size \(\varepsilon\) grows like \(\varepsilon\, e^{\lambda_1 t}\), where \(\lambda_1 \approx 1.5294\)
+    is the one unstable growth rate of S. The curve counts as "escaped" once it is 0.1 away from S, so the escape time is
+    about
+    \[t_{\text{escape}} \approx \frac{\ln(0.1/\varepsilon)}{\lambda_1}.\]
+    Making \(\varepsilon\) ten times smaller adds \(\ln(10)/\lambda_1 \approx 1.5056\). The simulator is plain forward Euler.</p>
   </details>
 </main>
 

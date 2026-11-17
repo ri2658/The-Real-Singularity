@@ -23,6 +23,25 @@ table.race{width:100%;border-collapse:collapse;font:15px system-ui,sans-serif;fo
 #msg{color:var(--sol);font:.9rem system-ui,sans-serif;white-space:pre-wrap}
 .k{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.renderMathInElement) return;
+  var opts = { delimiters: [{ left: "\\[", right: "\\]", display: true },
+                            { left: "\\(", right: "\\)", display: false }],
+               ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+               throwOnError: false };
+  renderMathInElement(document.body, opts);
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (el && el.isConnected && el.textContent.indexOf("\\(") >= 0) renderMathInElement(el, opts);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+});
+</script>
 </head>
 <body>
 <style>
@@ -201,9 +220,9 @@ async function run() {
     $('p-err').textContent = pct(relL2(p.flat, refFlat));
     $('p-errt').textContent = pct(relL2(p.flat.subarray(last * nx), refFlat.subarray(last * nx)));
     $('p-train').textContent = `${(info.train_seconds / 60).toFixed(1)} min of training`;
-    $('pnote').innerHTML = `PINN: run <code>${info.run}</code>, trained once for this ν only. One batch of ${ref.x.length * ref.t.length} points, ` +
+    $('pnote').innerHTML = `PINN: run <code>${info.run}</code>, trained once for this \\(\\nu\\) only. One batch of ${ref.x.length * ref.t.length} points, ` +
       `timed after a one-point warm-up, so model loading isn't counted. Its answer doesn't depend on N.` +
-      (nu === 'nu0.01pi' ? '' : ' At this ν the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html">Where a PINN breaks</a>.');
+      (nu === 'nu0.01pi' ? '' : ' At this \\(\\nu\\) the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html">Where a PINN breaks</a>.');
   } catch (e) { clearPinn(`PINN not available here (${e.message}).`); }
 
   // Replay the solution in time (about 4 seconds).

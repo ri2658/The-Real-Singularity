@@ -137,11 +137,12 @@
   </ul></div>
 
   <details class="math"><summary>The math, for the curious</summary>
-    <p>The loss is the mean squared residual of Burgers' equation u<sub>t</sub> + u u<sub>x</sub> − ν u<sub>xx</sub> = 0 at
-      the collocation points, plus the initial-condition and boundary terms. The error is the relative L² error against the
-      Cole–Hopf exact solution over the whole x–t grid. Training runs Adam, then switches to L-BFGS at step 2000.
-      Thick, medium and thin fluid are ν = 0.01/π, 0.003/π and 0.001/π; "extra check points at the jump" means
-      collocation points concentrated near the shock at x = 0.</p>
+    <p>The loss is the mean squared residual of Burgers' equation
+      \[u_t + u\,u_x - \nu\, u_{xx} = 0\]
+      at the collocation points, plus the initial-condition and boundary terms. The error is the relative \(L^2\) error against the
+      Cole–Hopf exact solution over the whole \((x, t)\) grid. Training runs Adam, then switches to L-BFGS at step 2000.
+      Thick, medium and thin fluid are \(\nu = 0.01/\pi\), \(0.003/\pi\) and \(0.001/\pi\); "extra check points at the jump" means
+      collocation points concentrated near the shock at \(x = 0\).</p>
   </details>
 </main>
 

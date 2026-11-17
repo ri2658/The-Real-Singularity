@@ -147,18 +147,20 @@ details a{color:var(--accent)}
 
     <details>
       <summary>The math, for the curious</summary>
-      <p>The traffic model is the Lighthill–Whitham–Richards model (1955–56): road density ρ obeys
-        ρ<sub>t</sub> + (ρ(1 − ρ))<sub>x</sub> = 0 when car speed falls linearly from full speed (ρ = 0) to a standstill
-        (ρ = 1). Writing u = 1 − 2ρ turns it into Burgers' equation, u<sub>t</sub> + u u<sub>x</sub> = 0. Car speed is
-        then (1 + u)/2, which is what the chart above plots.</p>
-      <p>Our runs add a small smoothing term ν u<sub>xx</sub>. You can think of it as how far ahead drivers look; that
+      <p>The traffic model is the Lighthill–Whitham–Richards model (1955–56): road density \(\rho\) obeys
+        \[\rho_t + \big(\rho(1-\rho)\big)_x = 0\]
+        when car speed falls linearly from full speed (\(\rho = 0\)) to a standstill (\(\rho = 1\)). Writing
+        \(u = 1 - 2\rho\) turns it into Burgers' equation,
+        \[u_t + u\,u_x = 0.\]
+        Car speed is then \(\tfrac{1+u}{2}\), which is what the chart above plots.</p>
+      <p>Our runs add a small smoothing term \(\nu\, u_{xx}\). You can think of it as how far ahead drivers look; that
         reading is our analogy, not part of the basic traffic model. "Ease off early", "normal" and "last second" are
-        ν = 0.01/π, 0.003/π and 0.001/π. The starting state is u = −sin(πx) on a road that wraps around, so the cars
+        \(\nu = 0.01/\pi\), \(0.003/\pi\) and \(0.001/\pi\). The starting state is \(u = -\sin(\pi x)\) on a road that wraps around, so the cars
         leaving on the right come back on the left. The chart is the exact solution (Cole–Hopf); the cars move at the
         local speed and are an illustration.</p>
-      <p>Numbers: 0.05% is the relative L2 error of our live model at ν = 0.01/π; about 40% is at ν = 0.001/π
+      <p>Numbers: 0.05% is the relative \(L^2\) error of our live model at \(\nu = 0.01/\pi\); about 40% is at \(\nu = 0.001/\pi\)
         (median of three training seeds, uniform or shock-focused training points); 200&times; and 35% are one training
-        run at ν = 0.003/π; 0.2% and 0.06 s are the finite-volume solver at ν = 0.001/π.</p>
+        run at \(\nu = 0.003/\pi\); 0.2% and 0.06 s are the finite-volume solver at \(\nu = 0.001/\pi\).</p>
       <p>Source: <a href="https://nbviewer.org/github/clawpack/riemann_book/blob/master/Traffic_flow.ipynb">LeVeque et
         al., Riemann Problems and Jupyter Solutions: Traffic flow</a>.</p>
     </details>

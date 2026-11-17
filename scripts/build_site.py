@@ -22,7 +22,9 @@ current versions into one folder that publish_site.py uploads:
 Every copied page gets the site-wide navigation bar (home, Beat 1, Beat 2;
 see BEATS), and each demo page also gets a previous / next bar at the bottom
 that walks through its beat in story order. The landing page's bar is
-refreshed between its <!-- NAV --> markers. Links use explicit
+refreshed between its <!-- NAV --> markers. Every copied page also loads KaTeX
+(see MATH): write math in the page sources as \\( ... \\) inline or \\[ ... \\] for
+a display line; text that JavaScript writes later is rendered too. Links use explicit
 .../index.html paths because CloudFront only serves index.html at the site root.
 
 Run from the repo root after changing any page, then commit site/:
@@ -92,6 +94,36 @@ PAGER_STYLE = """<style>
 .rs-pager .rs-up{opacity:.6}
 .rs-pager .rs-next{font-weight:600;margin-left:auto}
 </style>"""
+
+
+# KaTeX from cdnjs, pinned. Only \( \) and \[ \] count as math, so dollar amounts
+# stay plain text. A MutationObserver renders math in status text that the page's
+# own script writes after load. <option> labels and canvas text cannot hold math.
+KATEX = "https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9"
+MATH = f"""<link rel="stylesheet" href="{KATEX}/katex.min.css">
+<script defer src="{KATEX}/katex.min.js"></script>
+<script defer src="{KATEX}/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {{
+  if (!window.renderMathInElement) return;
+  var opts = {{ delimiters: [{{ left: "\\\\[", right: "\\\\]", display: true }},
+                            {{ left: "\\\\(", right: "\\\\)", display: false }}],
+               ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+               throwOnError: false }};
+  renderMathInElement(document.body, opts);
+  new MutationObserver(function (muts) {{
+    muts.forEach(function (m) {{
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (el && el.isConnected && el.textContent.indexOf("\\\\(") >= 0) renderMathInElement(el, opts);
+    }});
+  }}).observe(document.body, {{ childList: true, subtree: true, characterData: true }});
+}});
+</script>"""
+
+
+def add_math(html: str) -> str:
+    i = html.find("</head>")
+    return html if i < 0 else html[:i] + MATH + "\n" + html[i:]
 
 
 def beat_of(page):
@@ -172,7 +204,7 @@ def main():
             if not src_path.exists():
                 raise SystemExit(f"missing source for {page}: {src}")
             if dst.endswith(".html"):
-                (out / dst).write_text(add_nav(src_path.read_text(encoding="utf-8"), page),
+                (out / dst).write_text(add_math(add_nav(src_path.read_text(encoding="utf-8"), page)),
                                        encoding="utf-8")
             else:
                 shutil.copy2(src_path, out / dst)

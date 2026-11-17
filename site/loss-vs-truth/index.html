@@ -65,6 +65,25 @@
   details.math { color: var(--muted); max-width: 72ch; margin: 22px 0 0; font-size: 14px; }
   details.math summary { cursor: pointer; color: var(--ink); }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.renderMathInElement) return;
+  var opts = { delimiters: [{ left: "\\[", right: "\\]", display: true },
+                            { left: "\\(", right: "\\)", display: false }],
+               ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+               throwOnError: false };
+  renderMathInElement(document.body, opts);
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (el && el.isConnected && el.textContent.indexOf("\\(") >= 0) renderMathInElement(el, opts);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+});
+</script>
 </head>
 <body>
 <style>
@@ -148,11 +167,12 @@
   </ul></div>
 
   <details class="math"><summary>The math, for the curious</summary>
-    <p>The loss is the mean squared residual of Burgers' equation u<sub>t</sub> + u u<sub>x</sub> − ν u<sub>xx</sub> = 0 at
-      the collocation points, plus the initial-condition and boundary terms. The error is the relative L² error against the
-      Cole–Hopf exact solution over the whole x–t grid. Training runs Adam, then switches to L-BFGS at step 2000.
-      Thick, medium and thin fluid are ν = 0.01/π, 0.003/π and 0.001/π; "extra check points at the jump" means
-      collocation points concentrated near the shock at x = 0.</p>
+    <p>The loss is the mean squared residual of Burgers' equation
+      \[u_t + u\,u_x - \nu\, u_{xx} = 0\]
+      at the collocation points, plus the initial-condition and boundary terms. The error is the relative \(L^2\) error against the
+      Cole–Hopf exact solution over the whole \((x, t)\) grid. Training runs Adam, then switches to L-BFGS at step 2000.
+      Thick, medium and thin fluid are \(\nu = 0.01/\pi\), \(0.003/\pi\) and \(0.001/\pi\); "extra check points at the jump" means
+      collocation points concentrated near the shock at \(x = 0\).</p>
   </details>
 </main>
 
