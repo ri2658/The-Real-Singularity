@@ -18,6 +18,13 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# Browsers may keep a page they downloaded earlier and show it again without asking,
+# so after a deploy a reader could still see the old version. "no-cache" makes the
+# browser check with CloudFront every time (a quick "not modified" when nothing changed).
+# Large files that rarely change (models, images, fonts) may be kept for a day.
+CACHE_CONTROL = {".html": "no-cache", ".js": "no-cache", ".css": "no-cache", ".json": "no-cache"}
+DEFAULT_CACHE = "public, max-age=86400"
+
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
@@ -67,7 +74,8 @@ def main():
             str(path),
             args.bucket,
             key,
-            ExtraArgs={"ContentType": content_type},
+            ExtraArgs={"ContentType": content_type,
+                       "CacheControl": CACHE_CONTROL.get(path.suffix.lower(), DEFAULT_CACHE)},
         )
         print(f"{key}  {content_type}")
         uploaded += 1
