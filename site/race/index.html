@@ -7,22 +7,28 @@
 <style>
 :root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--ref:#8a93a3;--sol:#c2410c;--pinn:#2a78d6}
 @media (prefers-color-scheme:dark){:root{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ref:#98a2b3;--sol:#fb923c;--pinn:#5b9bea}}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Georgia,serif}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 main{max-width:760px;margin:0 auto;padding:20px 16px 32px}
 h1{font-size:1.4rem;margin:0 0 4px}
 p{color:var(--mut);margin:0 0 12px}
 canvas{width:100%;aspect-ratio:16/9;display:block;border-bottom:1px solid var(--grid)}
-.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:12px 0;font:.9rem system-ui,sans-serif}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:12px 0;font:.9rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 button,select{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:transparent;color:var(--fg);border-radius:6px;cursor:pointer}
 input[type=range]{flex:1 1 200px;accent-color:var(--sol)}
-table.race{width:100%;border-collapse:collapse;font:15px system-ui,sans-serif;font-variant-numeric:tabular-nums;margin-top:6px}
+table.race{width:100%;border-collapse:collapse;font:15px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;font-variant-numeric:tabular-nums;margin-top:6px}
 .race th,.race td{padding:7px 10px;border-bottom:1px solid var(--grid);text-align:right}
 .race th:first-child,.race td:first-child{text-align:left;color:var(--mut);font-weight:400}
 .race td b{font-size:1.1rem}
-.note{font:.85rem system-ui,sans-serif;color:var(--mut);margin:8px 0 0}
-#msg{color:var(--sol);font:.9rem system-ui,sans-serif;white-space:pre-wrap}
+.note{font:.85rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin:8px 0 0}
+#msg{color:var(--sol);font:.9rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;white-space:pre-wrap}
 .k{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script>
+if (document.fonts) document.fonts.ready.then(function () { window.dispatchEvent(new Event("resize")); });
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
@@ -46,12 +52,12 @@ document.addEventListener("DOMContentLoaded", function () {
 <body>
 <style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
-  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
-.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-home{font:700 15px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;opacity:1;padding-left:0}
 .rs-nav .rs-links{display:flex;align-items:center;gap:4px}
 </style>
 <nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html">Beat 2</a></div></div></nav>
@@ -170,7 +176,7 @@ function draw() {
   const m = {l: 40, r: 10, t: 10, b: 28};
   const X = v => m.l + (v + 1) / 2 * (w - m.l - m.r);
   const Y = v => h - m.b - (v + 1.1) / 2.2 * (h - m.t - m.b);
-  g.strokeStyle = css('--grid'); g.fillStyle = css('--mut'); g.font = '12px system-ui,sans-serif'; g.lineWidth = 1;
+  g.strokeStyle = css('--grid'); g.fillStyle = css('--mut'); g.font = '12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif'; g.lineWidth = 1;
   g.textAlign = 'center';
   for (const v of [-1, -.5, 0, .5, 1]) { g.beginPath(); g.moveTo(X(v), Y(-1.1)); g.lineTo(X(v), Y(1.1)); g.stroke(); g.fillText(v, X(v), h - 10); }
   g.textAlign = 'right';
@@ -251,7 +257,7 @@ $('nu').onchange();
 <style>
 .rs-pager{max-width:980px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
   display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;
-  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-pager a{color:inherit;text-decoration:none;opacity:.8}
 .rs-pager a:hover,.rs-pager a:focus-visible{opacity:1;text-decoration:underline}
 .rs-pager .rs-up{opacity:.6}

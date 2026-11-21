@@ -10,17 +10,17 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ch:#6cb4e4;--hot:#fb923c;--ph:#4ade80;--vis:#c4b5fd}}
 :root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ch:#6cb4e4;--hot:#fb923c;--ph:#4ade80;--vis:#c4b5fd}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Georgia,"Iowan Old Style",serif}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 main{max-width:760px;margin:0 auto;padding:20px 16px 32px}
 h1{font-size:1.5rem;margin:0 0 4px;line-height:1.2}
 p{margin:0 0 12px;color:var(--mut);max-width:62ch}
 canvas{width:100%;display:block;border-bottom:1px solid var(--grid)}
 #c1{aspect-ratio:16/10}#c2{aspect-ratio:16/9;margin-top:14px}
-.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:14px 0 6px;font-family:system-ui,sans-serif;font-size:.9rem}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:14px 0 6px;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;font-size:.9rem}
 input[type=range]{flex:1 1 220px;accent-color:var(--hot)}
 button,select{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:transparent;color:var(--fg);border-radius:6px;cursor:pointer}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
-#read{font-family:system-ui,sans-serif;font-size:.9rem;color:var(--fg);min-height:3em}
+#read{font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;font-size:.9rem;color:var(--fg);min-height:3em}
 .k{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
 </style>
 </head>
@@ -75,7 +75,7 @@ function frame(g,w,h,xr,yr,xl,yl){
   const m={l:44,r:12,t:12,b:34};
   const X=x=>m.l+(x-xr[0])/(xr[1]-xr[0])*(w-m.l-m.r);
   const Y=y=>h-m.b-(y-yr[0])/(yr[1]-yr[0])*(h-m.t-m.b);
-  g.strokeStyle=col('--grid'); g.fillStyle=col('--mut'); g.lineWidth=1; g.font='12px system-ui,sans-serif';
+  g.strokeStyle=col('--grid'); g.fillStyle=col('--mut'); g.lineWidth=1; g.font='12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
   g.textAlign='center';
   for(const v of [-1,-0.5,0,0.5,1]){g.beginPath();g.moveTo(X(v),Y(yr[0]));g.lineTo(X(v),Y(yr[1]));g.stroke();g.fillText(v,X(v),h-m.b+14);}
   g.textAlign='right';

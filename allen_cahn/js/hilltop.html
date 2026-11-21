@@ -21,9 +21,9 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+         font: 15px/1.5 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
   main { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
-  h1 { font: 700 1.6rem/1.2 Georgia, "Iowan Old Style", serif; margin: 0 0 6px; }
+  h1 { font: 700 1.6rem/1.2 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0 0 6px; }
   .lede { color: var(--muted); max-width: 70ch; margin: 0 0 18px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
@@ -45,15 +45,15 @@
   .explain { color: var(--muted); max-width: 72ch; margin-top: 18px; font-size: 14px; }
   .explain b { color: var(--ink); font-weight: 600; }
 
-  h2.step { font: 700 1.15rem/1.3 Georgia, "Iowan Old Style", serif; margin: 30px 0 8px; }
+  h2.step { font: 700 1.15rem/1.3 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 30px 0 8px; }
   h2.step .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
-               background: var(--accent); color: var(--bg); font: 700 13px system-ui, sans-serif;
+               background: var(--accent); color: var(--bg); font: 700 13px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
                margin-right: 8px; vertical-align: 2px; }
   .prose { color: var(--muted); max-width: 70ch; margin: 0 0 12px; }
   .prose b { color: var(--ink); font-weight: 600; }
   .try { border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 8px 8px 0;
          padding: 10px 14px; margin: 12px 0 14px; max-width: 72ch; color: var(--ink); font-size: 14px; }
-  .try::before { content: "Try this"; display: block; font: 600 11px system-ui, sans-serif; letter-spacing: .06em;
+  .try::before { content: "Try this"; display: block; font: 600 11px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; letter-spacing: .06em;
                  text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
   .notice { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
   .notice::before { content: "What to notice: "; font-weight: 600; color: var(--ink); }
@@ -178,7 +178,7 @@ function setupCanvas(c) {
 }
 
 function axisText(ctx, txt, x, y, align, base) {
-  ctx.fillStyle = css("--muted"); ctx.font = "11px system-ui, sans-serif";
+  ctx.fillStyle = css("--muted"); ctx.font = "11px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
   ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(txt, x, y);
 }
 

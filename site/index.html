@@ -5,30 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Real Singularity</title>
 <meta name="description" content="AI that learns physics is powerful, but its own score can't tell when it is wrong. We test physics-informed neural networks (PINNs) and show why a human still has to check the answer.">
+<!-- HEAD -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script>
+if (document.fonts) document.fonts.ready.then(function () { window.dispatchEvent(new Event("resize")); });
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.renderMathInElement) return;
+  var opts = { delimiters: [{ left: "\\[", right: "\\]", display: true },
+                            { left: "\\(", right: "\\)", display: false }],
+               ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+               throwOnError: false };
+  renderMathInElement(document.body, opts);
+  new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      if (el && el.isConnected && el.textContent.indexOf("\\(") >= 0) renderMathInElement(el, opts);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+});
+</script>
+<!-- /HEAD -->
 <style>
-:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--good:#15803d;--ink2:#2a6f97}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--good:#4ade80;--ink2:#6cb4e4}}
-:root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--good:#4ade80;--ink2:#6cb4e4}
+:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--good:#15803d;--ink2:#2a6f97;--code:#f3f2ee}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--good:#4ade80;--ink2:#6cb4e4;--code:#0b1017}}
+:root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--good:#4ade80;--ink2:#6cb4e4;--code:#0b1017}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 Georgia,"Iowan Old Style",serif}
+body{margin:0;background:var(--bg);color:var(--fg);font:16.5px/1.65 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 main{max-width:780px;margin:0 auto;padding:40px 16px 56px}
-h1{font-size:2.3rem;line-height:1.12;margin:0 0 14px}
-h2{font-size:1.45rem;line-height:1.25;margin:0 0 10px}
-h3{font:600 1.05rem system-ui,sans-serif;margin:0 0 6px}
-p{margin:0 0 14px;max-width:64ch}
+h1{font-size:2.4rem;line-height:1.1;letter-spacing:-.02em;margin:0 0 14px}
+h2{font-size:1.45rem;line-height:1.25;letter-spacing:-.01em;margin:0 0 10px}
+h3{font-size:1.05rem;margin:18px 0 6px}
+p{margin:0 0 14px;max-width:66ch}
 a{color:var(--accent)}
-.lede{font-size:1.12rem}
+.lede{font-size:1.1rem}
 .mut{color:var(--mut)}
-.num{font:600 .8rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+.small{font-size:.88rem;color:var(--mut)}
+.num{font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
 section{border-top:1px solid var(--grid);padding:30px 0 10px}
+.eq{overflow-x:auto;overflow-y:hidden;margin:4px 0 14px;padding:2px 0}
+.eq .katex-display{margin:.4em 0}
+.terms{margin:0 0 14px;padding-left:1.2em;max-width:66ch}
+.terms li{margin:0 0 6px}
 .thesis{background:var(--card);border:1px solid var(--grid);border-left:4px solid var(--accent);border-radius:10px;
   padding:16px 18px;margin:8px 0 18px}
-.thesis p{margin:0;font-size:1.05rem}
+.thesis p{margin:0;font-size:1.04rem}
 .thesis b{color:var(--accent)}
 figure{margin:10px 0 18px}
 figure svg{width:100%;height:auto;display:block;max-width:640px}
-figcaption{font:.86rem/1.5 system-ui,sans-serif;color:var(--mut);margin-top:6px;max-width:64ch}
-svg text{font-family:system-ui,sans-serif;fill:var(--fg)}
+figcaption{font-size:.86rem;line-height:1.5;color:var(--mut);margin-top:6px;max-width:66ch}
+svg text{font-family:inherit;fill:var(--fg)}
 svg .m{fill:var(--mut)}
 svg .box{fill:var(--card);stroke:var(--grid);stroke-width:1.5}
 svg .hl{fill:var(--card);stroke:var(--accent);stroke-width:2}
@@ -36,42 +68,58 @@ svg .ln{stroke:var(--mut);stroke-width:1.6;fill:none}
 svg .acc{stroke:var(--accent);stroke-width:2;fill:none}
 svg .dot{fill:var(--accent)}
 svg .curve{stroke:var(--ink2);stroke-width:2.5;fill:none}
+.gd{background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:14px 16px;margin:8px 0 18px}
+.gd canvas{width:100%;aspect-ratio:16/7;display:block}
+.gd .row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:10px;font-size:.9rem}
+.gd .row label{display:flex;align-items:center;gap:8px;flex:1 1 240px}
+.gd input[type=range]{flex:1;accent-color:var(--accent)}
+.gd button{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:var(--bg);color:var(--fg);border-radius:6px;cursor:pointer}
+.gd output{font-variant-numeric:tabular-nums}
+.gd .read{font-size:.88rem;color:var(--mut);margin-top:8px}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+details.code{border:1px solid var(--grid);border-radius:10px;margin:6px 0 18px;background:var(--card)}
+details.code summary{cursor:pointer;padding:10px 14px;font-size:.9rem;font-weight:600}
+details.code p{font-size:.86rem;color:var(--mut);margin:0 14px 8px}
+details.code pre{margin:0;padding:12px 14px;background:var(--code);border-top:1px solid var(--grid);border-radius:0 0 10px 10px;
+  overflow-x:auto;font:12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
 .beats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin:6px 0 10px}
 a.beat{display:block;background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:18px 18px 16px;color:inherit;text-decoration:none}
 a.beat:hover,a.beat:focus-visible{border-color:var(--accent);outline:none}
 a.beat .num{margin-bottom:2px}
-a.beat h2{font-size:1.25rem;margin:0 0 8px}
-a.beat p{font:.92rem/1.5 system-ui,sans-serif;color:var(--mut);margin:0 0 10px}
-a.beat .row{font:.86rem/1.45 system-ui,sans-serif;margin:0 0 6px;padding-left:10px;border-left:3px solid var(--grid)}
+a.beat h2{font-size:1.25rem;margin:0 0 4px}
+a.beat .beq{font-size:.95rem;margin:0 0 10px;color:var(--fg)}
+a.beat p{font-size:.92rem;line-height:1.5;color:var(--mut);margin:0 0 10px}
+a.beat .row{font-size:.86rem;line-height:1.45;margin:0 0 6px;padding-left:10px;border-left:3px solid var(--grid)}
 a.beat .row b{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
 a.beat .row.good b{color:var(--good)}a.beat .row.bad b{color:var(--accent)}a.beat .row.human b{color:var(--ink2)}
-a.beat .go{font:600 .9rem system-ui,sans-serif;color:var(--accent);margin-top:10px;display:block}
-.cmp{width:100%;border-collapse:collapse;font:.9rem/1.45 system-ui,sans-serif;margin:6px 0 16px}
+a.beat .go{font-size:.9rem;font-weight:600;color:var(--accent);margin-top:10px;display:block}
+.cmp{width:100%;border-collapse:collapse;font-size:.9rem;line-height:1.45;margin:6px 0 16px}
 .cmp th,.cmp td{border-bottom:1px solid var(--grid);padding:9px 8px;text-align:left;vertical-align:top}
 .cmp thead th{font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
 .cmp tbody th{font-weight:600;width:28%}
 .cmp td.h{color:var(--ink2);font-weight:600}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:4px 0 16px}
 .two div{background:var(--card);border:1px solid var(--grid);border-radius:10px;padding:14px 16px}
+.two h3{margin-top:0}
 .two h3.good{color:var(--good)}.two h3.bad{color:var(--accent)}
-.two ul{margin:0;padding-left:1.1em;font:.92rem/1.5 system-ui,sans-serif;color:var(--mut)}
+.two ul{margin:0;padding-left:1.1em;font-size:.92rem;line-height:1.5;color:var(--mut)}
 .two li{margin:0 0 6px}
-.sources{font:.82rem/1.55 system-ui,sans-serif;color:var(--mut)}
+.sources{font-size:.82rem;line-height:1.55;color:var(--mut)}
 .sources ol{padding-left:1.2em;margin:6px 0 0}
-footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.82rem/1.5 system-ui,sans-serif;color:var(--mut)}
-@media (max-width:520px){h1{font-size:1.9rem}.cmp{font-size:.84rem}.cmp th,.cmp td{padding:8px 5px}}
+footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-size:.82rem;line-height:1.5;color:var(--mut)}
+@media (max-width:520px){h1{font-size:2rem}.eq .katex-display>.katex{font-size:.82em}.cmp{font-size:.84rem}.cmp th,.cmp td{padding:8px 5px}}
 </style>
 </head>
 <body>
 <!-- NAV -->
 <style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
-  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
-.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-home{font:700 15px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;opacity:1;padding-left:0}
 .rs-nav .rs-links{display:flex;align-items:center;gap:4px}
 </style>
 <nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="index.html">The Real Singularity</a><div class="rs-links"><a href="beat1/index.html">Beat 1</a><a href="beat2/index.html">Beat 2</a></div></div></nav>
@@ -79,8 +127,14 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
 <main>
   <h1>The Real Singularity</h1>
   <p class="lede">In September 2026, OpenAI announced that its AI, in an 88-hour run, had settled one of the Millennium
-    Prize Problems: a $1,000,000 question about whether the equations of fluid flow can break down.<sup><a href="#s1">1</a></sup>
-    It can seem like AI can do anything these days, even the hardest problems in mathematical physics.</p>
+    Prize Problems: a $1,000,000 question about the equations of fluid flow.<sup><a href="#s1">1</a></sup> Those are the
+    <b>Navier&ndash;Stokes equations</b>, which describe how a fluid with velocity \(\mathbf{u}\) and pressure \(p\)
+    moves:</p>
+  <div class="eq">\[\begin{gathered}\underbrace{\partial_t \mathbf{u} + (\mathbf{u}\cdot\nabla)\,\mathbf{u}}_{\text{the flow changes}}
+    \;=\; \underbrace{-\nabla p}_{\text{pressure}} \;+\; \underbrace{\nu\,\Delta \mathbf{u}}_{\text{viscosity}}
+    \;+\; \underbrace{\mathbf{f}}_{\text{push}}, \\ \nabla\cdot\mathbf{u} = 0 \quad \text{(the fluid can't be squeezed)}.\end{gathered}\]</div>
+  <p>The prize asks whether, in three dimensions, a smooth flow always stays smooth, or whether it can "blow up" in a
+    finite time. It can seem like AI can do anything these days, even the hardest problems in mathematical physics.</p>
 
   <section>
     <p class="num">How physics is really done with AI</p>
@@ -100,47 +154,128 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
   </section>
 
   <section>
-    <p class="num">Step 1 · Neural networks in one minute</p>
-    <h2>A formula with thousands of knobs</h2>
-    <p>A neural network is a big adjustable formula. Give it numbers, for us a position on a road and a moment in time,
-      and it returns a number, such as the speed of traffic there. Inside are knobs: our networks have about 3,000.</p>
-    <p>Training means: let it guess, <b>score</b> how bad the guess is, turn every knob a little to make the score better,
-      and repeat thousands of times. The network never "understands" the problem. It just drives the score as low as
-      it can, so everything depends on what the score measures.</p>
+    <p class="num">Step 1 · Neural networks</p>
+    <h2>From one neuron to a network</h2>
+    <h3>A neuron is a line, then a bend</h3>
+    <p>A single <b>neuron</b> takes some numbers \(\mathbf{x}\), multiplies them by weights, adds a bias, and passes the
+      result through a fixed curve \(\sigma\) called the <b>activation function</b>:</p>
+    <div class="eq">\[y = \sigma(A\mathbf{x} + b).\]</div>
+    <p>The inside, \(A\mathbf{x} + b\), is an ordinary linear equation. The bend \(\sigma\) is what matters. Without it,
+      stacking layers gets you nowhere, because a linear function of a linear function is still linear:</p>
+    <div class="eq">\[A_2(A_1\mathbf{x} + b_1) + b_2 = (A_2A_1)\,\mathbf{x} + (A_2b_1 + b_2).\]</div>
+    <p>With a non-linear \(\sigma\) in between, layers can build up curves, bumps and steep slopes that no straight line
+      can. Our networks use \(\sigma(z) = \tanh z\), a smooth S-shaped curve.</p>
     <figure>
-      <svg viewBox="0 0 640 200" role="img" aria-label="Position and time go into a network of knobs, which outputs a speed; a score of the output feeds back to adjust the knobs.">
-        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--mut)"/></marker>
-        <marker id="ara" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker></defs>
-        <rect class="box" x="8" y="40" width="130" height="70" rx="10"/>
-        <text x="73" y="70" text-anchor="middle" font-size="15">position</text>
-        <text x="73" y="92" text-anchor="middle" font-size="15">time</text>
-        <line class="ln" x1="140" y1="75" x2="200" y2="75" marker-end="url(#ar)"/>
-        <rect class="hl" x="204" y="22" width="220" height="106" rx="12"/>
-        <text x="314" y="46" text-anchor="middle" font-size="14" font-weight="600">network</text>
-        <g style="stroke:var(--mut);stroke-width:1.4;fill:none">
-          <circle cx="244" cy="85" r="15"/><line x1="244" y1="85" x2="253" y2="74"/>
-          <circle cx="294" cy="85" r="15"/><line x1="294" y1="85" x2="282" y2="76"/>
-          <circle cx="344" cy="85" r="15"/><line x1="344" y1="85" x2="356" y2="90"/>
-          <circle cx="394" cy="85" r="15"/><line x1="394" y1="85" x2="394" y2="71"/>
-        </g>
-        <text x="314" y="120" text-anchor="middle" font-size="12" class="m">about 3,000 knobs</text>
-        <line class="ln" x1="426" y1="75" x2="486" y2="75" marker-end="url(#ar)"/>
-        <rect class="box" x="490" y="40" width="140" height="70" rx="10"/>
-        <text x="560" y="72" text-anchor="middle" font-size="15">speed of</text>
-        <text x="560" y="92" text-anchor="middle" font-size="15">traffic there</text>
-        <path class="acc" d="M560,112 C560,180 314,180 314,134" marker-end="url(#ara)"/>
-        <text x="437" y="190" text-anchor="middle" font-size="13" style="fill:var(--accent)">score the guess, nudge the knobs, repeat</text>
+      <svg viewBox="0 0 640 170" role="img" aria-label="Inputs x and t are multiplied by weights, summed with a bias, and passed through the tanh curve to give the output.">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--mut)"/></marker></defs>
+        <circle class="box" cx="40" cy="45" r="24"/><text x="40" y="51" text-anchor="middle" font-size="16" font-style="italic">x</text>
+        <circle class="box" cx="40" cy="125" r="24"/><text x="40" y="131" text-anchor="middle" font-size="16" font-style="italic">t</text>
+        <line class="ln" x1="66" y1="50" x2="216" y2="80" marker-end="url(#ar)"/>
+        <line class="ln" x1="66" y1="120" x2="216" y2="92" marker-end="url(#ar)"/>
+        <text x="130" y="52" font-size="13" class="m">× a₁</text><text x="130" y="128" font-size="13" class="m">× a₂</text>
+        <circle class="hl" cx="250" cy="86" r="32"/>
+        <text x="250" y="82" text-anchor="middle" font-size="14">a₁x + a₂t</text><text x="250" y="100" text-anchor="middle" font-size="14">+ b</text>
+        <line class="ln" x1="284" y1="86" x2="356" y2="86" marker-end="url(#ar)"/>
+        <rect class="hl" x="360" y="40" width="130" height="92" rx="10"/>
+        <line x1="372" y1="86" x2="478" y2="86" style="stroke:var(--grid)"/>
+        <path class="curve" d="M372,122 C410,122 410,122 425,86 C440,50 440,50 478,50"/>
+        <text x="425" y="152" text-anchor="middle" font-size="13" class="m">σ = tanh</text>
+        <line class="ln" x1="492" y1="86" x2="560" y2="86" marker-end="url(#ar)"/>
+        <circle class="box" cx="592" cy="86" r="26"/><text x="592" y="92" text-anchor="middle" font-size="16" font-style="italic">y</text>
       </svg>
+      <figcaption>One neuron: a weighted sum plus a bias (the \(A\mathbf{x} + b\)), then the bend \(\sigma\).</figcaption>
     </figure>
+
+    <h3>A network is many neurons in layers</h3>
+    <p>A <b>layer</b> runs many neurons side by side, so \(A\) becomes a matrix and \(b\) a vector. Feeding each layer's
+      output \(h_k\) into the next gives the whole network. Ours takes a position \(x\) and a time \(t\) and returns
+      one number, \(u\):</p>
+    <div class="eq">\[\begin{aligned} h_0 &= \begin{bmatrix} x \\ t \end{bmatrix}, \qquad
+      h_k = \sigma(A_k h_{k-1} + b_k) \quad (k = 1, \dots, 8), \\ u_\theta(x, t) &= A_9 h_8 + b_9. \end{aligned}\]</div>
+    <p>It has 8 layers of 20 neurons. All the entries of the \(A\)'s and \(b\)'s together, called the
+      <b>parameters</b> \(\theta\), number 3,021. They are the knobs that training turns.</p>
+    <details class="code">
+      <summary>See the code: our network in PyTorch</summary>
+      <p>Abridged from <code>pinn/model.py</code> in our repository.</p>
+<pre>import torch
+import torch.nn as nn
+
+class PINN(nn.Module):
+    """(x, t) -&gt; u: `depth` hidden layers of `width` neurons, tanh in between."""
+
+    def __init__(self, depth=8, width=20):
+        super().__init__()
+        layers = [nn.Linear(2, width), nn.Tanh()]          # A_1 [x, t] + b_1, then sigma
+        for _ in range(depth - 1):
+            layers += [nn.Linear(width, width), nn.Tanh()]  # A_k h + b_k, then sigma
+        layers.append(nn.Linear(width, 1))                 # A_9 h + b_9: one number out
+        self.net = nn.Sequential(*layers)
+
+    def forward(self, x, t):
+        return self.net(torch.cat([x, t], dim=1))</pre>
+    </details>
+
+    <h3>Scoring a guess: root mean squared error</h3>
+    <p>To train a network, we need a single number that says how wrong it is. When the right answers \(y_i\) are known,
+      the usual choice is the <b>root mean squared error</b>: square each miss, average, take the square root.</p>
+    <div class="eq">\[\text{RMSE}(\theta) = \sqrt{\frac{1}{N}\sum_{i=1}^{N}\big(u_\theta(x_i) - y_i\big)^2}.\]</div>
+    <p>Squaring makes big misses count much more than small ones, and the square root puts the score back in the same
+      units as \(u\). For example, misses of 0.1, 0.2 and 0.2 give
+      \(\sqrt{(0.01 + 0.04 + 0.04)/3} \approx 0.17\). In practice we minimize the mean squared error (MSE), the same
+      thing without the root: whatever makes one smaller makes the other smaller.</p>
+
+    <h3>Turning the knobs: gradient descent</h3>
+    <p>Picture the error as a landscape over all 3,021 knobs, and training as walking downhill. The <b>gradient</b>
+      \(\nabla_\theta L\) points in the direction where the loss \(L\) rises fastest, so each step goes the other way:</p>
+    <div class="eq">\[\theta \;\leftarrow\; \theta - \eta\,\nabla_\theta L(\theta).\]</div>
+    <p>The <b>learning rate</b> \(\eta\) sets the step size. Too small and training crawls; too large and it overshoots
+      the bottom and can fly off. The computer gets the gradient exactly, for all knobs at once, by applying the chain
+      rule backwards through the layers (<b>backpropagation</b>). Try it on one knob:</p>
+    <div class="gd" id="gd">
+      <canvas id="gdc" aria-label="A loss curve with the steps of gradient descent"></canvas>
+      <div class="row">
+        <label>learning rate \(\eta\) <input id="gdEta" type="range" min="0.05" max="1.1" step="0.05" value="0.2"><output id="gdEtaV">0.20</output></label>
+        <button id="gdStep">One step</button><button id="gdRun">Ten steps</button><button id="gdReset">Reset</button>
+      </div>
+      <p class="read" id="gdRead"></p>
+    </div>
+    <p class="small">This curve is \(L(\theta) = (\theta - 1)^2\), so each step multiplies the distance to the bottom
+      by \(1 - 2\eta\). Below \(\eta = 0.5\) it walks straight in, between 0.5 and 1 it zig-zags in, and above 1 it
+      flies off. The step-by-step simulator in Beat 2 is gradient descent in disguise and has the same kind of speed
+      limit.</p>
   </section>
 
   <section>
     <p class="num">Step 2 · How a PINN learns physics</p>
     <h2>The score is the physics</h2>
-    <p>An ordinary network is scored by comparing it with answers someone already computed. A PINN's score is different:
-      at thousands of points it checks whether the network's answer <b>obeys the physics rule</b> (the equation), and
-      whether it <b>starts in the right state</b>. No answer key needed. That is the big promise: write down the
-      physics, get the answer.</p>
+    <h3>Our problem: Burgers' equation</h3>
+    <p>Beat 1 is built on <b>Burgers' equation</b>, the simplest cousin of Navier&ndash;Stokes: one dimension, no
+      pressure. It keeps the two ingredients that make fluids hard, a term that makes the flow steepen itself and a
+      term that smooths it out:</p>
+    <div class="eq">\[u_t + u\,u_x = \nu\,u_{xx}, \qquad x \in [-1, 1],\; t \in [0, 1],\]
+      \[u(x, 0) = -\sin(\pi x), \qquad u(-1, t) = u(1, t) = 0.\]</div>
+    <ul class="terms">
+      <li>\(u(x, t)\) is the speed of the flow at position \(x\) and time \(t\); \(u_t\), \(u_x\), \(u_{xx}\) are its
+        rates of change in time and space.</li>
+      <li>\(u\,u_x\): faster parts catch up with slower ones, so the wave steepens into a cliff, called a shock.</li>
+      <li>\(\nu\,u_{xx}\): viscosity, which rounds the cliff off. We use \(\nu = 0.01/\pi\), \(0.003/\pi\) and
+        \(0.001/\pi\); the smaller \(\nu\), the sharper the cliff.</li>
+    </ul>
+    <p>Beat 2 uses a different equation, Allen&ndash;Cahn, \(u_t = u_{xx} + \mu\,(u - u^3)\), and the same recipe.</p>
+
+    <h3>The PINN's score: how badly it breaks the rules</h3>
+    <p>An ordinary network is scored with RMSE against answers someone already computed. A PINN has no answers to copy.
+      Instead it plugs its own guess \(u_\theta\) into the equation. Because \(u_\theta\) is a formula, the computer can
+      take its derivatives exactly, with the same backpropagation machinery. Whatever is left over is the
+      <b>residual</b>, which is zero only where the equation holds:</p>
+    <div class="eq">\[r_\theta(x, t) = \partial_t u_\theta + u_\theta\,\partial_x u_\theta - \nu\,\partial_{xx} u_\theta.\]</div>
+    <p>The loss adds up three mean squared errors: the residual at 10,000 random <b>collocation points</b> inside the
+      domain, the starting state at 100 points, and the ends of the road at 100 times each:</p>
+    <div class="eq">\[\begin{aligned} L(\theta) = {} & \underbrace{\frac{1}{N_r}\sum_{i} r_\theta(x_i, t_i)^2}_{\text{obey the equation}} \\
+      {} + {} & \underbrace{\frac{1}{N_0}\sum_{j}\big(u_\theta(x_j, 0) + \sin \pi x_j\big)^2}_{\text{start right}} \\
+      {} + {} & \underbrace{\frac{1}{N_b}\sum_{k}\Big(u_\theta(-1, t_k)^2 + u_\theta(1, t_k)^2\Big)}_{\text{ends held at zero}}. \end{aligned}\]</div>
+    <p>Then it is gradient descent as in Step 1. We use <b>Adam</b> for 2,000 steps, a version that adapts the step
+      size for each knob, then <b>L-BFGS</b> for up to 15,000 steps, which also estimates how the landscape curves.</p>
     <figure>
       <svg viewBox="0 0 640 190" role="img" aria-label="A curve checked at many points against the physics rule, plus a check of the starting state, add up to the PINN's score.">
         <rect class="box" x="8" y="10" width="300" height="170" rx="10"/>
@@ -149,17 +284,57 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
           <circle cx="40" cy="104" r="4"/><circle cx="70" cy="62" r="4"/><circle cx="100" cy="58" r="4"/><circle cx="130" cy="78" r="4"/>
           <circle cx="160" cy="104" r="4"/><circle cx="190" cy="124" r="4"/><circle cx="220" cy="128" r="4"/><circle cx="250" cy="110" r="4"/><circle cx="280" cy="74" r="4"/>
         </g>
-        <text x="158" y="170" text-anchor="middle" font-size="12" class="m">the network's answer, checked at many points</text>
-        <text x="330" y="52" font-size="15">score =</text>
-        <rect class="hl" x="330" y="64" width="300" height="44" rx="8"/>
-        <text x="345" y="91" font-size="14">how badly it breaks the rule at the dots</text>
-        <text x="472" y="128" text-anchor="middle" font-size="16">+</text>
-        <rect class="hl" x="330" y="136" width="300" height="44" rx="8"/>
-        <text x="345" y="163" font-size="14">how far it starts from the right state</text>
+        <text x="158" y="170" text-anchor="middle" font-size="12" class="m">the network's answer, checked at the dots</text>
+        <text x="330" y="40" font-size="15">loss =</text>
+        <rect class="hl" x="330" y="50" width="300" height="38" rx="8"/>
+        <text x="345" y="74" font-size="14">how badly it breaks the equation</text>
+        <text x="472" y="104" text-anchor="middle" font-size="16">+</text>
+        <rect class="hl" x="330" y="110" width="300" height="38" rx="8"/>
+        <text x="345" y="134" font-size="14">how far it starts from the right state</text>
+        <text x="472" y="166" text-anchor="middle" font-size="16">+ the two ends</text>
       </svg>
     </figure>
-    <p>But notice what that score measures: how well the answer follows the rule <i>where we checked</i>, not how close
-      it is to the truth. Most of the time the two agree. Our two beats show what happens when they don't.</p>
+    <details class="code">
+      <summary>See the code: the residual, the loss and the training loop</summary>
+      <p>Abridged from <code>pinn/losses.py</code> and <code>pinn/train.py</code>.</p>
+<pre>def grad(out, inp):
+    # exact derivative of the network's output with respect to an input
+    return torch.autograd.grad(out, inp, torch.ones_like(out), create_graph=True)[0]
+
+def pde_residual(model, x, t, nu):
+    """r = u_t + u * u_x - nu * u_xx at the points (x, t)."""
+    x = x.clone().requires_grad_(True)
+    t = t.clone().requires_grad_(True)
+    u = model(x, t)
+    u_x, u_t = grad(u, x), grad(u, t)
+    u_xx = grad(u_x, x)
+    return u_t + u * u_x - nu * u_xx
+
+def loss(model, pts, nu):
+    pde = torch.mean(pde_residual(model, pts["x_col"], pts["t_col"], nu) ** 2)
+    ic = torch.mean((model(pts["x_ic"], pts["t_ic"]) - pts["u_ic"]) ** 2)   # u_ic = -sin(pi x)
+    t_bc = pts["t_bc"]
+    bc = (torch.mean(model(-torch.ones_like(t_bc), t_bc) ** 2)
+          + torch.mean(model(torch.ones_like(t_bc), t_bc) ** 2))
+    return 0.1 * (pde + ic + bc)
+
+# training: gradient descent with Adam, then L-BFGS
+opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+for step in range(2000):
+    opt.zero_grad()
+    L = loss(model, pts, nu)
+    L.backward()          # backpropagation: the gradient for all 3,021 knobs
+    opt.step()            # theta &lt;- theta - (step) * gradient</pre>
+    </details>
+
+    <h3>How we check it: the error against the truth</h3>
+    <p>For our two problems the exact answer \(u\) is known, so we can measure what the loss cannot: how far the PINN
+      is from the truth over the whole grid. Every percentage on this site is this <b>relative \(L^2\) error</b>:</p>
+    <div class="eq">\[\begin{aligned} \text{error} &= \frac{\lVert u_\theta - u \rVert_2}{\lVert u \rVert_2} \\
+      &= \sqrt{\frac{\sum_{i}\big(u_\theta(x_i, t_i) - u(x_i, t_i)\big)^2}{\sum_{i} u(x_i, t_i)^2}}. \end{aligned}\]</div>
+    <p>Notice what the loss measures: how well the answer follows the rule <i>at the points we checked</i>, not how
+      close it is to the truth. Most of the time the two agree. Our two beats show what happens when they don't, and in
+      a real problem there is no exact \(u\) to compare against.</p>
   </section>
 
   <section>
@@ -170,6 +345,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
       <a class="beat" href="beat1/index.html">
         <p class="num">Beat 1</p>
         <h2>The wall of brake lights</h2>
+        <p class="beq">\(u_t + u\,u_x = \nu\,u_{xx}\)</p>
         <p>Freeway traffic slows into a sudden wall of brake lights. Can a PINN that only knows the rules of traffic
           predict it?</p>
         <div class="row good"><b>Truly impressive</b>On a gentle slowdown it is within 0.05% of the exact answer, and
@@ -183,6 +359,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
       <a class="beat" href="beat2/index.html">
         <p class="num">Beat 2</p>
         <h2>Balls in bowls, balls on hilltops</h2>
+        <p class="beq">\(u_t = u_{xx} + \mu\,(u - u^3)\)</p>
         <p>A rod of tiny magnets settles into resting shapes. Some are stable like a ball in a bowl; others balance on a
           hilltop.</p>
         <div class="row good"><b>Truly impressive</b>A PINN can aim straight at hilltop shapes that a step-by-step
@@ -211,7 +388,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
     <table class="cmp">
       <thead><tr><th></th><th>Our PINNs</th><th>AI-written proofs</th></tr></thead>
       <tbody>
-        <tr><th>The machine's own check</th><td>The training score: how well the answer follows the rule</td><td>Lean
+        <tr><th>The machine's own check</th><td>The training loss: how well the answer follows the equation</td><td>Lean
           accepts every step</td></tr>
         <tr><th>What that check can't tell you</th><td>Whether the answer is close to the truth</td><td>Whether what was
           checked is what we meant</td></tr>
@@ -252,6 +429,8 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
         translation: Why Lean verification of AI autoformalisation does not guarantee correct natural language proofs"</a>,
         Oct 2026; see also <a href="https://techcrunch.com/2026/10/08/openais-math-solutions-arent-meeting-the-fields-standards-yet/">TechCrunch,
         Oct 8, 2026</a>.</li>
+      <li>The network size (8 layers of 20) follows Raissi, Perdikaris and Karniadakis, "Physics-informed neural networks",
+        J. Comput. Phys. 378 (2019), 686&ndash;707.</li>
     </ol>
   </section>
 
@@ -259,5 +438,47 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font:.8
     DS3 Projects, UC San Diego, Fall 2026. Charles Cheng, Michelle Zhao, Paarth Nawani, Niko Calabro. Mentor: Ryo Ide.
   </footer>
 </main>
+<script>
+// Gradient descent on L(theta) = (theta - 1)^2, one knob.
+(function () {
+  const c = document.getElementById("gdc"), eta = document.getElementById("gdEta");
+  const L = th => (th - 1) ** 2, dL = th => 2 * (th - 1), TH0 = -1.6, LO = -1.85, HI = 3.85;
+  let path = [TH0];
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function draw() {
+    const d = devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+    c.width = Math.round(w * d); c.height = Math.round(h * d);
+    const g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, w, h);
+    const m = { l: 10, r: 10, t: 22, b: 24 }, YMAX = 8.2;
+    const X = th => m.l + (th - LO) / (HI - LO) * (w - m.l - m.r);
+    const Y = v => h - m.b - Math.min(v, YMAX) / YMAX * (h - m.t - m.b);
+    g.font = "12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+    g.strokeStyle = css("--grid"); g.beginPath(); g.moveTo(m.l, Y(0)); g.lineTo(w - m.r, Y(0)); g.stroke();
+    g.fillStyle = css("--mut"); g.textAlign = "center";
+    g.fillText("knob θ", (m.l + w - m.r) / 2, h - 6); g.textAlign = "left"; g.fillText("loss L", m.l, 14);
+    g.strokeStyle = css("--ink2"); g.lineWidth = 2.5; g.beginPath();
+    for (let i = 0; i <= 200; i++) { const th = LO + (HI - LO) * i / 200; i ? g.lineTo(X(th), Y(L(th))) : g.moveTo(X(th), Y(L(th))); }
+    g.stroke();
+    const vis = path.filter(th => th >= LO && th <= HI && L(th) <= YMAX);
+    g.strokeStyle = css("--accent"); g.lineWidth = 1.5; g.setLineDash([4, 3]); g.beginPath();
+    vis.forEach((th, i) => i ? g.lineTo(X(th), Y(L(th))) : g.moveTo(X(th), Y(L(th)))); g.stroke(); g.setLineDash([]);
+    vis.forEach((th, i) => { g.fillStyle = css("--accent"); g.globalAlpha = i === vis.length - 1 ? 1 : 0.45;
+      g.beginPath(); g.arc(X(th), Y(L(th)), i === vis.length - 1 ? 7 : 4, 0, 7); g.fill(); });
+    g.globalAlpha = 1;
+    const th = path[path.length - 1], gone = !isFinite(th) || Math.abs(th) > 1e6;
+    document.getElementById("gdRead").textContent = gone || !vis.includes(th)
+      ? `Step ${path.length - 1}: the knob has left the chart. The learning rate is too large.`
+      : `Step ${path.length - 1}: θ = ${th.toFixed(3)}, loss = ${L(th).toFixed(4)}. The bottom is θ = 1, loss = 0.`;
+  }
+  const step = n => { for (let i = 0; i < n; i++) { const th = path[path.length - 1]; path.push(th - +eta.value * dL(th)); } draw(); };
+  document.getElementById("gdStep").onclick = () => step(1);
+  document.getElementById("gdRun").onclick = () => step(10);
+  document.getElementById("gdReset").onclick = () => { path = [TH0]; draw(); };
+  eta.oninput = () => { document.getElementById("gdEtaV").textContent = (+eta.value).toFixed(2); path = [TH0]; draw(); };
+  addEventListener("resize", draw);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+  draw();
+})();
+</script>
 </body>
 </html>

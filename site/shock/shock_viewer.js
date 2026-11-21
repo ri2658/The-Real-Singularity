@@ -24,7 +24,7 @@ function frame(g,w,h,xr,yr,xl,yl){
   const m={l:44,r:12,t:12,b:34};
   const X=x=>m.l+(x-xr[0])/(xr[1]-xr[0])*(w-m.l-m.r);
   const Y=y=>h-m.b-(y-yr[0])/(yr[1]-yr[0])*(h-m.t-m.b);
-  g.strokeStyle=col('--grid'); g.fillStyle=col('--mut'); g.lineWidth=1; g.font='12px system-ui,sans-serif';
+  g.strokeStyle=col('--grid'); g.fillStyle=col('--mut'); g.lineWidth=1; g.font='12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
   g.textAlign='center';
   for(const v of [-1,-0.5,0,0.5,1]){g.beginPath();g.moveTo(X(v),Y(yr[0]));g.lineTo(X(v),Y(yr[1]));g.stroke();g.fillText(v,X(v),h-m.b+14);}
   g.textAlign='right';

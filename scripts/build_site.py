@@ -22,8 +22,8 @@ current versions into one folder that publish_site.py uploads:
 Every copied page gets the site-wide navigation bar (home, Beat 1, Beat 2;
 see BEATS), and each demo page also gets a previous / next bar at the bottom
 that walks through its beat in story order. The landing page's bar is
-refreshed between its <!-- NAV --> markers. Every copied page also loads KaTeX
-(see MATH): write math in the page sources as \\( ... \\) inline or \\[ ... \\] for
+refreshed between its <!-- NAV --> markers. Every copied page also loads the
+site font, Inter (see FONT), and KaTeX (see MATH): write math in the page sources as \\( ... \\) inline or \\[ ... \\] for
 a display line; text that JavaScript writes later is rendered too. Links use explicit
 .../index.html paths because CloudFront only serves index.html at the site root.
 
@@ -77,18 +77,18 @@ BEATS = [
 ]
 NAV_STYLE = """<style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
-  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
-.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-home{font:700 15px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;opacity:1;padding-left:0}
 .rs-nav .rs-links{display:flex;align-items:center;gap:4px}
 </style>"""
 PAGER_STYLE = """<style>
 .rs-pager{max-width:980px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
   display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;
-  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-pager a{color:inherit;text-decoration:none;opacity:.8}
 .rs-pager a:hover,.rs-pager a:focus-visible{opacity:1;text-decoration:underline}
 .rs-pager .rs-up{opacity:.6}
@@ -121,9 +121,22 @@ document.addEventListener("DOMContentLoaded", function () {{
 </script>"""
 
 
+# One font for the whole site, text and charts alike. Pages name it in their CSS and
+# canvas code as "Inter, system-ui, ..."; this loads it, then asks every page to
+# redraw its charts once it has arrived (each page redraws on resize).
+FONT = """<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script>
+if (document.fonts) document.fonts.ready.then(function () { window.dispatchEvent(new Event("resize")); });
+</script>"""
+HEAD = FONT + "\n" + MATH
+
+
 def add_math(html: str) -> str:
+    """Add the font and KaTeX to <head>."""
     i = html.find("</head>")
-    return html if i < 0 else html[:i] + MATH + "\n" + html[i:]
+    return html if i < 0 else html[:i] + HEAD + "\n" + html[i:]
 
 
 def beat_of(page):
@@ -180,14 +193,15 @@ def add_nav(html: str, current: str) -> str:
 
 
 def refresh_landing_nav():
-    """The landing page is hand-written; only the part between the NAV markers is regenerated."""
+    """The landing page is hand-written; only the parts between the NAV and HEAD markers are regenerated."""
     landing = SITE / "index.html"
     html = landing.read_text(encoding="utf-8")
-    a, b = "<!-- NAV -->", "<!-- /NAV -->"
-    if a in html and b in html:
-        start, end = html.index(a) + len(a), html.index(b)
-        html = html[:start] + "\n" + nav_html(None, prefix="") + "\n" + html[end:]
-        landing.write_text(html, encoding="utf-8")
+    for (a, b), fill in ((("<!-- NAV -->", "<!-- /NAV -->"), nav_html(None, prefix="")),
+                         (("<!-- HEAD -->", "<!-- /HEAD -->"), HEAD)):
+        if a in html and b in html:
+            start, end = html.index(a) + len(a), html.index(b)
+            html = html[:start] + "\n" + fill + "\n" + html[end:]
+    landing.write_text(html, encoding="utf-8")
 
 
 def main():

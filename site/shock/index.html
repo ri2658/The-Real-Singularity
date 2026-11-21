@@ -10,19 +10,25 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ch:#6cb4e4;--hot:#fb923c;--ph:#4ade80;--vis:#c4b5fd}}
 :root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ch:#6cb4e4;--hot:#fb923c;--ph:#4ade80;--vis:#c4b5fd}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Georgia,"Iowan Old Style",serif}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 main{max-width:760px;margin:0 auto;padding:20px 16px 32px}
 h1{font-size:1.5rem;margin:0 0 4px;line-height:1.2}
 p{margin:0 0 12px;color:var(--mut);max-width:62ch}
 canvas{width:100%;display:block;border-bottom:1px solid var(--grid)}
 #c1{aspect-ratio:16/10}#c2{aspect-ratio:16/9;margin-top:14px}
-.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:14px 0 6px;font-family:system-ui,sans-serif;font-size:.9rem}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:14px 0 6px;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;font-size:.9rem}
 input[type=range]{flex:1 1 220px;accent-color:var(--hot)}
 button,select{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:transparent;color:var(--fg);border-radius:6px;cursor:pointer}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
-#read{font-family:system-ui,sans-serif;font-size:.9rem;color:var(--fg);min-height:3em}
+#read{font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;font-size:.9rem;color:var(--fg);min-height:3em}
 .k{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script>
+if (document.fonts) document.fonts.ready.then(function () { window.dispatchEvent(new Event("resize")); });
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
@@ -46,12 +52,12 @@ document.addEventListener("DOMContentLoaded", function () {
 <body>
 <style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
-  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
-.rs-nav .rs-home{font:700 15px Georgia,"Iowan Old Style",serif;opacity:1;padding-left:0}
+.rs-nav .rs-home{font:700 15px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;opacity:1;padding-left:0}
 .rs-nav .rs-links{display:flex;align-items:center;gap:4px}
 </style>
 <nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html">Beat 2</a></div></div></nav>
@@ -105,7 +111,7 @@ function frame(g,w,h,xr,yr,xl,yl){
   const m={l:44,r:12,t:12,b:34};
   const X=x=>m.l+(x-xr[0])/(xr[1]-xr[0])*(w-m.l-m.r);
   const Y=y=>h-m.b-(y-yr[0])/(yr[1]-yr[0])*(h-m.t-m.b);
-  g.strokeStyle=col('--grid'); g.fillStyle=col('--mut'); g.lineWidth=1; g.font='12px system-ui,sans-serif';
+  g.strokeStyle=col('--grid'); g.fillStyle=col('--mut'); g.lineWidth=1; g.font='12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
   g.textAlign='center';
   for(const v of [-1,-0.5,0,0.5,1]){g.beginPath();g.moveTo(X(v),Y(yr[0]));g.lineTo(X(v),Y(yr[1]));g.stroke();g.fillText(v,X(v),h-m.b+14);}
   g.textAlign='right';
@@ -178,7 +184,7 @@ draw();
 <style>
 .rs-pager{max-width:980px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
   display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;
-  font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-pager a{color:inherit;text-decoration:none;opacity:.8}
 .rs-pager a:hover,.rs-pager a:focus-visible{opacity:1;text-decoration:underline}
 .rs-pager .rs-up{opacity:.6}

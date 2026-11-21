@@ -7,20 +7,20 @@
 <style>
 :root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--ref:#8a93a3;--sol:#c2410c;--pinn:#2a78d6}
 @media (prefers-color-scheme:dark){:root{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--ref:#98a2b3;--sol:#fb923c;--pinn:#5b9bea}}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Georgia,serif}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 main{max-width:760px;margin:0 auto;padding:20px 16px 32px}
 h1{font-size:1.4rem;margin:0 0 4px}
 p{color:var(--mut);margin:0 0 12px}
 canvas{width:100%;aspect-ratio:16/9;display:block;border-bottom:1px solid var(--grid)}
-.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:12px 0;font:.9rem system-ui,sans-serif}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:12px 0;font:.9rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 button,select{font:inherit;padding:6px 12px;border:1px solid var(--grid);background:transparent;color:var(--fg);border-radius:6px;cursor:pointer}
 input[type=range]{flex:1 1 200px;accent-color:var(--sol)}
-table.race{width:100%;border-collapse:collapse;font:15px system-ui,sans-serif;font-variant-numeric:tabular-nums;margin-top:6px}
+table.race{width:100%;border-collapse:collapse;font:15px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;font-variant-numeric:tabular-nums;margin-top:6px}
 .race th,.race td{padding:7px 10px;border-bottom:1px solid var(--grid);text-align:right}
 .race th:first-child,.race td:first-child{text-align:left;color:var(--mut);font-weight:400}
 .race td b{font-size:1.1rem}
-.note{font:.85rem system-ui,sans-serif;color:var(--mut);margin:8px 0 0}
-#msg{color:var(--sol);font:.9rem system-ui,sans-serif;white-space:pre-wrap}
+.note{font:.85rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin:8px 0 0}
+#msg{color:var(--sol);font:.9rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;white-space:pre-wrap}
 .k{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
 </style>
 </head>
@@ -140,7 +140,7 @@ function draw() {
   const m = {l: 40, r: 10, t: 10, b: 28};
   const X = v => m.l + (v + 1) / 2 * (w - m.l - m.r);
   const Y = v => h - m.b - (v + 1.1) / 2.2 * (h - m.t - m.b);
-  g.strokeStyle = css('--grid'); g.fillStyle = css('--mut'); g.font = '12px system-ui,sans-serif'; g.lineWidth = 1;
+  g.strokeStyle = css('--grid'); g.fillStyle = css('--mut'); g.font = '12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif'; g.lineWidth = 1;
   g.textAlign = 'center';
   for (const v of [-1, -.5, 0, .5, 1]) { g.beginPath(); g.moveTo(X(v), Y(-1.1)); g.lineTo(X(v), Y(1.1)); g.stroke(); g.fillText(v, X(v), h - 10); }
   g.textAlign = 'right';
