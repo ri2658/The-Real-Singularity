@@ -42,30 +42,6 @@ Beat 2, light/dark switch), the previous / next bar, the Inter font and KaTeX fo
 not its copy in `site/`**, which is overwritten on every build. The two exceptions live only in `site/`: the
 homepage `site/index.html` and the pictures in `site/images/`.
 
-## Where to edit the text
-
-| To change | Edit | Look for |
-| --- | --- | --- |
-| Homepage paragraphs | `site/index.html` | the small orange section labels: "How physics is really done with AI", "Step 1 · Neural networks", "Step 2 · How a PINN learns physics", "Step 3 · What we tested", "Step 4 · Back to the headline", "Conclusion", "Sources" |
-| The two beat cards on the homepage | `site/index.html` | `class="beat"` |
-| Beat 1 story | `story/beat1.html` | the `<h2>` headings, from "Traffic, treated like a fluid" to "What this tells us" |
-| Beat 2 story | `story/beat2.html` | the `<h2>` headings, from "Why hilltops matter" to "Two kinds of blow-up" |
-| Demo cards at the end of a beat | `story/beat1.html`, `story/beat2.html` | "Try it yourself" |
-| A demo page's intro, "Try this", "What to notice", "Key takeaways", "The math, for the curious" | the page's source file (table above) | those phrases |
-| Top-bar labels, which demos belong to each beat and in what order | `scripts/build_site.py` | `BEATS` |
-| Pictures | add the file to `site/images/` | reference it as `images/<name>` from the homepage, `../images/<name>` from a beat page |
-
-Math goes in as LaTeX: `\( u_t + u\,u_x = \nu\,u_{xx} \)` inside a sentence, `\[ ... \]` on its own line. A plain `$`
-stays a dollar sign.
-
-After an edit, rebuild and look at it locally, then publish:
-
-```bash
-python scripts/build_site.py
-python -m http.server 8000 --directory site   # open http://localhost:8000
-python scripts/deploy.py
-```
-
 ## Structure
 
 - `pinn/`: the Burgers' PINN package (model, sampling, losses, exact reference, training, run logging). See [`pinn/README.md`](./pinn/README.md).
