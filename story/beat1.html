@@ -14,7 +14,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 Inter, system-u
 main{max-width:1080px;margin:0 auto;padding:44px 20px 56px}
 /* text in a centred reading column; figures and card grids use the full width */
 main>*,main>section>*{max-width:760px !important;margin-left:auto !important;margin-right:auto !important}
-main>figure,main>section>figure,main>section>.cards,main>.cards{max-width:none !important}
+main>figure,main>section>figure,main>section>.cards,main>.cards,main>.opener{max-width:none !important}
 main>section{max-width:none}
 .eyebrow{font:600 .8rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
 h1{font-size:2.1rem;line-height:1.15;margin:0 0 12px}
@@ -23,8 +23,10 @@ p{margin:0 0 14px;max-width:62ch}
 .lede{color:var(--mut);font-size:1.05rem}
 section{border-top:1px solid var(--grid);padding:34px 0 10px}
 figure{margin:18px 0 8px}
-.photo{margin:14px 0 22px}
-.photo img{display:block;width:100%;height:auto;max-height:440px;object-fit:cover;border-radius:12px}
+.opener{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 32px;align-items:start;margin:22px 0 6px}
+.opener figure{margin:0}
+.photo img{display:block;width:100%;height:auto;aspect-ratio:5/3;object-fit:cover;border-radius:12px}
+@media (max-width:860px){.opener{grid-template-columns:1fr}}
 canvas{width:100%;display:block}
 #speed{aspect-ratio:16/8}
 #road{height:46px;margin-top:6px;border-radius:6px}
@@ -70,30 +72,33 @@ details a{color:var(--accent)}
 <main>
   <p class="eyebrow">Beat 1</p>
   <h1>The wall of brake lights</h1>
-  <figure class="photo">
-    <img src="../images/traffic-jam.webp" width="1050" height="700"
-      alt="A packed multi-lane freeway at rush hour, cars bumper to bumper with brake lights on.">
-  </figure>
   <p class="lede">You're on the freeway at full speed. Up ahead, traffic is crawling. At first the slowdown is gradual:
     cars ease off a little, then a little more. But as more cars arrive from behind, that gentle slowdown gets squeezed
     into a sudden wall of brake lights.</p>
 
-  <figure>
-    <canvas id="speed" aria-label="Car speed along the road"></canvas>
-    <canvas id="road" aria-label="Cars on the road"></canvas>
-    <div class="row">
-      <button id="play">Play</button>
-      <span class="grow">time <input id="t" type="range" min="0" max="1" step="0.002" value="0" aria-label="time"></span>
-      <label>drivers <select id="nu">
-        <option value="0.01">ease off early</option>
-        <option value="0.003">normal</option>
-        <option value="0.001" selected>brake at the last second</option>
-      </select></label>
-    </div>
-    <figcaption><b>What to notice:</b> traffic moves left to right. The top chart is the speed of the cars at each point
-      on the road; the dashed line is where it started. Press Play: the gentle slope in the middle turns into a cliff,
-      and the cars below bunch up and turn red as they hit it.</figcaption>
-  </figure>
+  <div class="opener">
+    <figure class="photo">
+      <img src="../images/traffic-jam.webp" width="1050" height="700"
+        alt="A packed multi-lane freeway at rush hour, cars bumper to bumper with brake lights on.">
+      <figcaption><b>The real thing.</b> Rush hour: the cars bunch up bumper to bumper.</figcaption>
+    </figure>
+    <figure class="anim">
+      <canvas id="speed" aria-label="Car speed along the road"></canvas>
+      <canvas id="road" aria-label="Cars on the road"></canvas>
+      <div class="row">
+        <button id="play">Play</button>
+        <span class="grow">time <input id="t" type="range" min="0" max="1" step="0.002" value="0" aria-label="time"></span>
+        <label>drivers <select id="nu">
+          <option value="0.01">ease off early</option>
+          <option value="0.003">normal</option>
+          <option value="0.001" selected>brake at the last second</option>
+        </select></label>
+      </div>
+      <figcaption><b>What to notice:</b> traffic moves left to right. The top chart is the speed of the cars at each point
+        on the road; the dashed line is where it started. Press Play: the gentle slope in the middle turns into a cliff,
+        and the cars below bunch up and turn red as they hit it.</figcaption>
+    </figure>
+  </div>
 
   <section>
     <h2>Traffic, treated like a fluid</h2>

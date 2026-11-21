@@ -160,12 +160,27 @@ if (document.fonts) document.fonts.ready.then(function () { window.dispatchEvent
 # follows the system setting; a click sets data-theme on <html>, which every
 # page's CSS honours, remembers it for the other pages, and asks the charts to
 # redraw. This runs in <head>, so a saved choice applies before the first paint.
-THEME = """<script>
+THEME = """<meta name="color-scheme" content="light dark">
+<style>:root{color-scheme:light dark}</style>
+<script>
 (function () {
   var KEY = "rs-theme", root = document.documentElement, mq = matchMedia("(prefers-color-scheme: dark)");
+  // Where the choice is kept: localStorage normally. If the browser blocks site storage,
+  // the choice rides along in the address instead (?theme=light), so it still carries
+  // from page to page.
+  var stored = (function () {
+    try { localStorage.setItem(KEY + "-test", "1"); localStorage.removeItem(KEY + "-test"); return true; }
+    catch (e) { return false; }
+  })();
+  function fromUrl() {
+    var m = /[?&]theme=(light|dark)\\b/.exec(location.search);
+    return m ? m[1] : null;
+  }
   function load() {
-    var saved = null;
-    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    var saved = fromUrl();
+    if (stored) {
+      if (saved) localStorage.setItem(KEY, saved); else saved = localStorage.getItem(KEY);
+    }
     if (saved === "light" || saved === "dark") root.dataset.theme = saved; else delete root.dataset.theme;
   }
   load();
@@ -180,7 +195,8 @@ THEME = """<script>
   window.rsToggleTheme = function () {
     var next = isDark() ? "light" : "dark";
     root.dataset.theme = next;
-    try { localStorage.setItem(KEY, next); } catch (e) {}
+    if (stored) localStorage.setItem(KEY, next);
+    else history.replaceState(null, "", location.pathname + "?theme=" + next + location.hash);
     paint();
     window.dispatchEvent(new Event("resize"));
   };
@@ -194,6 +210,13 @@ THEME = """<script>
     if (root.dataset.theme !== before) window.dispatchEvent(new Event("resize"));
   }
   window.addEventListener("pageshow", function (e) { if (e.persisted) sync(); });
+  // Without storage, add the choice to links to the site's other pages as they are followed.
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[href]");
+    if (stored || !a || !root.dataset.theme || /^[a-z]+:|^#/i.test(a.getAttribute("href"))) return;
+    var h = a.getAttribute("href").split("#");
+    a.setAttribute("href", h[0].replace(/[?].*$/, "") + "?theme=" + root.dataset.theme + (h[1] ? "#" + h[1] : ""));
+  }, true);
   window.addEventListener("storage", function (e) { if (e.key === KEY) sync(); });
 })();
 </script>"""

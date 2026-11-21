@@ -48,6 +48,15 @@ a.card:hover{border-color:var(--accent)}
 a.card h3{font:600 1rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;margin:0 0 4px}
 a.card h3::before{content:counter(cd) ". ";color:var(--accent)}
 a.card p{font:.88rem/1.45 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin:0}
+details.deeper{font:inherit;color:inherit;margin:8px 0 0;border-top:1px solid var(--grid)}
+details.deeper>summary{list-style:none;cursor:pointer;padding:26px 0 18px;position:relative;padding-right:40px}
+details.deeper>summary::-webkit-details-marker{display:none}
+details.deeper>summary .eyebrow{display:block}
+details.deeper>summary .t{display:block;font-size:1.35rem;font-weight:700;color:var(--fg);line-height:1.25}
+details.deeper>summary .hint{display:block;font-size:.92rem;font-weight:400;color:var(--mut);margin-top:4px}
+details.deeper>summary::after{content:"+";position:absolute;right:4px;top:28px;width:28px;height:28px;border:1px solid var(--grid);border-radius:50%;display:grid;place-items:center;color:var(--fg);font-size:18px;line-height:1}
+details.deeper[open]>summary::after{content:"\2212"}
+details.deeper p{max-width:62ch}
 details{font:.9rem/1.55 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin:8px 0 0}
 details summary{cursor:pointer;color:var(--fg);font-weight:600}
 details p{max-width:66ch}
@@ -77,12 +86,27 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
 .eq{overflow-x:auto;overflow-y:hidden;margin:2px 0 12px}
 @media (max-width:520px){.eq .katex-display>.katex{font-size:.82em}}
 </style>
+<meta name="color-scheme" content="light dark">
+<style>:root{color-scheme:light dark}</style>
 <script>
 (function () {
   var KEY = "rs-theme", root = document.documentElement, mq = matchMedia("(prefers-color-scheme: dark)");
+  // Where the choice is kept: localStorage normally. If the browser blocks site storage,
+  // the choice rides along in the address instead (?theme=light), so it still carries
+  // from page to page.
+  var stored = (function () {
+    try { localStorage.setItem(KEY + "-test", "1"); localStorage.removeItem(KEY + "-test"); return true; }
+    catch (e) { return false; }
+  })();
+  function fromUrl() {
+    var m = /[?&]theme=(light|dark)\b/.exec(location.search);
+    return m ? m[1] : null;
+  }
   function load() {
-    var saved = null;
-    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    var saved = fromUrl();
+    if (stored) {
+      if (saved) localStorage.setItem(KEY, saved); else saved = localStorage.getItem(KEY);
+    }
     if (saved === "light" || saved === "dark") root.dataset.theme = saved; else delete root.dataset.theme;
   }
   load();
@@ -97,7 +121,8 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
   window.rsToggleTheme = function () {
     var next = isDark() ? "light" : "dark";
     root.dataset.theme = next;
-    try { localStorage.setItem(KEY, next); } catch (e) {}
+    if (stored) localStorage.setItem(KEY, next);
+    else history.replaceState(null, "", location.pathname + "?theme=" + next + location.hash);
     paint();
     window.dispatchEvent(new Event("resize"));
   };
@@ -111,6 +136,13 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
     if (root.dataset.theme !== before) window.dispatchEvent(new Event("resize"));
   }
   window.addEventListener("pageshow", function (e) { if (e.persisted) sync(); });
+  // Without storage, add the choice to links to the site's other pages as they are followed.
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[href]");
+    if (stored || !a || !root.dataset.theme || /^[a-z]+:|^#/i.test(a.getAttribute("href"))) return;
+    var h = a.getAttribute("href").split("#");
+    a.setAttribute("href", h[0].replace(/[?].*$/, "") + "?theme=" + root.dataset.theme + (h[1] ? "#" + h[1] : ""));
+  }, true);
   window.addEventListener("storage", function (e) { if (e.key === KEY) sync(); });
 })();
 </script>
@@ -282,64 +314,66 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
   </section>
 
-  <section>
-    <p class="eyebrow">Going deeper: PINNs and blow-ups</p>
-    <h2>From a steep wall to a blow-up</h2>
-    <p>For the curious: the same bowl-and-hilltop idea sits at the centre of one of the biggest open questions in
-      mathematics.</p>
-    <p>In Beat 1, the later drivers braked, the steeper the wall of brake lights. The thinner the fluid, the closer
-      that wall comes to vertical; with no thickness at all, its steepness becomes infinite. That is a
-      <em>blow-up</em>, and it is where our PINN failed, about 40% off. No surprise: a PINN is built from smooth
-      pieces, so it can never draw an infinite slope.</p>
-    <figure>
-      <div class="pair">
-        <div><p class="panel-t">The whole road, thin fluid, end of the run</p><canvas id="fWallFull" height="200"></canvas></div>
-        <div><p class="panel-t">Zoomed in on the wall (\(x\) from \(-0.05\) to \(0.05\))</p><canvas id="fWallZoom" height="200"></canvas></div>
-      </div>
-      <div class="key">
-        <span><i style="border-color:var(--ref)"></i>thick fluid</span>
-        <span><i style="border-color:var(--mut)"></i>medium</span>
-        <span><i style="border-color:var(--fg)"></i>thin</span>
-        <span><i style="border-color:var(--accent);border-top-style:dashed"></i>our PINN, thin fluid</span>
-      </div>
-      <figcaption><b>The wall gets steeper; the PINN can't follow.</b> Exact answers at the end of Beat 1's run. Each 10&times;
-        thinner fluid makes the wall steeper (steepest slope 84, 279, 767); with no thickness it would be infinite. Our
-        PINN puts the thin-fluid wall in the wrong place.</figcaption>
-    </figure>
-  </section>
+  <details class="deeper">
+    <summary><span class="eyebrow">Going deeper</span><span class="t">PINNs and blow-ups</span><span class="hint">From a steep wall to a blow-up, and the million-dollar question behind it. Click to open.</span></summary>
+    <section>
+      <h2>From a steep wall to a blow-up</h2>
+      <p>For the curious: the same bowl-and-hilltop idea sits at the centre of one of the biggest open questions in
+        mathematics.</p>
+      <p>In Beat 1, the later drivers braked, the steeper the wall of brake lights. The thinner the fluid, the closer
+        that wall comes to vertical; with no thickness at all, its steepness becomes infinite. That is a
+        <em>blow-up</em>, and it is where our PINN failed, about 40% off. No surprise: a PINN is built from smooth
+        pieces, so it can never draw an infinite slope.</p>
+      <figure>
+        <div class="pair">
+          <div><p class="panel-t">The whole road, thin fluid, end of the run</p><canvas id="fWallFull" height="200"></canvas></div>
+          <div><p class="panel-t">Zoomed in on the wall (\(x\) from \(-0.05\) to \(0.05\))</p><canvas id="fWallZoom" height="200"></canvas></div>
+        </div>
+        <div class="key">
+          <span><i style="border-color:var(--ref)"></i>thick fluid</span>
+          <span><i style="border-color:var(--mut)"></i>medium</span>
+          <span><i style="border-color:var(--fg)"></i>thin</span>
+          <span><i style="border-color:var(--accent);border-top-style:dashed"></i>our PINN, thin fluid</span>
+        </div>
+        <figcaption><b>The wall gets steeper; the PINN can't follow.</b> Exact answers at the end of Beat 1's run. Each 10&times;
+          thinner fluid makes the wall steeper (steepest slope 84, 279, 767); with no thickness it would be infinite. Our
+          PINN puts the thin-fluid wall in the wrong place.</figcaption>
+      </figure>
+    </section>
 
-  <section>
-    <h2>Why blow-ups matter</h2>
-    <p>The Navier&ndash;Stokes equations of fluid flow underlie weather forecasts, aircraft design and blood-flow
-      models. Yet nobody knows whether they always give a sensible answer: could a smooth flow of water or air spin
-      itself up until its speed becomes infinite? If so, the equations are incomplete; if not, they never break down.</p>
-    <div class="stat"><span class="n">$1,000,000</span><span class="c">the prize for settling it either way: one of
-      the seven Millennium Prize Problems</span></div>
-  </section>
+    <section>
+      <h2>Why blow-ups matter</h2>
+      <p>The Navier&ndash;Stokes equations of fluid flow underlie weather forecasts, aircraft design and blood-flow
+        models. Yet nobody knows whether they always give a sensible answer: could a smooth flow of water or air spin
+        itself up until its speed becomes infinite? If so, the equations are incomplete; if not, they never break down.</p>
+      <div class="stat"><span class="n">$1,000,000</span><span class="c">the prize for settling it either way: one of
+        the seven Millennium Prize Problems</span></div>
+    </section>
 
-  <section>
-    <h2>Two kinds of blow-up</h2>
-    <p>Blow-ups come in two kinds. A <em>stable</em> one is a ball in a bowl: change the starting flow slightly and it
-      still blows up the same way, so a simulation can find it. An <em>unstable</em> one is a ball on a hilltop: it
-      needs a perfectly tuned start, and the tiniest error knocks a simulation off it.</p>
-    <figure>
-      <svg class="bh" viewBox="0 0 640 170" role="img" aria-label="Left: a ball in a bowl rolls back after a nudge. Right: a ball on a hilltop rolls away after a nudge.">
-        <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
-        <path d="M30,40 Q160,200 290,40" fill="none" stroke="currentColor" stroke-width="3"/>
-        <circle cx="160" cy="105" r="13" fill="var(--accent)"/>
-        <path d="M200,92 Q186,104 178,104" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/>
-        <text x="160" y="160" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="15" fill="currentColor">Stable: nudge it, it comes back</text>
-        <path d="M350,130 Q480,-30 610,130" fill="none" stroke="currentColor" stroke-width="3"/>
-        <circle cx="480" cy="37" r="13" fill="var(--accent)"/>
-        <path d="M500,44 Q530,58 548,82" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/>
-        <text x="480" y="160" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="15" fill="currentColor">Unstable: nudge it, it never comes back</text>
-      </svg>
-    </figure>
-    <p>Some mathematicians suspect any Navier&ndash;Stokes blow-up would be unstable. In 2025, mathematicians and
-      Google DeepMind researchers trained physics-informed networks to find such fragile blow-ups directly, and found
-      new ones in simpler fluid equations. That doesn't solve the million-dollar problem, but it shows what PINNs
-      might be good for. Our rod's S-shape is the same story in miniature.</p>
-  </section>
+    <section>
+      <h2>Two kinds of blow-up</h2>
+      <p>Blow-ups come in two kinds. A <em>stable</em> one is a ball in a bowl: change the starting flow slightly and it
+        still blows up the same way, so a simulation can find it. An <em>unstable</em> one is a ball on a hilltop: it
+        needs a perfectly tuned start, and the tiniest error knocks a simulation off it.</p>
+      <figure>
+        <svg class="bh" viewBox="0 0 640 170" role="img" aria-label="Left: a ball in a bowl rolls back after a nudge. Right: a ball on a hilltop rolls away after a nudge.">
+          <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+          <path d="M30,40 Q160,200 290,40" fill="none" stroke="currentColor" stroke-width="3"/>
+          <circle cx="160" cy="105" r="13" fill="var(--accent)"/>
+          <path d="M200,92 Q186,104 178,104" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/>
+          <text x="160" y="160" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="15" fill="currentColor">Stable: nudge it, it comes back</text>
+          <path d="M350,130 Q480,-30 610,130" fill="none" stroke="currentColor" stroke-width="3"/>
+          <circle cx="480" cy="37" r="13" fill="var(--accent)"/>
+          <path d="M500,44 Q530,58 548,82" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/>
+          <text x="480" y="160" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="15" fill="currentColor">Unstable: nudge it, it never comes back</text>
+        </svg>
+      </figure>
+      <p>Some mathematicians suspect any Navier&ndash;Stokes blow-up would be unstable. In 2025, mathematicians and
+        Google DeepMind researchers trained physics-informed networks to find such fragile blow-ups directly, and found
+        new ones in simpler fluid equations. That doesn't solve the million-dollar problem, but it shows what PINNs
+        might be good for. Our rod's S-shape is the same story in miniature.</p>
+    </section>
+  </details>
 
   <div class="next"><a href="../beat1/index.html">&larr; Beat 1: The wall of brake lights</a><a href="../index.html">Home</a></div>
 </main>
@@ -631,6 +665,8 @@ function pathTick() {
 
 function drawAll() { drawWall(); drawStates(); drawPath(); }
 window.addEventListener("resize", drawAll);
+// The "Going deeper" charts are drawn while folded away; redraw them when it opens.
+document.querySelector("details.deeper").addEventListener("toggle", drawAll);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
 $("nHump").onclick = () => nudge("hump");
 $("nS").onclick = () => nudge("S");
