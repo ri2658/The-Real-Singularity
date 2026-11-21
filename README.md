@@ -1,157 +1,112 @@
 # The Real Singularity
 
-**What AI that learns physics can and can't do, tested with demos you can play with.**
-Live site: **https://d3hn8ndenpdwl3.cloudfront.net**
+A website that explains how a physics-informed neural network (PINN) works, using the viscous Burgers' equation as the running example:
 
+$$
+\frac{\partial u}{\partial t} + u \frac{\partial u}{\partial x} = \nu \frac{\partial^2 u}{\partial x^2}
+$$
+
+Live site: **https://d3hn8ndenpdwl3.cloudfront.net**
 DS3 Projects, UC San Diego, Fall 2026. Charles Cheng, Michelle Zhao, Paarth Nawani, Niko Calabro. Mentor: Ryo Ide.
 
----
+The site starts from this autumn's headlines, where AI is said to have settled Navier–Stokes and the Riemann
+hypothesis. It then shows how AI is really used for physics: it explains neural networks and PINNs, and tests
+PINNs on two problems with known exact answers.
 
-## The hook
+- **Beat 1 (Burgers' equation, told as a traffic jam):** the PINN is excellent on a gentle wave (0.055% error) and
+  fails on a sharp shock (about 40%). Its own training loss can improve 226× while the answer stays 35% wrong.
+- **Beat 2 (Allen–Cahn, $u_t = u_{xx} + \mu(u - u^3)$):** a step-by-step simulator can never stop on an unstable
+  state; a PINN can aim at one, but its loss can't tell a stable state from an unstable one.
 
-In September 2026, OpenAI announced that its AI had settled a Navier–Stokes Millennium Prize Problem, a
-$1,000,000 question about whether the equations of fluid flow can blow up. In November, an Anthropic researcher
-announced that he and Claude had proved the Riemann hypothesis, in 17 million lines of Lean. It can seem like AI
-can do anything now, even the hardest problems in mathematical physics.
-
-But that is not how most physics actually gets done with AI. Day to day, scientists train neural networks to
-predict how fluids, traffic or materials behave. A popular approach is the **physics-informed neural network
-(PINN)**, which learns from the equation itself instead of from worked examples. We built PINNs, tested them on two
-problems where the exact answer is known, and checked every result.
-
-**Our thread: an AI's own score is not the same as being right.** PINNs are genuinely powerful, but they fail in a
-systematic way: the loss they train on can look excellent while the answer is wrong. Someone still has to set up the
-question, check the score against something independent, and interpret the answer. The same theme continues in
-AI-written proofs, where a passing Lean check is not the same as a proof people have confirmed.
-
-We are not debunking AI. We are trying to show where it is truly revolutionary, and where its abilities are
-overstated.
-
-## What we did
-
-### How a PINN works (homepage, Steps 1–2)
-
-A network $u_\theta(x, t)$ (8 layers of 20 tanh neurons, 3,021 parameters) is trained by gradient descent to make
-the equation's residual small at 10,000 random points, plus the starting state and the boundary:
-
-$$L(\theta) = \frac{1}{N_r}\sum_i r_\theta(x_i, t_i)^2 + \frac{1}{N_0}\sum_j \big(u_\theta(x_j, 0) - u_0(x_j)\big)^2 + \frac{1}{N_b}\sum_k u_\theta(\pm 1, t_k)^2 .$$
-
-No exact answer goes into the loss. We measure accuracy separately, as the relative $L^2$ error against the exact
-solution; every percentage on the site is that number.
-
-### Beat 1: The wall of brake lights (Burgers' equation)
-
-$$u_t + u\,u_x = \nu\,u_{xx}, \qquad u(x, 0) = -\sin(\pi x), \quad u(\pm 1, t) = 0.$$
-
-Burgers' equation is the one-dimensional cousin of Navier–Stokes, and with a change of variables it is also the
-classic model of a traffic jam: a smooth slowdown that sharpens into a wall (a shock). Smaller viscosity $\nu$
-means a sharper wall.
-
-| Finding | Number |
-| --- | --- |
-| Gentle wall ($\nu = 0.01/\pi$): the PINN is excellent | 0.055% error |
-| Sharp wall ($\nu = 0.001/\pi$): the PINN fails, even with extra training points at the wall | about 40% error |
-| The PINN's own loss can't tell: in one run it improved 226× while the answer stayed wrong | 35% error |
-| A traditional finite-volume solver on the sharp wall, in the browser | 0.17% error in 63 ms |
-
-### Beat 2: Balls in bowls, balls on hilltops (Allen–Cahn)
-
-$$u_t = u_{xx} + \mu\,(u - u^3) \quad \text{on } (0, \pi), \qquad u = 0 \text{ at both ends}, \quad \mu = 6.$$
-
-A rod of tiny magnets has five resting shapes: two stable (balls in bowls) and three unstable (balls on hilltops).
-
-- A step-by-step simulator is gradient descent on the energy, so it always rolls downhill and can never stop on a
-  hilltop. A ball nudged off the hilltop takes $\ln 10/\lambda_1 = 1.5056$ more time units for every 10× smaller
-  nudge; we measured 1.5058.
-- A PINN can aim straight at hilltop shapes. But its loss is just as good for a bowl as for a hilltop, and nearly
-  perfect for a useless flat answer. Handing its guesses to the simulator shows which ones hold up.
-
-### Back to the headline
-
-OpenAI released its Navier–Stokes proof with a Lean version. Mathematicians at Cambridge showed that the Lean
-version checks a slightly different statement from the written proof. That does not make the result wrong, but the
-machine check did not confirm the proof people read. In both PINNs and AI proofs, a person closes the gap.
+The thread through the site is that an AI's own score is not the same as being right, so a person still has to
+check and interpret the result. The same theme continues in AI-written proofs checked by Lean.
 
 ## The website
 
 | Page | What it shows | Source file |
 | --- | --- | --- |
-| Home | The hook, neural networks and PINNs explained, the two beats, back to the headline | `site/index.html` |
+| Home | Headline hook, neural networks and PINNs explained, the two beats, back to the headline | `site/index.html` |
 | Beat 1 | The traffic story, with a live car animation | `story/beat1.html` |
-| How the wall forms | Characteristics crossing into a shock | `shock viewer/` |
-| Our PINN, live | The trained PINN running in the browser (ONNX) | `web/` |
+| How the wall forms | Characteristics crossing into a shock | `shock viewer/index.html` |
+| Our PINN, live | The trained PINN running in the browser (ONNX) | `web/index.html` |
 | The breaking point | PINN vs. exact at three viscosities | `burgers/js/viscosity.html` |
-| The score that lies | Training loss vs. true error over training | `burgers/js/loss_truth.html` |
-| The race | PINN vs. finite-volume solver, head to head | `Finite volume solver/race_solver.html` |
-| Beat 2 | The magnets story, stability, and blow-ups | `story/beat2.html` |
-| The step-by-step simulator | Allen–Cahn forward Euler, energy ladder | `allen_cahn/js/simulator.html` |
+| The score that lies | Training loss vs. true error | `burgers/js/loss_truth.html` |
+| The race | PINN vs. finite-volume solver | `Finite volume solver/race_solver.html` |
+| Beat 2 | The magnets story, stability and blow-ups | `story/beat2.html` |
+| The step-by-step simulator | Allen–Cahn forward Euler and the energy ladder | `allen_cahn/js/simulator.html` |
 | Falling off a hilltop | The hilltop-escape experiment | `allen_cahn/js/hilltop.html` |
 | Fixing the PINN's guesses | The simulator correcting PINN guesses | `allen_cahn/js/correction.html` |
 
-Every page is plain HTML and JavaScript with no framework. Math is written as `\( … \)` or `\[ … \]` and rendered
-by KaTeX; the whole site uses one font, Inter; the light / dark switch is in the top-right corner.
+`scripts/build_site.py` copies each source into `site/` and adds what every page shares: the top bar (home, Beat 1,
+Beat 2, light/dark switch), the previous / next bar, the Inter font and KaTeX for math. So **edit the source file,
+not its copy in `site/`**, which is overwritten on every build. The two exceptions live only in `site/`: the
+homepage `site/index.html` and the pictures in `site/images/`.
 
-### How the pieces fit
+## Where to edit the text
 
-```
-page sources (story/, web/, burgers/js/, allen_cahn/js/, ...)  +  data/
-        │   python scripts/build_site.py
-        ▼
-site/   ← adds the top bar, the previous/next bar, the font, KaTeX and the theme switch to every page
-        │   python scripts/deploy.py
-        ▼
-S3 + CloudFront (infrastructure/)  →  https://d3hn8ndenpdwl3.cloudfront.net
-```
+| To change | Edit | Look for |
+| --- | --- | --- |
+| Homepage paragraphs | `site/index.html` | the small orange section labels: "How physics is really done with AI", "Step 1 · Neural networks", "Step 2 · How a PINN learns physics", "Step 3 · What we tested", "Step 4 · Back to the headline", "Conclusion", "Sources" |
+| The two beat cards on the homepage | `site/index.html` | `class="beat"` |
+| Beat 1 story | `story/beat1.html` | the `<h2>` headings, from "Traffic, treated like a fluid" to "What this tells us" |
+| Beat 2 story | `story/beat2.html` | the `<h2>` headings, from "Why hilltops matter" to "Two kinds of blow-up" |
+| Demo cards at the end of a beat | `story/beat1.html`, `story/beat2.html` | "Try it yourself" |
+| A demo page's intro, "Try this", "What to notice", "Key takeaways", "The math, for the curious" | the page's source file (table above) | those phrases |
+| Top-bar labels, which demos belong to each beat and in what order | `scripts/build_site.py` | `BEATS` |
+| Pictures | add the file to `site/images/` | reference it as `images/<name>` from the homepage, `../images/<name>` from a beat page |
 
-`site/index.html` (the homepage) and `site/images/` are edited in place; everything else in `site/` is generated,
-so edit the source file, not the copy in `site/`.
+Math goes in as LaTeX: `\( u_t + u\,u_x = \nu\,u_{xx} \)` inside a sentence, `\[ ... \]` on its own line. A plain `$`
+stays a dollar sign.
 
-### Work on the site
+After an edit, rebuild and look at it locally, then publish:
 
 ```bash
-python scripts/build_site.py                 # rebuild site/ after any change
-python -m http.server 8000 --directory site  # then open http://localhost:8000
-python scripts/deploy.py                     # build, sign in to AWS, upload, refresh CloudFront
+python scripts/build_site.py
+python -m http.server 8000 --directory site   # open http://localhost:8000
+python scripts/deploy.py
 ```
 
-To add a picture to a beat page, put it in `site/images/` (WebP or JPEG, a few hundred KB at most) and reference it
-from `story/beat1.html` or `story/beat2.html` as `../images/<name>`.
+## Structure
 
-## Repository layout
+- `pinn/`: the Burgers' PINN package (model, sampling, losses, exact reference, training, run logging). See [`pinn/README.md`](./pinn/README.md).
+- `scripts/`: training runs, ONNX and data exports, and the site build and publish scripts
+- `runs/`: saved training runs (config, history, checkpoints)
+- `notebooks/`: the PINN tutorial and the reference / L2 error notebook
+- `data/`: Burgers reference solutions and the JSON data the site pages read. See [`data/README.md`](./data/README.md).
+- `results/` and `model performance/`: viscosity sweep and loss-vs-error plots
+- `Finite volume solver/`: the finite-volume Burgers solver and its JS port for the race page
+- `shock viewer/`, `burgers/js/`: shock-formation viewer, loss-vs-truth and viscosity pages
+- `web/`: the live-PINN page and its ONNX model
+- `story/`: the Beat 1 and Beat 2 story pages
+- `allen_cahn/`: Allen-Cahn simulator, equilibria, hilltop and correction pages. See [`allen_cahn/js/README.md`](./allen_cahn/js/README.md).
+- `site/`: the assembled site, built by `scripts/build_site.py`
+- `infrastructure/`: AWS CDK stack that hosts the site (S3 + CloudFront). See [`infrastructure/README.md`](./infrastructure/README.md).
 
-| Folder | Contents |
-| --- | --- |
-| `pinn/` | The Burgers PINN in PyTorch: model, training points, losses, exact reference, training loop, run logging |
-| `scripts/` | Run experiments (`run.py`, `reproduce_baseline.py`), export data for the site (`export_*.py`), plots, build and deploy |
-| `runs/` | Every training run: config, loss and error history, checkpoints, summary |
-| `results/` | Figures and tables from the experiments |
-| `data/` | References, exported predictions and ONNX models used by the site (see `data/README.md`) |
-| `Finite volume solver/` | The traditional solver (Python and JavaScript) and the race page |
-| `shock viewer/` | The shock-formation page |
-| `burgers/js/` | The breaking-point and score-that-lies pages |
-| `allen_cahn/js/` | The Allen–Cahn simulator, hilltop experiment and correction pages (see its README) |
-| `web/` | The live-PINN page and its ONNX model |
-| `story/` | The Beat 1 and Beat 2 story pages |
-| `site/` | The built website |
-| `infrastructure/` | AWS CDK stack for hosting (S3 + CloudFront) |
-| `notebooks/` | The original PINN tutorial notebook |
+## Setup
+
+```bash
+pip install -r requirements.txt
+```
+
+## Build and publish the site
+
+```bash
+python scripts/build_site.py
+python scripts/deploy.py                  # build, sign in to AWS, upload, refresh CloudFront
+python scripts/deploy.py --dry-run        # build and list what would be uploaded
+```
+
+`deploy.py` reads the bucket and distribution from the `BurgersSiteStack` outputs. To pass them by hand instead:
+
+```bash
+python scripts/publish_site.py --dry-run
+python scripts/publish_site.py --bucket BUCKET --distribution DIST_ID
+```
 
 ## Reproduce the experiments
 
 ```bash
-pip install -r requirements.txt
-python scripts/reproduce_baseline.py   # checks pinn/ against the original tutorial network
-python scripts/run.py --help           # any single run, saved to runs/<name>/
-python scripts/show_results.py         # error table and plots for the main runs (runs/p1000_8x20_s*)
-node allen_cahn/js/check_ac.js         # Allen–Cahn simulator checks
+python scripts/run.py --help              # one training run, saved to runs/<name>/
+python scripts/show_results.py            # error table and plots for the main runs
+node allen_cahn/js/check_ac.js            # Allen-Cahn simulator checks
 ```
-
-## Sources
-
-- Navier–Stokes priority controversy, Wikipedia; CNBC, Sept 9, 2026.
-- Bastounis, Circelli and Hansen, "Navier-Stokes lost in translation: Why Lean verification of AI
-  autoformalisation does not guarantee correct natural language proofs", arXiv 2610.08144, Oct 2026.
-- Al Jazeera, Nov 21, 2026; Washington Post, Nov 20, 2026 (the Riemann hypothesis claim, unverified at the time of
-  writing).
-- Raissi, Perdikaris and Karniadakis, "Physics-informed neural networks", J. Comput. Phys. 378 (2019), 686–707.
-- LeVeque et al., *Riemann Problems and Jupyter Solutions*: Traffic flow (the Lighthill–Whitham–Richards model).
