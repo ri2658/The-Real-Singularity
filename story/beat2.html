@@ -488,7 +488,7 @@ function drawProtein(fr, now) {
   const ang = closed + (open - closed) * fr.p + jig;
   // hinge low and arms sized so the fully open arm (about 100 degrees, plus its bend) stays inside the frame
   const hx = w * 0.42, hy = h * 0.84, L = Math.min(w * 0.34, (hy - 14) / 1.12, 210), r = Math.max(4.5, Math.min(8, L / 16));
-  const blue = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light" ? "#5b9bea" : "#2a78d6";
+  const blue = (document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) ? "#5b9bea" : "#2a78d6";
   // glow at the hinge, brightest at the transition state
   if (strain > 0.02) {
     const gr = g.createRadialGradient(hx, hy, 2, hx, hy, 70);

@@ -393,7 +393,7 @@ loadJsonCurves();
     }
     return null;
   }
-  function bowlColor() { return matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light" ? "#4ade80" : "#15803d"; }
+  function bowlColor() { return (document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) ? "#4ade80" : "#15803d"; }
   function draw() {
     if (!EQ) return;
     const d = window.devicePixelRatio || 1, w = cv.clientWidth, h = +cv.getAttribute("height");
