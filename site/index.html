@@ -81,6 +81,13 @@ section{border-top:1px solid var(--grid);padding:30px 0 10px}
 .thesis p{margin:0;font-size:1.04rem}
 .thesis b{color:var(--accent)}
 figure{margin:10px 0 18px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:8px 28px;align-items:start;margin-bottom:18px}
+.hero .lede{margin:0 0 6px}
+.hero-fig{margin:0}
+.hero-fig img{display:block;width:100%;height:auto}
+.hero-fig figcaption{font-size:.78rem}
+@media (max-width:640px){.hero{grid-template-columns:1fr}.hero-fig{order:-1;max-width:240px;margin:0 auto 6px}
+  .hero-fig figcaption{text-align:center}}
 figure svg{width:100%;height:auto;display:block;max-width:640px}
 figcaption{font-size:.86rem;line-height:1.5;color:var(--mut);margin-top:6px;max-width:66ch}
 svg text{font-family:inherit;fill:var(--fg)}
@@ -156,13 +163,24 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-si
 <!-- /NAV -->
 <main>
   <h1>The Real Singularity</h1>
-  <p class="lede">In September 2026, OpenAI announced that its AI, in an 88-hour run, had settled one of the Millennium
-    Prize Problems: a $1,000,000 question about the equations of fluid flow.<sup><a href="#s1">1</a></sup> Those are the
-    <b>Navier&ndash;Stokes equations</b>, which describe how a fluid with velocity \(\mathbf{u}\) and pressure \(p\)
-    moves:</p>
-  <div class="eq">\[\begin{gathered}\underbrace{\partial_t \mathbf{u} + (\mathbf{u}\cdot\nabla)\,\mathbf{u}}_{\text{the flow changes}}
+  <div class="hero">
+    <div class="hero-text">
+    <p class="lede">In September 2026, OpenAI announced that its AI, in an 88-hour run, had settled one of the Millennium
+      Prize Problems: a $1,000,000 question about the equations of fluid flow.<sup><a href="#s1">1</a></sup> Those are the
+      <b>Navier&ndash;Stokes equations</b>, which describe how a fluid with velocity \(\mathbf{u}\) and pressure \(p\)
+      moves:</p>
+    <div class="eq">\[\begin{gathered}\underbrace{\partial_t \mathbf{u} + (\mathbf{u}\cdot\nabla)\,\mathbf{u}}_{\text{the flow changes}}
     \;=\; \underbrace{-\nabla p}_{\text{pressure}} \;+\; \underbrace{\nu\,\Delta \mathbf{u}}_{\text{viscosity}}
     \;+\; \underbrace{\mathbf{f}}_{\text{push}}, \\ \nabla\cdot\mathbf{u} = 0 \quad \text{(the fluid can't be squeezed)}.\end{gathered}\]</div>
+    </div>
+    <figure class="hero-fig">
+      <img src="images/vortex-stretching.webp" width="697" height="760"
+        alt="Streamlines spiralling around a vertical axis: a vortex tube being stretched along its axis.">
+      <figcaption><b>Vortex stretching</b> (illustration). A spinning tube of fluid pulled along its axis gets thinner and
+        spins faster. Whether this can go on without limit in 3D, so that the flow blows up, is the heart of the
+        Millennium question.</figcaption>
+    </figure>
+  </div>
   <p>The prize asks whether, in three dimensions, a smooth flow always stays smooth, or whether it can "blow up" in a
     finite time. It can seem like AI can do anything these days, even the hardest problems in mathematical physics.
     (While we were building this site, an Anthropic researcher announced that he and Claude had proved the Riemann
