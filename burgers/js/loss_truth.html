@@ -6,18 +6,18 @@
 <title>The score that lies</title>
 <style>
   :root {
-    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
-    --nu1: #2a78d6; --nu2: #eb6834; --nu3: #1f9e78; --loss: #1c2330; --err: #c2410c; --accent: #c2410c;
+    --bg:var(--c-bg,#fbfaf7); --panel:var(--c-card,#ffffff); --ink:var(--c-fg,#1c2330); --muted:var(--c-mut,#5d6675); --line:var(--c-line,#e4e3de);
+    --nu1:var(--c-nu1,#2a78d6); --nu2:var(--c-nu2,#eb6834); --nu3:var(--c-nu3,#1f9e78); --loss:var(--c-fg,#1c2330); --err:var(--c-accent,#c2410c); --accent:var(--c-accent,#c2410c);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-      --nu1: #5b9bea; --nu2: #fb923c; --nu3: #34c79a; --loss: #e6e9ef; --err: #fb923c; --accent: #fb923c;
+      --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
+      --nu1:var(--c-nu1,#5b9bea); --nu2:var(--c-nu2,#fb923c); --nu3:var(--c-nu3,#34c79a); --loss:var(--c-fg,#e6e9ef); --err:var(--c-accent,#fb923c); --accent:var(--c-accent,#fb923c);
     }
   }
   :root[data-theme="dark"] {
-    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-    --nu1: #5b9bea; --nu2: #fb923c; --nu3: #34c79a; --loss: #e6e9ef; --err: #fb923c; --accent: #fb923c;
+    --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
+    --nu1:var(--c-nu1,#5b9bea); --nu2:var(--c-nu2,#fb923c); --nu3:var(--c-nu3,#34c79a); --loss:var(--c-fg,#e6e9ef); --err:var(--c-accent,#fb923c); --accent:var(--c-accent,#fb923c);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);

@@ -9,7 +9,12 @@
 <script>
 (function () {
   var KEY = "rs-theme", root = document.documentElement, mq = matchMedia("(prefers-color-scheme: dark)");
-  try { var saved = localStorage.getItem(KEY); if (saved === "light" || saved === "dark") root.dataset.theme = saved; } catch (e) {}
+  function load() {
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    if (saved === "light" || saved === "dark") root.dataset.theme = saved; else delete root.dataset.theme;
+  }
+  load();
   var SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   var MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>';
   function isDark() { return root.dataset.theme ? root.dataset.theme === "dark" : mq.matches; }
@@ -27,8 +32,29 @@
   };
   document.addEventListener("DOMContentLoaded", paint);
   mq.addEventListener("change", paint);
+  // A page restored by the Back / Forward buttons, or open in another tab, keeps the
+  // theme it had then; re-read the saved choice so every page agrees.
+  function sync() {
+    var before = root.dataset.theme;
+    load(); paint();
+    if (root.dataset.theme !== before) window.dispatchEvent(new Event("resize"));
+  }
+  window.addEventListener("pageshow", function (e) { if (e.persisted) sync(); });
+  window.addEventListener("storage", function (e) { if (e.key === KEY) sync(); });
 })();
 </script>
+<style>
+:root{--c-bg:#fbfaf7;--c-card:#ffffff;--c-fg:#1c2330;--c-mut:#5d6675;--c-line:#e2e1dc;--c-accent:#c2410c;
+  --c-pinn:#c2410c;--c-pinn-fill:rgba(194,65,12,.16);--c-solver:#2a78d6;--c-exact:#4b5563;--c-ghost:#a9a79f;
+  --c-good:#15803d;--c-bad:#b91c1c;--c-nu1:#8fbbe6;--c-nu2:#2a78d6;--c-nu3:#173f6e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-bg:#10151d;--c-card:#161d27;--c-fg:#e6e9ef;
+  --c-mut:#98a2b3;--c-line:#2b3442;--c-accent:#fb923c;--c-pinn:#fb923c;--c-pinn-fill:rgba(251,146,60,.22);
+  --c-solver:#5b9bea;--c-exact:#c3cad5;--c-ghost:#6b7380;--c-good:#4ade80;--c-bad:#f87171;
+  --c-nu1:#2f5f99;--c-nu2:#5b9bea;--c-nu3:#c2dcf7}}
+:root[data-theme="dark"]{--c-bg:#10151d;--c-card:#161d27;--c-fg:#e6e9ef;--c-mut:#98a2b3;--c-line:#2b3442;
+  --c-accent:#fb923c;--c-pinn:#fb923c;--c-pinn-fill:rgba(251,146,60,.22);--c-solver:#5b9bea;--c-exact:#c3cad5;
+  --c-ghost:#6b7380;--c-good:#4ade80;--c-bad:#f87171;--c-nu1:#2f5f99;--c-nu2:#5b9bea;--c-nu3:#c2dcf7}
+</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -56,12 +82,35 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <!-- /HEAD -->
 <style>
-:root{--bg:#fbfaf7;--fg:#1c2330;--mut:#5d6675;--grid:#dcdfe5;--card:#ffffff;--accent:#c2410c;--good:#15803d;--ink2:#2a6f97;--code:#f3f2ee}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--good:#4ade80;--ink2:#6cb4e4;--code:#0b1017}}
-:root[data-theme="dark"]{--bg:#10151d;--fg:#e6e9ef;--mut:#98a2b3;--grid:#2b3442;--card:#161d27;--accent:#fb923c;--good:#4ade80;--ink2:#6cb4e4;--code:#0b1017}
+:root{--bg:var(--c-bg,#fbfaf7);--band:#f3f1ec;--fg:var(--c-fg,#1c2330);--mut:var(--c-mut,#5d6675);--grid:var(--c-line,#dcdfe5);--card:var(--c-card,#ffffff);--accent:var(--c-accent,#c2410c);--good:var(--c-good,#15803d);--ink2:var(--c-solver,#2a6f97);--code:#f3f2ee}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:var(--c-bg,#10151d);--band:#0c1119;--fg:var(--c-fg,#e6e9ef);--mut:var(--c-mut,#98a2b3);--grid:var(--c-line,#2b3442);--card:var(--c-card,#161d27);--accent:var(--c-accent,#fb923c);--good:var(--c-good,#4ade80);--ink2:var(--c-solver,#6cb4e4);--code:#0b1017}}
+:root[data-theme="dark"]{--bg:var(--c-bg,#10151d);--band:#0c1119;--fg:var(--c-fg,#e6e9ef);--mut:var(--c-mut,#98a2b3);--grid:var(--c-line,#2b3442);--card:var(--c-card,#161d27);--accent:var(--c-accent,#fb923c);--good:var(--c-good,#4ade80);--ink2:var(--c-solver,#6cb4e4);--code:#0b1017}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16.5px/1.65 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-main{max-width:780px;margin:0 auto;padding:40px 16px 56px}
+main{max-width:none;margin:0;padding:0}
+.band{padding:64px 20px 52px}
+section.band:nth-of-type(even){background:var(--band)}
+.wrap{max-width:1120px;margin:0 auto}
+.band>.wrap>*{max-width:760px;margin-left:auto;margin-right:auto}
+.band>.wrap>.beats,.band>.wrap>.two,.band>.wrap>.split{max-width:none}
+.band>.wrap>.cmp{max-width:920px}
+.band>.wrap>.num,.band>.wrap>h2{text-align:center}
+.band-hero>.wrap>*{max-width:none}
+.band>.wrap>h2{font-size:1.9rem;margin-bottom:22px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 40px;align-items:center;margin:0 0 8px}
+.split-wide{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}
+.split>div>:first-child{margin-top:0}
+.split p{max-width:none}
+@media (max-width:880px){.split,.split-wide{grid-template-columns:1fr}}
+.band-hero{background:linear-gradient(135deg,#0b1424 0%,#15233d 55%,#3d1e0f 100%);color:#eef1f5;padding:72px 20px 60px}
+.band-hero h1{font-size:3.4rem;color:#fff}
+.band-hero .kicker{font-size:.8rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fdba74;margin:0 0 10px}
+.band-hero .tagline{font-size:1.3rem;line-height:1.45;color:#c9d2de;margin:0 0 34px;max-width:40ch}
+.band-hero .lede{color:#e6eaf0}
+.band-hero b{color:#fff}
+.band-hero a{color:#fdba74}
+.band-hero figcaption{color:#aab4c3}
+.band-hero .after{color:#aab4c3;font-size:.95rem;max-width:72ch;margin:6px 0 0}
 h1{font-size:2.4rem;line-height:1.1;letter-spacing:-.02em;margin:0 0 14px}
 h2{font-size:1.45rem;line-height:1.25;letter-spacing:-.01em;margin:0 0 10px}
 h3{font-size:1.05rem;margin:18px 0 6px}
@@ -71,7 +120,7 @@ a{color:var(--accent)}
 .mut{color:var(--mut)}
 .small{font-size:.88rem;color:var(--mut)}
 .num{font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
-section{border-top:1px solid var(--grid);padding:30px 0 10px}
+
 .eq{overflow-x:auto;overflow-y:hidden;margin:4px 0 14px;padding:2px 0}
 .eq .katex-display{margin:.4em 0}
 .terms{margin:0 0 14px;padding-left:1.2em;max-width:66ch}
@@ -81,12 +130,12 @@ section{border-top:1px solid var(--grid);padding:30px 0 10px}
 .thesis p{margin:0;font-size:1.04rem}
 .thesis b{color:var(--accent)}
 figure{margin:10px 0 18px}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:8px 28px;align-items:start;margin-bottom:18px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:8px 48px;align-items:center;margin-bottom:18px}
 .hero .lede{margin:0 0 6px}
 .hero-fig{margin:0}
 .hero-fig img{display:block;width:100%;height:auto}
 .hero-fig figcaption{font-size:.78rem}
-@media (max-width:640px){.hero{grid-template-columns:1fr}.hero-fig{order:-1;max-width:240px;margin:0 auto 6px}
+@media (max-width:760px){.hero{grid-template-columns:1fr}.hero-fig{order:-1;max-width:260px;margin:0 auto 6px}
   .hero-fig figcaption{text-align:center}}
 figure svg{width:100%;height:auto;display:block;max-width:640px}
 figcaption{font-size:.86rem;line-height:1.5;color:var(--mut);margin-top:6px;max-width:66ch}
@@ -136,8 +185,8 @@ a.beat .go{font-size:.9rem;font-weight:600;color:var(--accent);margin-top:10px;d
 .two li{margin:0 0 6px}
 .sources{font-size:.82rem;line-height:1.55;color:var(--mut)}
 .sources ol{padding-left:1.2em;margin:6px 0 0}
-footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-size:.82rem;line-height:1.5;color:var(--mut)}
-@media (max-width:520px){h1{font-size:2rem}.eq .katex-display>.katex{font-size:.82em}.cmp{font-size:.84rem}.cmp th,.cmp td{padding:8px 5px}}
+footer.band{border-top:1px solid var(--grid);padding:22px 20px 28px;font-size:.82rem;line-height:1.5;color:var(--mut)}
+@media (max-width:520px){.band{padding:44px 16px 36px}.band-hero{padding:44px 16px 40px}.band-hero h1{font-size:2.3rem}.band>.wrap>h2{font-size:1.5rem}.eq .katex-display>.katex{font-size:.82em}.cmp{font-size:.84rem}.cmp th,.cmp td{padding:8px 5px}}
 </style>
 </head>
 <body>
@@ -145,7 +194,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-si
 <style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-.rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav .rs-in{max-width:1120px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
@@ -162,7 +211,12 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-si
 <nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="index.html">The Real Singularity</a><div class="rs-links"><a href="beat1/index.html">Beat 1</a><a href="beat2/index.html">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <!-- /NAV -->
 <main>
-  <h1>The Real Singularity</h1>
+  <header class="band band-hero">
+    <div class="wrap">
+      <p class="kicker">DS3 Projects &middot; UC San Diego &middot; Fall 2026</p>
+      <h1>The Real Singularity</h1>
+      <p class="tagline">What AI that learns physics can and can't do, tested with demos you can play with.</p>
+
   <div class="hero">
     <div class="hero-text">
     <p class="lede">In September 2026, OpenAI announced that its AI, in an 88-hour run, had settled one of the Millennium
@@ -176,17 +230,15 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-si
     <figure class="hero-fig">
       <img src="images/vortex-stretching.webp" width="697" height="760"
         alt="Streamlines spiralling around a vertical axis: a vortex tube being stretched along its axis.">
-      <figcaption><b>Vortex stretching</b> (illustration). A spinning tube of fluid pulled along its axis gets thinner and
-        spins faster. Whether this can go on without limit in 3D, so that the flow blows up, is the heart of the
-        Millennium question.</figcaption>
+      <figcaption><b>Vortex stretching</b> (illustration).</figcaption>
     </figure>
   </div>
-  <p>The prize asks whether, in three dimensions, a smooth flow always stays smooth, or whether it can "blow up" in a
-    finite time. It can seem like AI can do anything these days, even the hardest problems in mathematical physics.
-    (While we were building this site, an Anthropic researcher announced that he and Claude had proved the Riemann
-    hypothesis, in 17 million lines of Lean that no one has yet read in full.<sup><a href="#s3">3</a></sup>)</p>
+  <p class="after">While we were building this site, an Anthropic researcher announced that he and Claude had proved the Riemann
+    hypothesis, in 17 million lines of Lean that no one has yet read in full.<sup><a href="#s3">3</a></sup></p>
 
-  <section>
+    </div>
+  </header>
+  <section class="band"><div class="wrap">
     <p class="num">How physics is really done with AI</p>
     <h2>Have you wondered how AI actually solves physics problems?</h2>
     <p>Headlines like that one are about proofs on paper. Day to day, scientists and engineers use AI for physics in a
@@ -194,18 +246,20 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-si
       approach is the <b>physics-informed neural network</b>, or <b>PINN</b>, which learns from the laws of physics
       themselves instead of from piles of worked examples.</p>
     <p>We built PINNs, tested them on two problems where we know the exact answers, and checked every result. Along the
-      way we found where they are truly impressive, where they fail, and why the failures are hard to see.</p>
+      way we found <b>where they are truly impressive</b>, <b>where they fail</b>, and <b>why the failures are hard to see</b>.</p>
     <div class="thesis"><p>Our thread: <b>an AI's own score is not the same as being right.</b> PINNs fail in a
       systematic way: the number they train on can look excellent while the answer is wrong. Someone has to set up
       the question, check the score against something independent, and decide what the answer means. For now, that
       person is a part of the loop nothing in our experiments could replace.</p></div>
     <p class="mut">At the end we come back to AI-written math proofs, a very different tool, and find the same theme
       continuing there.</p>
-  </section>
+  </div></section>
 
-  <section>
+  <section class="band"><div class="wrap">
     <p class="num">Step 1 · Neural networks</p>
     <h2>From one neuron to a network</h2>
+    <div class="split">
+      <div>
     <h3>A neuron is a line, then a bend</h3>
     <p>A single <b>neuron</b> takes some numbers \(\mathbf{x}\), multiplies them by weights, adds a bias, and passes the
       result through a fixed curve \(\sigma\) called the <b>activation function</b>:</p>
@@ -215,6 +269,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-si
     <div class="eq">\[A_2(A_1\mathbf{x} + b_1) + b_2 = (A_2A_1)\,\mathbf{x} + (A_2b_1 + b_2).\]</div>
     <p>With a non-linear \(\sigma\) in between, layers can build up curves, bumps and steep slopes that no straight line
       can. Our networks use \(\sigma(z) = \tanh z\), a smooth S-shaped curve.</p>
+      </div>
     <figure>
       <svg viewBox="0 0 640 170" role="img" aria-label="Inputs x and t are multiplied by weights, summed with a bias, and passed through the tanh curve to give the output.">
         <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--mut)"/></marker></defs>
@@ -235,6 +290,7 @@ footer{border-top:1px solid var(--grid);margin-top:28px;padding-top:16px;font-si
       </svg>
       <figcaption>One neuron: a weighted sum plus a bias (the \(A\mathbf{x} + b\)), then the bend \(\sigma\).</figcaption>
     </figure>
+    </div>
 
     <h3>A network is many neurons in layers</h3>
     <p>A <b>layer</b> runs many neurons side by side, so \(A\) becomes a matrix and \(b\) a vector. Feeding each layer's
@@ -274,6 +330,8 @@ class PINN(nn.Module):
       \(\sqrt{(0.01 + 0.04 + 0.04)/3} \approx 0.17\). In practice we minimize the mean squared error (MSE), the same
       thing without the root: whatever makes one smaller makes the other smaller.</p>
 
+    <div class="split split-wide">
+      <div>
     <h3>Turning the knobs: gradient descent</h3>
     <p>Picture the error as a landscape over all 3,021 knobs, and training as walking downhill. The <b>gradient</b>
       \(\nabla_\theta L\) points in the direction where the loss \(L\) rises fastest, so each step goes the other way:</p>
@@ -281,6 +339,8 @@ class PINN(nn.Module):
     <p>The <b>learning rate</b> \(\eta\) sets the step size. Too small and training crawls; too large and it overshoots
       the bottom and can fly off. The computer gets the gradient exactly, for all knobs at once, by applying the chain
       rule backwards through the layers (<b>backpropagation</b>). Try it on one knob:</p>
+      </div>
+      <div>
     <div class="gd" id="gd">
       <canvas id="gdc" aria-label="A loss curve with the steps of gradient descent"></canvas>
       <div class="row">
@@ -293,9 +353,11 @@ class PINN(nn.Module):
       by \(1 - 2\eta\). Below \(\eta = 0.5\) it walks straight in, between 0.5 and 1 it zig-zags in, and above 1 it
       flies off. The step-by-step simulator in Beat 2 is gradient descent in disguise and has the same kind of speed
       limit.</p>
-  </section>
+      </div>
+    </div>
+  </div></section>
 
-  <section>
+  <section class="band"><div class="wrap">
     <p class="num">Step 2 · How a PINN learns physics</p>
     <h2>The score is the physics</h2>
     <h3>Our problem: Burgers' equation</h3>
@@ -385,9 +447,9 @@ for step in range(2000):
     <p>Notice what the loss measures: how well the answer follows the rule <i>at the points we checked</i>, not how
       close it is to the truth. Most of the time the two agree. Our two beats show what happens when they don't, and in
       a real problem there is no exact \(u\) to compare against.</p>
-  </section>
+  </div></section>
 
-  <section>
+  <section class="band"><div class="wrap">
     <p class="num">Step 3 · What we tested</p>
     <h2>Two problems, two kinds of failure</h2>
     <p class="mut">Each beat opens with a short story, then lets you try the demos yourself. Start with Beat 1.</p>
@@ -421,9 +483,9 @@ for step in range(2000):
         <span class="go">Read Beat 2 &rarr;</span>
       </a>
     </div>
-  </section>
+  </div></section>
 
-  <section>
+  <section class="band"><div class="wrap">
     <p class="num">Step 4 · Back to the headline</p>
     <h2>The same theme, one level up</h2>
     <p>OpenAI's result is a proof, not a simulation, and an AI that writes proofs is a very different tool from a PINN.
@@ -446,9 +508,9 @@ for step in range(2000):
           Mathematicians reading it, then peer review</td></tr>
       </tbody>
     </table>
-  </section>
+  </div></section>
 
-  <section>
+  <section class="band"><div class="wrap">
     <p class="num">Conclusion</p>
     <h2>What AI really changes, and what it doesn't</h2>
     <div class="two">
@@ -467,9 +529,9 @@ for step in range(2000):
       person: someone has to decide what to ask, check the AI's score against something independent, and interpret what
       the answer means. That is the real singularity we found: not the moment AI stops needing us, but the places where it
       clearly still does.</p>
-  </section>
+  </div></section>
 
-  <section class="sources">
+  <section class="band sources"><div class="wrap">
     <p class="num">Sources</p>
     <ol>
       <li id="s1"><a href="https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_priority_controversy">Navier–Stokes priority
@@ -485,11 +547,11 @@ for step in range(2000):
       <li>The network size (8 layers of 20) follows Raissi, Perdikaris and Karniadakis, "Physics-informed neural networks",
         J. Comput. Phys. 378 (2019), 686&ndash;707.</li>
     </ol>
-  </section>
+  </div></section>
 
-  <footer>
+  <footer class="band"><div class="wrap">
     DS3 Projects, UC San Diego, Fall 2026. Charles Cheng, Michelle Zhao, Paarth Nawani, Niko Calabro. Mentor: Ryo Ide.
-  </footer>
+  </div></footer>
 </main>
 <script>
 // Gradient descent on L(theta) = (theta - 1)^2, one knob.

@@ -7,20 +7,20 @@
 <style>
   :root {
     color-scheme: light;
-    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
-    --curve: #2a78d6; --warn: #b3261e;
+    --bg:var(--c-bg,#fbfaf7); --panel:var(--c-card,#ffffff); --ink:var(--c-fg,#1c2330); --muted:var(--c-mut,#5d6675); --line:var(--c-line,#e4e3de);
+    --curve:var(--c-pinn,#2a78d6); --warn:var(--c-bad,#b3261e);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-      --curve: #5b9bea; --warn: #f87171;
+      --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
+      --curve:var(--c-pinn,#5b9bea); --warn:var(--c-bad,#f87171);
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-    --curve: #5b9bea; --warn: #f87171;
+    --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
+    --curve:var(--c-pinn,#5b9bea); --warn:var(--c-bad,#f87171);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
@@ -184,7 +184,7 @@ async function refresh() {
   const u = one[0];
   latest = { xs, us, x, u };
   $("caption").textContent =
-    `The PINN's fluid speed (blue) at time ${t.toFixed(2)}. At position ${x.toFixed(2)} (the dot), the PINN says the speed is ${u.toFixed(3)}.`;
+    `The PINN's fluid speed (orange) at time ${t.toFixed(2)}. At position ${x.toFixed(2)} (the dot), the PINN says the speed is ${u.toFixed(3)}.`;
   draw(xs, us, x, u);
 }
 

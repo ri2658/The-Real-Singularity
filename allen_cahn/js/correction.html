@@ -6,18 +6,18 @@
 <title>Correcting a PINN</title>
 <style>
   :root {
-    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
-    --curve: #2a78d6; --ghost: #a9a79f; --guess: #c2410c; --hump: #15803d;
+    --bg:var(--c-bg,#fbfaf7); --panel:var(--c-card,#ffffff); --ink:var(--c-fg,#1c2330); --muted:var(--c-mut,#5d6675); --line:var(--c-line,#e4e3de);
+    --curve:var(--c-solver,#2a78d6); --ghost:var(--c-ghost,#a9a79f); --guess:var(--c-pinn,#c2410c); --hump:var(--c-good,#15803d);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-      --curve: #5b9bea; --ghost: #6b7380; --guess: #fb923c; --hump: #4ade80;
+      --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
+      --curve:var(--c-solver,#5b9bea); --ghost:var(--c-ghost,#6b7380); --guess:var(--c-pinn,#fb923c); --hump:var(--c-good,#4ade80);
     }
   }
   :root[data-theme="dark"] {
-    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-    --curve: #5b9bea; --ghost: #6b7380; --guess: #fb923c; --hump: #4ade80;
+    --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
+    --curve:var(--c-solver,#5b9bea); --ghost:var(--c-ghost,#6b7380); --guess:var(--c-pinn,#fb923c); --hump:var(--c-good,#4ade80);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);

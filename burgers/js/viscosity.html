@@ -6,18 +6,18 @@
 <title>Where a PINN Breaks</title>
 <style>
   :root {
-    --bg: #fbfaf7; --panel: #ffffff; --ink: #1c2330; --muted: #5d6675; --line: #e4e3de;
-    --ref: #1c2330; --pinn: #c2410c; --errfill: rgba(194, 65, 12, .18); --good: #15803d; --bad: #b91c1c;
+    --bg:var(--c-bg,#fbfaf7); --panel:var(--c-card,#ffffff); --ink:var(--c-fg,#1c2330); --muted:var(--c-mut,#5d6675); --line:var(--c-line,#e4e3de);
+    --ref:var(--c-exact,#1c2330); --pinn:var(--c-pinn,#c2410c); --errfill:var(--c-pinn-fill,rgba(194, 65, 12, .18)); --good:var(--c-good,#15803d); --bad:var(--c-bad,#b91c1c);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-      --ref: #e6e9ef; --pinn: #fb923c; --errfill: rgba(251, 146, 60, .22); --good: #4ade80; --bad: #f87171;
+      --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
+      --ref:var(--c-exact,#e6e9ef); --pinn:var(--c-pinn,#fb923c); --errfill:var(--c-pinn-fill,rgba(251, 146, 60, .22)); --good:var(--c-good,#4ade80); --bad:var(--c-bad,#f87171);
     }
   }
   :root[data-theme="dark"] {
-    --bg: #10151d; --panel: #161d27; --ink: #e6e9ef; --muted: #98a2b3; --line: #2b3442;
-    --ref: #e6e9ef; --pinn: #fb923c; --errfill: rgba(251, 146, 60, .22); --good: #4ade80; --bad: #f87171;
+    --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
+    --ref:var(--c-exact,#e6e9ef); --pinn:var(--c-pinn,#fb923c); --errfill:var(--c-pinn-fill,rgba(251, 146, 60, .22)); --good:var(--c-good,#4ade80); --bad:var(--c-bad,#f87171);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);

@@ -23,7 +23,7 @@ Every copied page gets the site-wide navigation bar (home, Beat 1, Beat 2;
 see BEATS), and each demo page also gets a previous / next bar at the bottom
 that walks through its beat in story order. The landing page's bar is
 refreshed between its <!-- NAV --> markers. Every copied page also loads the
-site font, Inter (see FONT), and KaTeX (see MATH): write math in the page sources as \\( ... \\) inline or \\[ ... \\] for
+site font, Inter (see FONT), the colour palette (see PALETTE) and KaTeX (see MATH): write math in the page sources as \\( ... \\) inline or \\[ ... \\] for
 a display line; text that JavaScript writes later is rendered too. Links use explicit
 .../index.html paths because CloudFront only serves index.html at the site root.
 
@@ -78,7 +78,7 @@ BEATS = [
 NAV_STYLE = """<style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-.rs-nav .rs-in{max-width:980px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav .rs-in{max-width:1120px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
@@ -128,6 +128,25 @@ document.addEventListener("DOMContentLoaded", function () {{
 </script>"""
 
 
+# One colour palette for the whole site. Every page names its colours with its own
+# tokens (--bg, --pinn, --curve, ...) and points them at these, so the same thing has
+# the same colour everywhere: the PINN is orange, a traditional solver or simulator is
+# blue, the exact answer is neutral grey, and the three viscosities are a blue ramp
+# from thick (light) to thin (dark).
+PALETTE = """<style>
+:root{--c-bg:#fbfaf7;--c-card:#ffffff;--c-fg:#1c2330;--c-mut:#5d6675;--c-line:#e2e1dc;--c-accent:#c2410c;
+  --c-pinn:#c2410c;--c-pinn-fill:rgba(194,65,12,.16);--c-solver:#2a78d6;--c-exact:#4b5563;--c-ghost:#a9a79f;
+  --c-good:#15803d;--c-bad:#b91c1c;--c-nu1:#8fbbe6;--c-nu2:#2a78d6;--c-nu3:#173f6e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-bg:#10151d;--c-card:#161d27;--c-fg:#e6e9ef;
+  --c-mut:#98a2b3;--c-line:#2b3442;--c-accent:#fb923c;--c-pinn:#fb923c;--c-pinn-fill:rgba(251,146,60,.22);
+  --c-solver:#5b9bea;--c-exact:#c3cad5;--c-ghost:#6b7380;--c-good:#4ade80;--c-bad:#f87171;
+  --c-nu1:#2f5f99;--c-nu2:#5b9bea;--c-nu3:#c2dcf7}}
+:root[data-theme="dark"]{--c-bg:#10151d;--c-card:#161d27;--c-fg:#e6e9ef;--c-mut:#98a2b3;--c-line:#2b3442;
+  --c-accent:#fb923c;--c-pinn:#fb923c;--c-pinn-fill:rgba(251,146,60,.22);--c-solver:#5b9bea;--c-exact:#c3cad5;
+  --c-ghost:#6b7380;--c-good:#4ade80;--c-bad:#f87171;--c-nu1:#2f5f99;--c-nu2:#5b9bea;--c-nu3:#c2dcf7}
+</style>"""
+
+
 # One font for the whole site, text and charts alike. Pages name it in their CSS and
 # canvas code as "Inter, system-ui, ..."; this loads it, then asks every page to
 # redraw its charts once it has arrived (each page redraws on resize).
@@ -144,7 +163,12 @@ if (document.fonts) document.fonts.ready.then(function () { window.dispatchEvent
 THEME = """<script>
 (function () {
   var KEY = "rs-theme", root = document.documentElement, mq = matchMedia("(prefers-color-scheme: dark)");
-  try { var saved = localStorage.getItem(KEY); if (saved === "light" || saved === "dark") root.dataset.theme = saved; } catch (e) {}
+  function load() {
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    if (saved === "light" || saved === "dark") root.dataset.theme = saved; else delete root.dataset.theme;
+  }
+  load();
   var SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   var MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>';
   function isDark() { return root.dataset.theme ? root.dataset.theme === "dark" : mq.matches; }
@@ -162,9 +186,18 @@ THEME = """<script>
   };
   document.addEventListener("DOMContentLoaded", paint);
   mq.addEventListener("change", paint);
+  // A page restored by the Back / Forward buttons, or open in another tab, keeps the
+  // theme it had then; re-read the saved choice so every page agrees.
+  function sync() {
+    var before = root.dataset.theme;
+    load(); paint();
+    if (root.dataset.theme !== before) window.dispatchEvent(new Event("resize"));
+  }
+  window.addEventListener("pageshow", function (e) { if (e.persisted) sync(); });
+  window.addEventListener("storage", function (e) { if (e.key === KEY) sync(); });
 })();
 </script>"""
-HEAD = THEME + "\n" + FONT + "\n" + MATH
+HEAD = THEME + "\n" + PALETTE + "\n" + FONT + "\n" + MATH
 
 
 def add_math(html: str) -> str:
