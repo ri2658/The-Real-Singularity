@@ -24,6 +24,11 @@ table.race{width:100%;border-collapse:collapse;font:15px Inter, system-ui, -appl
 #msg{color:var(--sol);font:.9rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;white-space:pre-wrap}
 .k{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
 </style>
+<style>
+main{max-width:900px !important;margin-left:auto !important;margin-right:auto !important;
+  padding-left:16px !important;padding-right:16px !important;box-sizing:border-box}
+main :is(p,ul,ol,h1,h2,h3,figcaption,.lede,.try,.notice,.takeaways,.key,section){max-width:none !important}
+</style>
 <meta name="color-scheme" content="light dark">
 <style>:root{color-scheme:light dark}</style>
 <script>
@@ -126,7 +131,8 @@ document.addEventListener("DOMContentLoaded", function () {
 <style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-.rs-nav .rs-in{max-width:1120px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav,.rs-nav *,.rs-pager{box-sizing:border-box}
+.rs-nav .rs-in{max-width:900px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
@@ -140,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=e30aed8b">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=e30aed8b" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=e30aed8b">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
 <h1>The race: a traditional solver vs. our PINN</h1>
 <p>This is the classic way to simulate the fluid from the previous page. It chops the line into many small cells and updates each cell's speed one small time step at a time (engineers call it the finite-volume method, and have used it for decades). There is no training: it just follows the rules of the equation.</p>
@@ -308,7 +314,7 @@ async function run() {
     $('p-train').textContent = `${(info.train_seconds / 60).toFixed(1)} min of training`;
     $('pnote').innerHTML = `PINN: run <code>${info.run}</code>, trained once for this \\(\\nu\\) only. One batch of ${ref.x.length * ref.t.length} points, ` +
       `timed after a one-point warm-up, so model loading isn't counted. Its answer doesn't depend on N.` +
-      (nu === 'nu0.01pi' ? '' : ' At this \\(\\nu\\) the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html">Where a PINN breaks</a>.');
+      (nu === 'nu0.01pi' ? '' : ' At this \\(\\nu\\) the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html?v=e30aed8b">Where a PINN breaks</a>.');
   } catch (e) { clearPinn(`PINN not available here (${e.message}).`); }
 
   // Replay the solution in time (about 4 seconds).
@@ -335,7 +341,7 @@ matchMedia('(prefers-color-scheme:dark)').addEventListener('change', draw);
 $('nu').onchange();
 </script>
 <style>
-.rs-pager{max-width:980px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
+.rs-pager{max-width:900px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
   display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-pager a{color:inherit;text-decoration:none;opacity:.8}
@@ -343,6 +349,6 @@ $('nu').onchange();
 .rs-pager .rs-up{opacity:.6}
 .rs-pager .rs-next{font-weight:600;margin-left:auto}
 </style>
-<nav class="rs-pager" aria-label="Beat 1 pages"><a href="../loss-vs-truth/index.html">&larr; The score that lies</a><a class="rs-up" href="../beat1/index.html">Back to Beat 1</a><a class="rs-next" href="../beat2/index.html">Next: Beat 2, Balls in bowls &rarr;</a></nav>
+<nav class="rs-pager" aria-label="Beat 1 pages"><a href="../loss-vs-truth/index.html?v=e30aed8b">&larr; The score that lies</a><a class="rs-up" href="../beat1/index.html?v=e30aed8b">Back to Beat 1</a><a class="rs-next" href="../beat2/index.html?v=e30aed8b">Next: Beat 2, Balls in bowls &rarr;</a></nav>
 </body>
 </html>

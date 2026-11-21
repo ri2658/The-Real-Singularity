@@ -11,15 +11,11 @@
 :root[data-theme="dark"]{--bg:var(--c-bg,#10151d);--fg:var(--c-fg,#e6e9ef);--mut:var(--c-mut,#98a2b3);--grid:var(--c-line,#2b3442);--card:var(--c-card,#161d27);--accent:var(--c-accent,#fb923c);--soon:var(--c-ghost,#6b7380);--road:#262d39;--line:var(--c-accent,#fb923c);--ref:var(--c-ghost,#5f6878)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-main{max-width:1080px;margin:0 auto;padding:44px 20px 56px}
-/* text in a centred reading column; figures and card grids use the full width */
-main>*,main>section>*{max-width:760px !important;margin-left:auto !important;margin-right:auto !important}
-main>figure,main>section>figure,main>section>.cards,main>.cards,main>.opener{max-width:none !important}
-main>section{max-width:none}
+main{max-width:900px;margin:0 auto;padding:44px 16px 56px}
 .eyebrow{font:600 .8rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
 h1{font-size:2.1rem;line-height:1.15;margin:0 0 12px}
 h2{font-size:1.35rem;line-height:1.25;margin:0 0 8px}
-p{margin:0 0 14px;max-width:62ch}
+p{margin:0 0 14px}
 .lede{color:var(--mut);font-size:1.05rem}
 section{border-top:1px solid var(--grid);padding:34px 0 10px}
 figure{margin:18px 0 8px}
@@ -58,11 +54,11 @@ a.card h3::before{content:counter(cd) ". ";color:var(--accent)}
 a.card p{font:.88rem/1.45 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin:0}
 .eq{overflow-x:auto;overflow-y:hidden;margin:2px 0 12px}
 @media (max-width:520px){.eq .katex-display>.katex{font-size:.82em}}
-.terms{margin:0 0 14px;padding-left:1.2em;max-width:62ch}
+.terms{margin:0 0 14px;padding-left:1.2em}
 .terms li{margin:0 0 6px}
 details{font:.9rem/1.55 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin:8px 0 0}
 details summary{cursor:pointer;color:var(--fg);font-weight:600}
-details p{max-width:66ch}
+details p{max-width:none}
 details a{color:var(--accent)}
 .next{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--grid);margin-top:24px;padding-top:16px;font:.95rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .next a{color:var(--accent);text-decoration:none;font-weight:600}
@@ -169,7 +165,8 @@ document.addEventListener("DOMContentLoaded", function () {
 <style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-.rs-nav .rs-in{max-width:1120px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav,.rs-nav *,.rs-pager{box-sizing:border-box}
+.rs-nav .rs-in{max-width:900px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
@@ -183,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=e30aed8b">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=e30aed8b" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=e30aed8b">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
   <p class="eyebrow">Beat 1</p>
   <h1>The wall of brake lights</h1>
@@ -279,15 +276,15 @@ document.addEventListener("DOMContentLoaded", function () {
     <p class="eyebrow">Try it yourself</p>
     <h2>Five demos, in story order</h2>
     <div class="cards">
-      <a class="card" href="../shock/index.html"><h3>How the wall forms</h3><p>The full animation, plus the paths that
+      <a class="card" href="../shock/index.html?v=e30aed8b"><h3>How the wall forms</h3><p>The full animation, plus the paths that
         "slow down" signals take along the road.</p></a>
-      <a class="card" href="../pinn/index.html"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws
+      <a class="card" href="../pinn/index.html?v=e30aed8b"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws
         its answer instantly.</p></a>
-      <a class="card" href="../viscosity/index.html"><h3>The breaking point</h3><p>Slide from gentle to sharp and watch
+      <a class="card" href="../viscosity/index.html?v=e30aed8b"><h3>The breaking point</h3><p>Slide from gentle to sharp and watch
         where the PINN stops matching the exact answer.</p></a>
-      <a class="card" href="../loss-vs-truth/index.html"><h3>The score that lies</h3><p>The PINN's own score and its real
+      <a class="card" href="../loss-vs-truth/index.html?v=e30aed8b"><h3>The score that lies</h3><p>The PINN's own score and its real
         error, side by side over training.</p></a>
-      <a class="card" href="../race/index.html"><h3>The race</h3><p>The PINN against the traditional method, head to
+      <a class="card" href="../race/index.html?v=e30aed8b"><h3>The race</h3><p>The PINN against the traditional method, head to
         head.</p></a>
     </div>
     <p style="font:.88rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut)">The demos use the physics name for the same thing:
@@ -314,7 +311,7 @@ document.addEventListener("DOMContentLoaded", function () {
     </details>
   </section>
 
-  <div class="next"><a href="../index.html">&larr; Home</a><a href="../beat2/index.html">Beat 2: Balls in bowls &rarr;</a></div>
+  <div class="next"><a href="../index.html?v=e30aed8b">&larr; Home</a><a href="../beat2/index.html?v=e30aed8b">Beat 2: Balls in bowls &rarr;</a></div>
 </main>
 <script>
 const PI = Math.PI, N_CARS = 44;

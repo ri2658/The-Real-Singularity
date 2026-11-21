@@ -31,6 +31,8 @@ Run from the repo root after changing any page, then commit site/:
     python scripts/build_site.py
 """
 
+import hashlib
+import re
 import shutil
 from pathlib import Path
 
@@ -78,7 +80,8 @@ BEATS = [
 NAV_STYLE = """<style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-.rs-nav .rs-in{max-width:1120px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav,.rs-nav *,.rs-pager{box-sizing:border-box}
+.rs-nav .rs-in{max-width:900px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
@@ -93,7 +96,7 @@ NAV_STYLE = """<style>
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>"""
 PAGER_STYLE = """<style>
-.rs-pager{max-width:980px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
+.rs-pager{max-width:900px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
   display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-pager a{color:inherit;text-decoration:none;opacity:.8}
@@ -229,6 +232,16 @@ def add_math(html: str) -> str:
     return html if i < 0 else html[:i] + HEAD + "\n" + html[i:]
 
 
+# Every page shares one content width, 900px, so the top bar, text, charts and cards
+# line up from page to page. The demo pages each set their own widths, so this
+# block (added after their own styles) brings them to the same edges.
+WIDTH = """<style>
+main{max-width:900px !important;margin-left:auto !important;margin-right:auto !important;
+  padding-left:16px !important;padding-right:16px !important;box-sizing:border-box}
+main :is(p,ul,ol,h1,h2,h3,figcaption,.lede,.try,.notice,.takeaways,.key,section){max-width:none !important}
+</style>"""
+
+
 def beat_of(page):
     for key, label, title, pages in BEATS:
         if page == key or page in dict(pages):
@@ -278,6 +291,10 @@ def add_nav(html: str, current: str) -> str:
     j = html.find(">", i) + 1
     html = html[:j] + "\n" + nav_html(current) + html[j:]
     pager = pager_html(current)
+    if pager:                      # a demo page: bring it to the shared width
+        i = html.find("</head>")
+        if i >= 0:
+            html = html[:i] + WIDTH + "\n" + html[i:]
     k = html.rfind("</body>")
     if pager and k >= 0:
         html = html[:k] + pager + "\n" + html[k:]
@@ -294,6 +311,24 @@ def refresh_landing_nav():
             start, end = html.index(a) + len(a), html.index(b)
             html = html[:start] + "\n" + fill + "\n" + html[end:]
     landing.write_text(html, encoding="utf-8")
+
+
+VERSION_RE = re.compile(r'(href="(?![a-z]+:|#)[^"]*?index\.html)(\?v=[0-9a-f]+)?(?=["#])')
+
+
+def version_links():
+    """Add ?v=<content hash> to every link between the site's pages.
+
+    Browsers can keep an old copy of a page and show it again without asking. Changing
+    the address whenever the content changes means a reader always gets the new page.
+    The hash covers the pages themselves, so it only changes when something did.
+    """
+    pages = sorted(SITE.rglob("*.html"))
+    texts = {p: VERSION_RE.sub(r"\1", p.read_text(encoding="utf-8")) for p in pages}
+    digest = hashlib.sha1("".join(texts[p] for p in pages).encode("utf-8")).hexdigest()[:8]
+    for p in pages:
+        p.write_text(VERSION_RE.sub(lambda m: f"{m.group(1)}?v={digest}", texts[p]), encoding="utf-8")
+    print(f"page links versioned: ?v={digest}")
 
 
 def main():
@@ -328,6 +363,8 @@ def main():
         for f in files:
             shutil.copy2(f, out / f.name)
             print(f"{str(f.relative_to(ROOT)):45s} -> site/{folder}/{f.name}")
+
+    version_links()
 
     total = sum(p.stat().st_size for p in SITE.rglob("*") if p.is_file())
     print(f"\nsite/ is ready: {total / 1e6:.2f} MB")

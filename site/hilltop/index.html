@@ -67,6 +67,11 @@
   details.math summary { cursor: pointer; color: var(--ink); }
   .card .notice { margin-top: 8px; }
 </style>
+<style>
+main{max-width:900px !important;margin-left:auto !important;margin-right:auto !important;
+  padding-left:16px !important;padding-right:16px !important;box-sizing:border-box}
+main :is(p,ul,ol,h1,h2,h3,figcaption,.lede,.try,.notice,.takeaways,.key,section){max-width:none !important}
+</style>
 <meta name="color-scheme" content="light dark">
 <style>:root{color-scheme:light dark}</style>
 <script>
@@ -169,7 +174,8 @@ document.addEventListener("DOMContentLoaded", function () {
 <style>
 .rs-nav{position:sticky;top:0;z-index:50;background:var(--bg,#fbfaf7);border-bottom:1px solid rgba(127,127,127,.25);
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
-.rs-nav .rs-in{max-width:1120px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
+.rs-nav,.rs-nav *,.rs-pager{box-sizing:border-box}
+.rs-nav .rs-in{max-width:900px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap}
 .rs-nav a{color:inherit;text-decoration:none;opacity:.72;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .rs-nav a:hover,.rs-nav a:focus-visible{opacity:1;outline:none;background:rgba(127,127,127,.14)}
 .rs-nav a.on{opacity:1;font-weight:600;background:rgba(127,127,127,.18)}
@@ -183,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html">Beat 1</a><a href="../beat2/index.html" class="on" aria-current="page">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=e30aed8b">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=e30aed8b">Beat 1</a><a href="../beat2/index.html?v=e30aed8b" class="on" aria-current="page">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
   <h1>Falling off a hilltop</h1>
   <p class="lede">Can a simulation stay on a hilltop if you are careful enough? This page measures how long it holds on.</p>
@@ -444,7 +450,7 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", red
 })();
 </script>
 <style>
-.rs-pager{max-width:980px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
+.rs-pager{max-width:900px;margin:24px auto 0;padding:14px 16px 28px;border-top:1px solid rgba(127,127,127,.25);
   display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:baseline;
   font:14px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .rs-pager a{color:inherit;text-decoration:none;opacity:.8}
@@ -452,6 +458,6 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", red
 .rs-pager .rs-up{opacity:.6}
 .rs-pager .rs-next{font-weight:600;margin-left:auto}
 </style>
-<nav class="rs-pager" aria-label="Beat 2 pages"><a href="../allen-cahn/index.html">&larr; The step-by-step simulator</a><a class="rs-up" href="../beat2/index.html">Back to Beat 2</a><a class="rs-next" href="../correction/index.html">Next: Fixing the PINN's guesses &rarr;</a></nav>
+<nav class="rs-pager" aria-label="Beat 2 pages"><a href="../allen-cahn/index.html?v=e30aed8b">&larr; The step-by-step simulator</a><a class="rs-up" href="../beat2/index.html?v=e30aed8b">Back to Beat 2</a><a class="rs-next" href="../correction/index.html?v=e30aed8b">Next: Fixing the PINN's guesses &rarr;</a></nav>
 </body>
 </html>
