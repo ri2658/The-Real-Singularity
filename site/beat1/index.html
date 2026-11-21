@@ -21,6 +21,8 @@ section{border-top:1px solid var(--grid);padding:34px 0 10px}
 figure{margin:18px 0 8px}
 .opener{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 32px;align-items:start;margin:22px 0 6px}
 .opener figure{margin:0}
+.notice-wide{font-size:.88rem;line-height:1.5;color:var(--mut);margin:10px 0 6px}
+.notice-wide b{color:var(--fg)}
 .photo img{display:block;width:100%;height:auto;aspect-ratio:5/3;object-fit:cover;border-radius:12px}
 @media (max-width:860px){.opener{grid-template-columns:1fr}}
 canvas{width:100%;display:block}
@@ -180,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=e30aed8b">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=e30aed8b" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=e30aed8b">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=1ce7850d">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=1ce7850d" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=1ce7850d">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
   <p class="eyebrow">Beat 1</p>
   <h1>The wall of brake lights</h1>
@@ -206,11 +208,9 @@ document.addEventListener("DOMContentLoaded", function () {
           <option value="0.001" selected>brake at the last second</option>
         </select></label>
       </div>
-      <figcaption><b>What to notice:</b> traffic moves left to right. The top chart is the speed of the cars at each point
-        on the road; the dashed line is where it started. Press Play: the gentle slope in the middle turns into a cliff,
-        and the cars below bunch up and turn red as they hit it.</figcaption>
     </figure>
   </div>
+  <p class="notice-wide"><b>What to notice:</b> traffic moves left to right. The top chart is the speed of the cars at each point on the road; the dashed line is where it started. Press Play: the gentle slope in the middle turns into a cliff, and the cars below bunch up and turn red as they hit it.</p>
 
   <section>
     <h2>Traffic, treated like a fluid</h2>
@@ -276,15 +276,15 @@ document.addEventListener("DOMContentLoaded", function () {
     <p class="eyebrow">Try it yourself</p>
     <h2>Five demos, in story order</h2>
     <div class="cards">
-      <a class="card" href="../shock/index.html?v=e30aed8b"><h3>How the wall forms</h3><p>The full animation, plus the paths that
+      <a class="card" href="../shock/index.html?v=1ce7850d"><h3>How the wall forms</h3><p>The full animation, plus the paths that
         "slow down" signals take along the road.</p></a>
-      <a class="card" href="../pinn/index.html?v=e30aed8b"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws
+      <a class="card" href="../pinn/index.html?v=1ce7850d"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws
         its answer instantly.</p></a>
-      <a class="card" href="../viscosity/index.html?v=e30aed8b"><h3>The breaking point</h3><p>Slide from gentle to sharp and watch
+      <a class="card" href="../viscosity/index.html?v=1ce7850d"><h3>The breaking point</h3><p>Slide from gentle to sharp and watch
         where the PINN stops matching the exact answer.</p></a>
-      <a class="card" href="../loss-vs-truth/index.html?v=e30aed8b"><h3>The score that lies</h3><p>The PINN's own score and its real
+      <a class="card" href="../loss-vs-truth/index.html?v=1ce7850d"><h3>The score that lies</h3><p>The PINN's own score and its real
         error, side by side over training.</p></a>
-      <a class="card" href="../race/index.html?v=e30aed8b"><h3>The race</h3><p>The PINN against the traditional method, head to
+      <a class="card" href="../race/index.html?v=1ce7850d"><h3>The race</h3><p>The PINN against the traditional method, head to
         head.</p></a>
     </div>
     <p style="font:.88rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut)">The demos use the physics name for the same thing:
@@ -311,7 +311,7 @@ document.addEventListener("DOMContentLoaded", function () {
     </details>
   </section>
 
-  <div class="next"><a href="../index.html?v=e30aed8b">&larr; Home</a><a href="../beat2/index.html?v=e30aed8b">Beat 2: Balls in bowls &rarr;</a></div>
+  <div class="next"><a href="../index.html?v=1ce7850d">&larr; Home</a><a href="../beat2/index.html?v=1ce7850d">Beat 2: Balls in bowls &rarr;</a></div>
 </main>
 <script>
 const PI = Math.PI, N_CARS = 44;

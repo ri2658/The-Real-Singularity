@@ -81,6 +81,17 @@
 main{max-width:900px !important;margin-left:auto !important;margin-right:auto !important;
   padding-left:16px !important;padding-right:16px !important;box-sizing:border-box}
 main :is(p,ul,ol,h1,h2,h3,figcaption,.lede,.try,.notice,.takeaways,.key,section){max-width:none !important}
+/* the same four-step layout on every demo: 1 the question, 2 try it, 3 why, 4 key takeaways */
+h2.step{font:700 1.15rem/1.3 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;margin:34px 0 10px;color:var(--c-fg)}
+h2.step .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--c-accent);
+  color:var(--c-bg);font:700 13px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;margin-right:10px;vertical-align:2px}
+main>h1+h2.step{margin-top:14px}
+.try,.takeaways{border:0;border-top:1px solid var(--c-fg);border-bottom:1px solid var(--c-line);border-radius:0;
+  background:none;padding:10px 0 12px;margin:12px 0 18px;color:var(--c-fg);font-size:15px}
+.try::before{content:"Try this";display:block;font:600 11px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--c-accent);margin-bottom:4px}
+.takeaways ul{margin:0;padding-left:1.2em}.takeaways li{margin:0 0 8px}.takeaways li:last-child{margin-bottom:0}
+.takeaways .weak{color:var(--c-accent);font-weight:600}
 </style>
 <meta name="color-scheme" content="light dark">
 <style>:root{color-scheme:light dark}</style>
@@ -199,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=e30aed8b">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=e30aed8b">Beat 1</a><a href="../beat2/index.html?v=e30aed8b" class="on" aria-current="page">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=1ce7850d">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=1ce7850d">Beat 1</a><a href="../beat2/index.html?v=1ce7850d" class="on" aria-current="page">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
   <h1>The step-by-step simulator</h1>
   <p class="lede">This is how a traditional simulation works, and the one thing it can never do.</p>
@@ -572,6 +583,6 @@ loadJsonCurves();
 .rs-pager .rs-up{opacity:.6}
 .rs-pager .rs-next{font-weight:600;margin-left:auto}
 </style>
-<nav class="rs-pager" aria-label="Beat 2 pages"><a href="../beat2/index.html?v=e30aed8b">&larr; Beat 2: Balls in bowls</a><a class="rs-next" href="../hilltop/index.html?v=e30aed8b">Next: Falling off a hilltop &rarr;</a></nav>
+<nav class="rs-pager" aria-label="Beat 2 pages"><a href="../beat2/index.html?v=1ce7850d">&larr; Beat 2: Balls in bowls</a><a class="rs-next" href="../hilltop/index.html?v=1ce7850d">Next: Falling off a hilltop &rarr;</a></nav>
 </body>
 </html>

@@ -27,6 +27,17 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 main{max-width:900px !important;margin-left:auto !important;margin-right:auto !important;
   padding-left:16px !important;padding-right:16px !important;box-sizing:border-box}
 main :is(p,ul,ol,h1,h2,h3,figcaption,.lede,.try,.notice,.takeaways,.key,section){max-width:none !important}
+/* the same four-step layout on every demo: 1 the question, 2 try it, 3 why, 4 key takeaways */
+h2.step{font:700 1.15rem/1.3 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;margin:34px 0 10px;color:var(--c-fg)}
+h2.step .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--c-accent);
+  color:var(--c-bg);font:700 13px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;margin-right:10px;vertical-align:2px}
+main>h1+h2.step{margin-top:14px}
+.try,.takeaways{border:0;border-top:1px solid var(--c-fg);border-bottom:1px solid var(--c-line);border-radius:0;
+  background:none;padding:10px 0 12px;margin:12px 0 18px;color:var(--c-fg);font-size:15px}
+.try::before{content:"Try this";display:block;font:600 11px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--c-accent);margin-bottom:4px}
+.takeaways ul{margin:0;padding-left:1.2em}.takeaways li{margin:0 0 8px}.takeaways li:last-child{margin-bottom:0}
+.takeaways .weak{color:var(--c-accent);font-weight:600}
 </style>
 <meta name="color-scheme" content="light dark">
 <style>:root{color-scheme:light dark}</style>
@@ -145,13 +156,14 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=e30aed8b">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=e30aed8b" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=e30aed8b">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=1ce7850d">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=1ce7850d" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=1ce7850d">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
 <h1>How a smooth wave turns into a cliff</h1>
+<h2 class="step"><span class="n">1</span>The question</h2>
 <p>We start with a smooth wave of moving fluid. Fluid on the left side moves right, fluid on the right side moves left, so everything heads toward the middle. Each blue line in the top picture follows one bit of fluid as it moves at its starting speed.</p>
-<p>The faster bits catch up with the slower ones ahead of them. At time \(t = 1/\pi \approx 0.318\) the lines first cross at the middle (\(x = 0\)), and the smooth wave becomes a sudden jump, called a <b>shock</b>. Press Play to watch it happen. Sharp jumps like this are exactly what trips up the PINN on the next pages.</p>
-<p>The bottom picture shows the fluid's speed at each position. The thickness menu sets how thick (viscous) the fluid is: thick fluid rounds the jump off a little, thin fluid makes it almost a vertical wall.</p>
 
+<h2 class="step"><span class="n">2</span>Try it</h2>
+<div class="try">Press <b>Play</b>, or <b>Jump to the first crossing</b>. Then set the thickness to <b>thin</b> and watch the jump in the bottom picture become an almost vertical wall.</div>
 <canvas id="c1"></canvas>
 <canvas id="c2"></canvas>
 
@@ -168,6 +180,15 @@ document.addEventListener("DOMContentLoaded", function () {
  <span><i class="k" style="background:var(--grid)"></i>if the bits passed through each other (impossible)</span>
 </div>
 <div id="read"></div>
+<h2 class="step"><span class="n">3</span>Why it happens</h2>
+<p>The faster bits catch up with the slower ones ahead of them. At time \(t = 1/\pi \approx 0.318\) the lines first cross at the middle (\(x = 0\)), and the smooth wave becomes a sudden jump, called a <b>shock</b>.</p>
+<p>The bottom picture shows the fluid's speed at each position. The thickness menu sets how thick (viscous) the fluid is: thick fluid rounds the jump off a little, thin fluid makes it almost a vertical wall.</p>
+<h2 class="step"><span class="n">4</span>Key takeaways</h2>
+<div class="takeaways"><ul>
+  <li>Faster fluid catches up with slower fluid; where the paths cross, a sudden jump (a shock) forms, first at \(t = 1/\pi \approx 0.318\).</li>
+  <li>Thickness (viscosity) rounds the jump off. The thinner the fluid, the closer it gets to a vertical wall.</li>
+  <li><span class="weak">Sharp jumps like this are exactly what trips up the PINN on the next pages.</span></li>
+</ul></div>
 </main>
 <script>
 const PI=Math.PI, TS=1/PI;
@@ -275,6 +296,6 @@ draw();
 .rs-pager .rs-up{opacity:.6}
 .rs-pager .rs-next{font-weight:600;margin-left:auto}
 </style>
-<nav class="rs-pager" aria-label="Beat 1 pages"><a href="../beat1/index.html?v=e30aed8b">&larr; Beat 1: The wall of brake lights</a><a class="rs-next" href="../pinn/index.html?v=e30aed8b">Next: Our PINN, live &rarr;</a></nav>
+<nav class="rs-pager" aria-label="Beat 1 pages"><a href="../beat1/index.html?v=1ce7850d">&larr; Beat 1: The wall of brake lights</a><a class="rs-next" href="../pinn/index.html?v=1ce7850d">Next: Our PINN, live &rarr;</a></nav>
 </body>
 </html>

@@ -28,9 +28,13 @@ table.race{width:100%;border-collapse:collapse;font:15px Inter, system-ui, -appl
 <body>
 <main>
 <h1>The race: a traditional solver vs. our PINN</h1>
+<h2 class="step"><span class="n">1</span>The question</h2>
+<p>Given the same fluid, which gets closer to the exact answer, and how fast: a traditional solver or our trained PINN?</p>
 <p>This is the classic way to simulate the fluid from the previous page. It chops the line into many small cells and updates each cell's speed one small time step at a time (engineers call it the finite-volume method, and have used it for decades). There is no training: it just follows the rules of the equation.</p>
-<p>Pick how thick the fluid is and how many cells to use, then press Run. The traditional solver computes the whole history on the spot, and our trained PINN, running in your browser, fills in the same 256 × 100 grid of points. Both are timed and compared with the exact answer (gray).</p>
 
+<h2 class="step"><span class="n">2</span>Try it</h2>
+<p>Pick how thick the fluid is and how many cells to use, then press Run. The traditional solver computes the whole history on the spot, and our trained PINN, running in your browser, fills in the same 256 × 100 grid of points. Both are timed and compared with the exact answer (gray).</p>
+<div class="try">Run the <b>thick</b> fluid, then the <b>thin</b> one, and compare the two columns of the table: the solver stays close on both, while the PINN that was excellent on the thick fluid misses the thin one badly.</div>
 <div class="row">
   <label>fluid thickness <select id="nu">
     <option value="nu0.01pi">thick (ν = 0.01/π)</option>
@@ -63,6 +67,18 @@ table.race{width:100%;border-collapse:collapse;font:15px Inter, system-ui, -appl
 </table>
 <p class="note" id="pnote"></p>
 <p id="msg"></p>
+<h2 class="step"><span class="n">3</span>Why this happens</h2>
+<p>The solver works on the equation directly, one cell and one time step at a time. It needs no training, and a finer
+grid simply makes it more accurate. The PINN answers quickly too, but only after a long training run, and only as
+well as that training went: on the thin fluid the jump is too sharp for it (see "The breaking point").</p>
+<h2 class="step"><span class="n">4</span>Key takeaways</h2>
+<div class="takeaways"><ul>
+  <li>On the thin fluid, the traditional solver lands within about 0.2% of the exact answer in a few hundredths of a
+    second, with no training.</li>
+  <li>On the thick fluid, the trained PINN is very accurate and answers fast, but it first needed about 20 minutes of
+    training for this one fluid.</li>
+  <li><span class="weak">On the thin fluid the PINN is about 40% off: speed is no help if the answer is wrong.</span></li>
+</ul></div>
 </main>
 
 <script src="burgers_fv.js"></script>

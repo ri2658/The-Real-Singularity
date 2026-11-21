@@ -21,6 +21,8 @@ section{border-top:1px solid var(--grid);padding:34px 0 10px}
 figure{margin:18px 0 8px}
 .opener{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 32px;align-items:start;margin:22px 0 6px}
 .opener figure{margin:0}
+.notice-wide{font-size:.88rem;line-height:1.5;color:var(--mut);margin:10px 0 6px}
+.notice-wide b{color:var(--fg)}
 .photo img{display:block;width:100%;height:auto;aspect-ratio:5/3;object-fit:cover;border-radius:12px}
 @media (max-width:860px){.opener{grid-template-columns:1fr}}
 canvas{width:100%;display:block}
@@ -90,11 +92,9 @@ details a{color:var(--accent)}
           <option value="0.001" selected>brake at the last second</option>
         </select></label>
       </div>
-      <figcaption><b>What to notice:</b> traffic moves left to right. The top chart is the speed of the cars at each point
-        on the road; the dashed line is where it started. Press Play: the gentle slope in the middle turns into a cliff,
-        and the cars below bunch up and turn red as they hit it.</figcaption>
     </figure>
   </div>
+  <p class="notice-wide"><b>What to notice:</b> traffic moves left to right. The top chart is the speed of the cars at each point on the road; the dashed line is where it started. Press Play: the gentle slope in the middle turns into a cliff, and the cars below bunch up and turn red as they hit it.</p>
 
   <section>
     <h2>Traffic, treated like a fluid</h2>

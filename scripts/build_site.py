@@ -239,6 +239,17 @@ WIDTH = """<style>
 main{max-width:900px !important;margin-left:auto !important;margin-right:auto !important;
   padding-left:16px !important;padding-right:16px !important;box-sizing:border-box}
 main :is(p,ul,ol,h1,h2,h3,figcaption,.lede,.try,.notice,.takeaways,.key,section){max-width:none !important}
+/* the same four-step layout on every demo: 1 the question, 2 try it, 3 why, 4 key takeaways */
+h2.step{font:700 1.15rem/1.3 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;margin:34px 0 10px;color:var(--c-fg)}
+h2.step .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--c-accent);
+  color:var(--c-bg);font:700 13px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;margin-right:10px;vertical-align:2px}
+main>h1+h2.step{margin-top:14px}
+.try,.takeaways{border:0;border-top:1px solid var(--c-fg);border-bottom:1px solid var(--c-line);border-radius:0;
+  background:none;padding:10px 0 12px;margin:12px 0 18px;color:var(--c-fg);font-size:15px}
+.try::before{content:"Try this";display:block;font:600 11px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--c-accent);margin-bottom:4px}
+.takeaways ul{margin:0;padding-left:1.2em}.takeaways li{margin:0 0 8px}.takeaways li:last-child{margin-bottom:0}
+.takeaways .weak{color:var(--c-accent);font-weight:600}
 </style>"""
 
 

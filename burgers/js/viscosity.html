@@ -50,7 +50,7 @@
   .verdict { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid var(--good); background: var(--panel);
              border-radius: 0 8px 8px 0; }
   .verdict.bad { border-left-color: var(--bad); }
-  table { border-collapse: collapse; font-size: 14px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  table { border-collapse: collapse; font-size: 14px; margin: 8px auto 0; font-variant-numeric: tabular-nums; }
   th, td { padding: 5px 12px; border-bottom: 1px solid var(--line); text-align: right; }
   th:first-child, td:first-child { text-align: left; }
   td.cur { outline: 2px solid var(--pinn); outline-offset: -2px; border-radius: 4px; }
@@ -65,9 +65,14 @@
 <body>
 <main>
   <h1>Where a PINN breaks</h1>
+  <h2 class="step"><span class="n">1</span>The question</h2>
   <p class="lede">Burgers' equation \(u_t + u\,u_x = \nu\, u_{xx}\) starts from a smooth sine wave and
     steepens into a shock at \(x = 0\). The smaller the viscosity \(\nu\), the sharper the shock. Our PINN, trained the same way
-    each time, nails the smooth case and falls apart as the shock sharpens. Slide \(\nu\) and \(t\) to see where.</p>
+    each time, nails the smooth case and falls apart as the shock sharpens. Where exactly does it break?</p>
+
+  <h2 class="step"><span class="n">2</span>Try it</h2>
+  <div class="try">Slide the viscosity from \(0.01/\pi\) to \(0.001/\pi\) and watch the dashed PINN line pull away from
+    the exact one near \(x = 0\). Then switch to <b>Shock-focused</b> and try the middle setting again.</div>
 
   <div class="controls">
     <label for="nu">Viscosity \(\nu\)</label>
@@ -108,7 +113,8 @@
   </div>
   <p class="verdict" id="verdict">Loading…</p>
 
-  <h2>All six trained PINNs</h2>
+  <h2 class="step"><span class="n">3</span>Why this happens</h2>
+  <h3>All six trained PINNs</h3>
   <p class="label">Relative \(L^2\) error over the whole \((x, t)\) grid; median of three seeds, except the uniform \(\nu = 0.01/\pi\) model,
     which is the one behind the live PINN page.</p>
   <table id="summary"><thead><tr><th>Training points</th><th>\(0.01/\pi\)</th><th>\(0.003/\pi\)</th><th>\(0.001/\pi\)</th></tr></thead><tbody></tbody></table>
@@ -121,6 +127,15 @@
   <p class="explain"><b>Why more points at the shock isn't enough.</b> Putting half the training points near \(x = 0\) rescues
     \(\nu = 0.003/\pi\), from about 49% error down to about 1.3%, but not \(\nu = 0.001/\pi\): still about 45%. A finite-volume solver gets
     the same shock to about 0.1% error (see the race page).</p>
+
+  <h2 class="step"><span class="n">4</span>Key takeaways</h2>
+  <div class="takeaways"><ul>
+    <li>On the thick fluid, the PINN matches the exact answer to within 0.055%.</li>
+    <li>Make the fluid 10&times; thinner and it is off by more than 40%, whether its training points are spread evenly or
+      packed around the shock.</li>
+    <li><span class="weak">Extra points at the shock rescue the medium fluid (49% to 1.3%) but not the thin one, where a
+      traditional solver still gets about 0.1%.</span></li>
+  </ul></div>
 </main>
 
 <script>

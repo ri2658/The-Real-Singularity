@@ -56,10 +56,16 @@
 <body>
 <main>
   <h1>Correcting a PINN</h1>
-  <p class="lede">A physics-informed neural network gave us rough guesses for two steady states of the Allen–Cahn
+  <h2 class="step"><span class="n">1</span>The question</h2>
+  <p class="lede">If a PINN's answer is only roughly right, can a traditional solver finish the job? A physics-informed neural network gave us rough guesses for two steady states of the Allen–Cahn
     equation: the stable <b>hump</b> and the unstable <b>S</b>. Both guesses have a small training loss. Here a plain
     forward-Euler solver takes each guess as its starting curve. One heals into the exact answer; the other heals
     for a while, then falls off.</p>
+
+  <h2 class="step"><span class="n">2</span>Try it</h2>
+  <div class="try">Press <b>Run</b> with the <b>Hump guess</b>, then pick the <b>S guess</b> and run again. Watch the right
+    chart: the distance to the hump keeps falling, while the distance to the S falls for a while and then turns back
+    up.</div>
 
   <div class="controls">
     <div class="seg" role="group" aria-label="Which guess">
@@ -100,6 +106,7 @@
   </div>
   <p class="status" id="status">Loading…</p>
 
+  <h2 class="step"><span class="n">3</span>Why this happens</h2>
   <p class="explain"><b>Why the hump heals.</b> The hump is a bowl: every small change to it shrinks, the slowest
     at rate 8.69 per time unit, so the PINN's error drops about 6,000× per time unit. The solver turns a rough
     guess into the exact answer, which is what classical methods are good at.</p>
@@ -107,6 +114,13 @@
     at rate 1.53. The solver first removes the PINN's error in every other direction, so the curve moves toward S.
     The tiny leftover piece in the unstable direction keeps growing, and the curve rolls into a hump. The PINN's
     loss can't tell a bowl from a hilltop: both are exact solutions with zero residual.</p>
+
+  <h2 class="step"><span class="n">4</span>Key takeaways</h2>
+  <div class="takeaways"><ul>
+    <li>A traditional solver can polish a rough PINN guess into the exact answer, when that answer is a bowl.</li>
+    <li>On a hilltop it can't: the tiny leftover error grows, and the curve rolls off into a hump.</li>
+    <li><span class="weak">The PINN's loss is near zero for both, so only the outside check shows which answer is real.</span></li>
+  </ul></div>
 </main>
 
 <script src="allen_cahn.js"></script>
