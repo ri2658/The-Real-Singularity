@@ -1,7 +1,6 @@
-"""S3 + CloudFront for the Burgers PINN page in web/.
+"""S3 + CloudFront that host the whole website (the built site/ folder).
 
-The PlantDex stack is a Lambda API. It does not serve static files, so this
-stack is separate and is only created from site_app.py.
+Created from site_app.py; scripts/deploy.py uploads site/ to it.
 """
 
 from aws_cdk import (

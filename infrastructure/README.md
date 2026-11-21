@@ -1,23 +1,19 @@
-# Infra
+# Infrastructure
 
-AWS CDK stack for the PlantDex backend (Lambda + HTTP API + DynamoDB cache + Secrets Manager).
+AWS CDK app for the website: one stack, `BurgersSiteStack`, defined in `burgers_site_stack.py` and created by
+`site_app.py`. It is a private S3 bucket behind a CloudFront distribution, in Charles's free-plan AWS account
+(us-east-2). The live site is **https://d3hn8ndenpdwl3.cloudfront.net**.
 
-## Deploy
-
-Use the SSO profile (do not use long-lived access keys):
+You only need this folder to create or delete the stack. Day-to-day updates go through `scripts/deploy.py`
+(see the main README).
 
 ```bash
-aws sso login --profile plantdex
 cd infrastructure
-source .venv/bin/activate
-AWS_PROFILE=plantdex cdk deploy
-```
-
-This stack is the PlantDex API only. It does not serve the Burgers page. That site is `burgers_site_stack.py`, deployed with `site_app.py`. Steps are in [`../web/README.md`](../web/README.md).
-
-After deploy, set the frontend env var to the stack output `PlantDexApiUrl`:
-
-```bash
-# frontend/.env.local
-NEXT_PUBLIC_PLANTDEX_API_URL=https://....execute-api.us-west-2.amazonaws.com
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+npm install -g aws-cdk
+cdk bootstrap                      # once per account and region
+cdk deploy                         # creates BurgersSiteStack
+cdk destroy                        # takes the site down
 ```

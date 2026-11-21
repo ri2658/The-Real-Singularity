@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CDK app for the Burgers page only. Does not deploy the PlantDex API."""
+"""CDK app for the website: one stack, BurgersSiteStack (S3 + CloudFront)."""
 
 import aws_cdk as cdk
 

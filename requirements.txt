@@ -1,3 +1,8 @@
-# Add project dependencies here
-pandas
+# Python packages for the PINN experiments, the data exports and deployment.
+# The website itself is plain HTML + JavaScript and needs none of these.
+torch            # PINN training (pinn/, scripts/run.py)
 numpy
+matplotlib       # result plots (scripts/plot_*.py, scripts/show_results.py)
+onnx             # export trained PINNs for the browser (scripts/export_*onnx.py)
+onnxruntime      # check the exported models against PyTorch
+boto3            # upload the site (scripts/deploy.py, scripts/publish_site.py)

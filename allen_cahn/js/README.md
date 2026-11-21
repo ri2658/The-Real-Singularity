@@ -32,5 +32,5 @@ python -m http.server
 ```
 
 Then open http://localhost:8000/allen_cahn/js/simulator.html. Serve from the repo root
-so the page can also load `data/allen_cahn/equilibria.json` and `pinn_guesses.json`
-(they show up in the "Starting curve" list once those files exist).
+so the page can also load `data/allen_cahn/equilibria.json` and the PINN guesses
+(`pinn_rough_w1e4_adam2000.json`, `pinn_accurate_w100_lbfgs.json`), which show up in the "Starting curve" list.
