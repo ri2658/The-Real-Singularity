@@ -23,6 +23,8 @@ p{margin:0 0 14px;max-width:62ch}
 .lede{color:var(--mut);font-size:1.05rem}
 section{border-top:1px solid var(--grid);padding:34px 0 10px}
 figure{margin:18px 0 8px}
+.photo{margin:14px 0 22px}
+.photo img{display:block;width:100%;height:auto;max-height:440px;object-fit:cover;border-radius:12px}
 canvas{width:100%;display:block}
 #speed{aspect-ratio:16/8}
 #road{height:46px;margin-top:6px;border-radius:6px}
@@ -156,6 +158,10 @@ document.addEventListener("DOMContentLoaded", function () {
 <main>
   <p class="eyebrow">Beat 1</p>
   <h1>The wall of brake lights</h1>
+  <figure class="photo">
+    <img src="../images/traffic-jam.webp" width="1050" height="700"
+      alt="A packed multi-lane freeway at rush hour, cars bumper to bumper with brake lights on.">
+  </figure>
   <p class="lede">You're on the freeway at full speed. Up ahead, traffic is crawling. At first the slowdown is gradual:
     cars ease off a little, then a little more. But as more cars arrive from behind, that gentle slowdown gets squeezed
     into a sudden wall of brake lights.</p>
