@@ -56,6 +56,13 @@ details p{max-width:none}
 details a{color:var(--accent)}
 .next{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--grid);margin-top:24px;padding-top:16px;font:.95rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif}
 .next a{color:var(--accent);text-decoration:none;font-weight:600}
+/* Opening photo */
+figure.photo{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:22px;align-items:center;margin:22px 0 10px}
+figure.photo img{display:block;width:100%;height:auto;aspect-ratio:1;border-radius:12px}
+figure.photo figcaption{margin-top:0;font-size:.95rem}
+figure.photo figcaption .credit{display:block;font-size:.8rem;margin-top:10px}
+figure.photo figcaption a{color:inherit}
+@media (max-width:640px){figure.photo{grid-template-columns:1fr;gap:10px}figure.photo img{max-width:360px}}
 /* Beat 2 figures */
 .key{display:flex;flex-wrap:wrap;gap:4px 16px;font:.82rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin-top:6px}
 .key i{display:inline-block;width:20px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:6px}
@@ -196,12 +203,20 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=1ce7850d">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=1ce7850d">Beat 1</a><a href="../beat2/index.html?v=1ce7850d" class="on" aria-current="page">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=07216382">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=07216382">Beat 1</a><a href="../beat2/index.html?v=07216382" class="on" aria-current="page">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
   <p class="eyebrow">Beat 2</p>
   <h1>Balls in bowls, balls on hilltops</h1>
   <p class="lede">Some answers to an equation are stable, like a ball in a bowl. Others are unstable, like a ball on a hilltop:
     still, until the smallest nudge sends it rolling. Which tools can find each kind?</p>
+  <figure class="photo">
+    <img src="../images/hemoglobin.webp" width="450" height="450" alt="Animation of hemoglobin switching between its oxy and deoxy shapes">
+    <figcaption><b>The real thing.</b> Hemoglobin, the protein that carries oxygen in your blood, has two stable
+      shapes. It shifts between them as oxygen binds (oxy) and drops off (deoxy).
+      <span class="credit">Animation: Shuchismita Dutta, David S. Goodsell and the RCSB PDB,
+        <a href="https://pdb101.rcsb.org/motm/41">Molecule of the Month: Hemoglobin</a>,
+        <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Converted to WebP.</span></figcaption>
+  </figure>
 
   <section>
     <h2>Why hilltops matter: how things change shape</h2>
@@ -299,11 +314,11 @@ document.addEventListener("DOMContentLoaded", function () {
     <p class="eyebrow">Try it yourself</p>
     <h2>Three demos, in story order</h2>
     <div class="cards">
-      <a class="card" href="../allen-cahn/index.html?v=1ce7850d"><h3>The step-by-step simulator</h3><p>A traditional simulation
+      <a class="card" href="../allen-cahn/index.html?v=07216382"><h3>The step-by-step simulator</h3><p>A traditional simulation
         always rolls downhill, so it can only ever settle into a stable state. Try the S-shape with a tiny nudge.</p></a>
-      <a class="card" href="../hilltop/index.html?v=1ce7850d"><h3>Falling off a hilltop</h3><p>Balance the rod on a hilltop,
+      <a class="card" href="../hilltop/index.html?v=07216382"><h3>Falling off a hilltop</h3><p>Balance the rod on a hilltop,
         nudge it, and time the fall. A 10&times; smaller nudge only buys about 1.5 more time units.</p></a>
-      <a class="card" href="../correction/index.html?v=1ce7850d"><h3>Fixing the PINN's guesses</h3><p>We hand the PINN's rough
+      <a class="card" href="../correction/index.html?v=07216382"><h3>Fixing the PINN's guesses</h3><p>We hand the PINN's rough
         answers to the simulator: the stable one settles into place, the unstable one falls off.</p></a>
     </div>
   </section>
@@ -369,7 +384,7 @@ document.addEventListener("DOMContentLoaded", function () {
     </section>
   </details>
 
-  <div class="next"><a href="../beat1/index.html?v=1ce7850d">&larr; Beat 1: The wall of brake lights</a><a href="../index.html?v=1ce7850d">Home</a></div>
+  <div class="next"><a href="../beat1/index.html?v=07216382">&larr; Beat 1: The wall of brake lights</a><a href="../index.html?v=07216382">Home</a></div>
 </main>
 <script>
 (() => {
