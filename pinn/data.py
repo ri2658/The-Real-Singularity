@@ -8,13 +8,16 @@ import math
 
 import torch
 
+from .losses import pde_residual
+
 
 def initial_condition(x: torch.Tensor) -> torch.Tensor:
     """u(x, 0) = -sin(pi x)."""
     return -torch.sin(math.pi * x)
 
 
-SAMPLING_METHODS = ("uniform", "shock")
+SAMPLING_METHODS = ("uniform", "shock", "resample", "rad")
+ADAPTIVE_METHODS = ("resample", "rad")     # collocation points are redrawn during training
 
 
 def sample_points(
@@ -39,6 +42,10 @@ def sample_points(
                    [-1, 1]), t uniform in [0, 1]. The rest stay uniform.
                    Uses prior knowledge of where the shock forms (x = 0 for this
                    initial condition), not the residual.
+        "resample", "rad"
+                   start from exactly the same uniform points as "uniform"; training
+                   then redraws them (see resample_uniform / rad_collocation below and
+                   pinn/train.py). No prior knowledge of where the shock is.
 
     Returns a dict of (N, 1) float32 tensors:
         x_ic, t_ic, u_ic      initial condition: x evenly spaced, t = 0
@@ -57,7 +64,7 @@ def sample_points(
 
     t_bc = torch.rand(n_bc, 1, generator=gen)
 
-    if sampling == "uniform":
+    if sampling in ("uniform",) + ADAPTIVE_METHODS:
         x_col = torch.rand(n_col, 1, generator=gen) * 2.0 - 1.0
         t_col = torch.rand(n_col, 1, generator=gen)
     else:
@@ -89,3 +96,32 @@ def sample_points(
         "t_col": t_col,
     }
     return {k: v.to(device) for k, v in pts.items()}
+
+
+def resample_uniform(n: int, gen: torch.Generator, device="cpu"):
+    """New uniform collocation points (x, t), each (n, 1): the "resample" method."""
+    x = torch.rand(n, 1, generator=gen) * 2.0 - 1.0
+    t = torch.rand(n, 1, generator=gen)
+    return x.to(device), t.to(device)
+
+
+def rad_collocation(model, nu: float, n: int, gen: torch.Generator, pool: int = 100_000,
+                    k: float = 1.0, c: float = 1.0, device="cpu", batch: int = 20_000):
+    """Residual-based adaptive distribution (RAD), Wu et al., CMAME 403 (2023) 115671.
+
+    Draw `pool` uniform candidate points, evaluate the PDE residual r there, and pick n of
+    them without replacement with probability proportional to
+
+        |r|^k / mean(|r|^k) + c
+
+    k = 1, c = 1 is the setting the paper recommends as a robust default. Larger k packs
+    the points harder into where the equation is broken; c keeps some points everywhere.
+    Needs no prior knowledge of where the trouble is: the residual finds it.
+    """
+    xp, tp = resample_uniform(pool, gen, device)
+    r = torch.cat([pde_residual(model, xp[i:i + batch], tp[i:i + batch], nu).detach()
+                   for i in range(0, pool, batch)]).abs().squeeze(1)
+    w = r ** k
+    w = w / w.mean() + c
+    idx = torch.multinomial(w.cpu(), n, replacement=False, generator=gen).to(xp.device)
+    return xp[idx], tp[idx]

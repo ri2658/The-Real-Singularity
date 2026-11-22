@@ -1,0 +1,7 @@
+{
+ "final_step": 17000,
+ "final_loss_total": 1.5720592045909143e-06,
+ "final_rel_l2": 0.0038924652658169742,
+ "final_loss_pde_fresh": 0.0003126879382133484,
+ "wall_time_s": 1966.2
+}

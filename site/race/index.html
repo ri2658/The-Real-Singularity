@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=07216382">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=07216382" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=07216382">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=f3d1c2f2">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=f3d1c2f2" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=f3d1c2f2">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
 <h1>The race: a traditional solver vs. our PINN</h1>
 <h2 class="step"><span class="n">1</span>The question</h2>
@@ -341,7 +341,7 @@ async function run() {
     $('p-train').textContent = `${(info.train_seconds / 60).toFixed(1)} min of training`;
     $('pnote').innerHTML = `PINN: run <code>${info.run}</code>, trained once for this \\(\\nu\\) only. One batch of ${ref.x.length * ref.t.length} points, ` +
       `timed after a one-point warm-up, so model loading isn't counted. Its answer doesn't depend on N.` +
-      (nu === 'nu0.01pi' ? '' : ' At this \\(\\nu\\) the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html?v=07216382">Where a PINN breaks</a>.');
+      (nu === 'nu0.01pi' ? '' : ' At this \\(\\nu\\) the PINN answers just as fast but misses the shock; see <a href="../viscosity/index.html?v=f3d1c2f2">Where a PINN breaks</a>.');
   } catch (e) { clearPinn(`PINN not available here (${e.message}).`); }
 
   // Replay the solution in time (about 4 seconds).
@@ -376,6 +376,6 @@ $('nu').onchange();
 .rs-pager .rs-up{opacity:.6}
 .rs-pager .rs-next{font-weight:600;margin-left:auto}
 </style>
-<nav class="rs-pager" aria-label="Beat 1 pages"><a href="../loss-vs-truth/index.html?v=07216382">&larr; The score that lies</a><a class="rs-up" href="../beat1/index.html?v=07216382">Back to Beat 1</a><a class="rs-next" href="../beat2/index.html?v=07216382">Next: Beat 2, Balls in bowls &rarr;</a></nav>
+<nav class="rs-pager" aria-label="Beat 1 pages"><a href="../loss-vs-truth/index.html?v=f3d1c2f2">&larr; The score that lies</a><a class="rs-up" href="../beat1/index.html?v=f3d1c2f2">Back to Beat 1</a><a class="rs-next" href="../beat2/index.html?v=f3d1c2f2">Next: Beat 2, Balls in bowls &rarr;</a></nav>
 </body>
 </html>

@@ -18,3 +18,6 @@ cdk.out/
 **/venv/
 # CDK deploy outputs
 infrastructure/cdk-outputs.json
+
+# GPU training environment (CUDA build of torch, see scripts/run.py --device)
+.venv-gpu/

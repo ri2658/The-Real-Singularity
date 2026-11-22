@@ -5,9 +5,10 @@ Refactor of the tutorial notebooks into importable modules (week 3, task C1).
 | File | Contents |
 |---|---|
 | `model.py` | `PINN(depth, width, init)` — tanh MLP, (x, t) -> u |
-| `data.py` | `sample_points(...)` — IC / BC / collocation points, seeded |
+| `data.py` | `sample_points(...)` — IC / BC / collocation points, seeded; `resample_uniform`, `rad_collocation` — redraw the collocation points during training |
 | `losses.py` | `compute_losses(model, pts, nu)` -> `{"pde", "ic", "bc"}`; `total_loss(losses, weights)` |
 | `reference.py` | `burgers_exact`, `make_reference`, `save_reference`, `load_reference`, `rel_l2_grid` |
+| `fresh.py` | `fresh_points()`, `mean_r2(model, x, t, nu)` — the score on 200,000 new points (a validation check that needs no exact answer) |
 | `train.py` | `TrainConfig`, `train(cfg, ref)` -> `(model, history, cfg_dict)` |
 | `runlog.py` | `RunLogger`, `load_run`, `load_checkpoint`, `list_checkpoints` |
 
@@ -17,7 +18,9 @@ Set `run_name` (or use `scripts/run.py --name ...`) and every run is saved to `r
 
 ```
 config.json        settings used (nu, depth, width, steps, seed, ...)
-history.json       every log_every steps: step, phase, loss_total, loss_pde, loss_ic, loss_bc, rel_l2
+history.json       every log_every steps: step, phase, loss_total, loss_pde, loss_ic, loss_bc, rel_l2,
+                   evals (loss + gradient evaluations so far); with fresh_every > 0 also
+                   loss_pde_fresh (PDE term on the 200,000 new points of pinn/fresh.py)
 ckpt_000500.pt     model weights every ckpt_every steps
 final.pt           final weights
 summary.json       final loss, final rel_l2, wall time
@@ -50,6 +53,32 @@ from pinn import TrainConfig, train, load_reference
 ref = load_reference()
 model, history, cfg = train(TrainConfig(nu=0.01 / math.pi), ref=ref)
 history[-1]  # {'step', 'loss_total', 'loss_pde', 'loss_ic', 'loss_bc', 'rel_l2'}
+```
+
+## Collocation sampling
+
+`TrainConfig.sampling` (`scripts/run.py --sampling`):
+
+| value | points | prior knowledge of the shock? |
+|---|---|---|
+| `uniform` | 10,000 uniform points, fixed for the whole run | no |
+| `shock` | half of them at x ~ N(0, 0.05), fixed | yes: we know the shock forms at x = 0 |
+| `resample` | uniform, redrawn every `resample_every` Adam steps and at the start of every L-BFGS round | no |
+| `rad` | drawn from a 100,000-point uniform pool with probability ∝ \|r\|^k / mean(\|r\|^k) + c (Wu et al. 2023, k = c = 1), same schedule | no: the residual finds it |
+
+With `resample` / `rad`, L-BFGS runs in rounds of `lbfgs_round` steps, each with new points and a new
+L-BFGS optimizer (its curvature history assumes the loss does not change).
+
+## GPU
+
+`scripts/run.py --device cuda` trains on the GPU, float32 throughout. The CPU-only torch in the main environment
+cannot, so the GPU runs use a separate environment with the CUDA build:
+
+```bash
+python -m venv .venv-gpu
+.venv-gpu/Scripts/pip install torch==2.11.0+cu128 --index-url https://download.pytorch.org/whl/cu128
+.venv-gpu/Scripts/pip install numpy scipy matplotlib
+.venv-gpu/Scripts/python scripts/run.py --name my_run ... --device cuda
 ```
 
 ## Conventions

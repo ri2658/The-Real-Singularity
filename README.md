@@ -14,7 +14,9 @@ hypothesis. It then shows how AI is really used for physics: it explains neural 
 PINNs on two problems with known exact answers.
 
 - **Beat 1 (Burgers' equation, told as a traffic jam):** the PINN is excellent on a gentle wave (0.055% error) and
-  fails on a sharp shock (about 40%). Its own training loss can improve 226× while the answer stays 35% wrong.
+  fails on a sharp shock (about 40%). Its own training loss can keep falling while the answer stays 35% wrong;
+  graded on points it never trained on, the same PINN scores thousands of times worse. Check points that keep
+  moving to where the equation breaks (no prior knowledge of the shock) bring that case down to about 1%.
 - **Beat 2 (Allen–Cahn, $u_t = u_{xx} + \mu(u - u^3)$):** a step-by-step simulator can never stop on an unstable
   state; a PINN can aim at one, but its loss can't tell a stable state from an unstable one.
 
@@ -84,5 +86,11 @@ python scripts/publish_site.py --bucket BUCKET --distribution DIST_ID
 ```bash
 python scripts/run.py --help              # one training run, saved to runs/<name>/
 python scripts/show_results.py            # error table and plots for the main runs
+python scripts/export_loss_truth.py       # "The score that lies" data, with sanity checks (~10 min)
+python scripts/loss_truth_numbers.py      # every number that page, Beat 1 and the home page quote
 node allen_cahn/js/check_ac.js            # Allen-Cahn simulator checks
 ```
+
+GPU training (`scripts/run.py --device cuda`) needs the CUDA build of PyTorch in its own environment, `.venv-gpu`;
+see [`pinn/README.md`](./pinn/README.md#gpu). This network is small, so one GPU run is no faster than one CPU run;
+the GPU helps by running several trainings at once (each needs about 2.5 GB of Windows commit memory).

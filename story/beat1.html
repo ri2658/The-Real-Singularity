@@ -123,14 +123,18 @@ details a{color:var(--accent)}
   <section>
     <h2>When drivers brake at the last second, it breaks</h2>
     <p>Now the wall gets sharp, and the PINN is off by about 40%. We tried giving it extra practice right at the wall.
-      That helps when the wall is only moderately sharp, but at the sharpest wall it was still off by more than 40%.</p>
+      That helps when the wall is only moderately sharp. So does moving its practice spots to wherever it is breaking
+      the rules, which needs no hint about where the wall is. But at the sharpest wall, both left it more than 40%
+      off.</p>
   </section>
 
   <section>
     <h2>Worse, the AI couldn't tell</h2>
-    <p>While it trains, a PINN grades itself on how well it follows the rules. In one of our runs that grade improved
-      more than 200 times, yet the answer stayed 35% wrong. On a real road there is no answer key to compare against,
-      so that grade is all you would have.</p>
+    <p>While it trains, a PINN grades itself on how well it follows the rules at a fixed set of check points along
+      the road. In our runs at the "normal" setting, that grade kept improving while the answer stayed 35% to 62%
+      wrong. The grade only looked good at the points it had practised on: graded on new points it had never seen, the
+      same PINNs scored thousands of times worse. That second check needs no answer key, but the AI didn't run it.
+      Someone had to think of it.</p>
   </section>
 
   <section>
@@ -144,7 +148,7 @@ details a{color:var(--accent)}
     <div class="board">
       <div><p class="n pinn">0.05%</p><p class="l">PINN error when the slowdown is gentle</p></div>
       <div><p class="n pinn">~40%</p><p class="l">PINN error when the wall is sharp, with or without extra practice</p></div>
-      <div><p class="n pinn">200&times;</p><p class="l">better training score while the answer stayed 35% wrong</p></div>
+      <div><p class="n pinn">&gt;1,000&times;</p><p class="l">worse score on new points than on their training points, for PINNs that were 35% to 62% wrong</p></div>
       <div><p class="n solver">0.2%</p><p class="l">traditional solver on the sharp wall, in 0.06&nbsp;s</p></div>
     </div>
   </section>
@@ -152,8 +156,8 @@ details a{color:var(--accent)}
   <section>
     <h2>What this tells us</h2>
     <p class="takeaway">This AI is not useless: on smooth problems it is fast and accurate. But sharp changes trip it up,
-      and its own score can't warn you when that happens. Someone still has to check its answer against something
-      outside the AI. Keep that in mind; it comes back later.</p>
+      and the score it trains on can't warn you when that happens. Someone still has to check its answer in a way it
+      wasn't trained for. Keep that in mind; it comes back later.</p>
   </section>
 
   <section>
@@ -188,8 +192,12 @@ details a{color:var(--accent)}
         leaving on the right come back on the left. The chart is the exact solution (Cole–Hopf); the cars move at the
         local speed and are an illustration.</p>
       <p>Numbers: 0.05% is the relative \(L^2\) error of our live model at \(\nu = 0.01/\pi\); about 40% is at \(\nu = 0.001/\pi\)
-        (median of three training seeds, uniform or shock-focused training points); 200&times; and 35% are one training
-        run at \(\nu = 0.003/\pi\); 0.2% and 0.06 s are the finite-volume solver at \(\nu = 0.001/\pi\).</p>
+        (median of three training seeds, uniform or shock-focused training points; one run whose training points
+        kept moving to where the residual was largest ended about 50% off there, while three such runs at
+        \(\nu = 0.003/\pi\) ended 0.7% to 1.4% off); &gt;1,000&times; and 35% to 62% are
+        the three training runs at \(\nu = 0.003/\pi\) with evenly spread training points: at the end of training, their
+        score on 200,000 new points was about 1,700 to 17,000 times their score on their own 10,000 points; 0.2% and 0.06 s are the
+        finite-volume solver at \(\nu = 0.001/\pi\).</p>
       <p>Source: <a href="https://nbviewer.org/github/clawpack/riemann_book/blob/master/Traffic_flow.ipynb">LeVeque et
         al., Riemann Problems and Jupyter Solutions: Traffic flow</a>.</p>
     </details>

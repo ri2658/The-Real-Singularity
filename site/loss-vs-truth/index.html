@@ -7,17 +7,17 @@
 <style>
   :root {
     --bg:var(--c-bg,#fbfaf7); --panel:var(--c-card,#ffffff); --ink:var(--c-fg,#1c2330); --muted:var(--c-mut,#5d6675); --line:var(--c-line,#e4e3de);
-    --nu1:var(--c-nu1,#2a78d6); --nu2:var(--c-nu2,#eb6834); --nu3:var(--c-nu3,#1f9e78); --loss:var(--c-fg,#1c2330); --err:var(--c-accent,#c2410c); --accent:var(--c-accent,#c2410c);
+    --nu1:var(--c-nu1,#2a78d6); --nu2:var(--c-nu2,#eb6834); --nu3:var(--c-nu3,#1f9e78); --loss:var(--c-fg,#1c2330); --fresh:var(--c-accent,#c2410c); --err:var(--c-fg,#1c2330); --accent:var(--c-accent,#c2410c);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
-      --nu1:var(--c-nu1,#5b9bea); --nu2:var(--c-nu2,#fb923c); --nu3:var(--c-nu3,#34c79a); --loss:var(--c-fg,#e6e9ef); --err:var(--c-accent,#fb923c); --accent:var(--c-accent,#fb923c);
+      --nu1:var(--c-nu1,#5b9bea); --nu2:var(--c-nu2,#fb923c); --nu3:var(--c-nu3,#34c79a); --loss:var(--c-fg,#e6e9ef); --fresh:var(--c-accent,#fb923c); --err:var(--c-fg,#e6e9ef); --accent:var(--c-accent,#fb923c);
     }
   }
   :root[data-theme="dark"] {
     --bg:var(--c-bg,#10151d); --panel:var(--c-card,#161d27); --ink:var(--c-fg,#e6e9ef); --muted:var(--c-mut,#98a2b3); --line:var(--c-line,#2b3442);
-    --nu1:var(--c-nu1,#5b9bea); --nu2:var(--c-nu2,#fb923c); --nu3:var(--c-nu3,#34c79a); --loss:var(--c-fg,#e6e9ef); --err:var(--c-accent,#fb923c); --accent:var(--c-accent,#fb923c);
+    --nu1:var(--c-nu1,#5b9bea); --nu2:var(--c-nu2,#fb923c); --nu3:var(--c-nu3,#34c79a); --loss:var(--c-fg,#e6e9ef); --fresh:var(--c-accent,#fb923c); --err:var(--c-fg,#e6e9ef); --accent:var(--c-accent,#fb923c);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
@@ -25,22 +25,29 @@
   main { max-width: 1000px; margin: 0 auto; padding: 20px 16px 40px; }
   h1 { font: 700 1.6rem/1.2 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0 0 6px; }
   .lede { color: var(--muted); max-width: 72ch; margin: 0 0 16px; }
-  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
-  .presets button { padding: 6px 12px; font: inherit; font-size: 13px; border-radius: 999px; cursor: pointer;
+  .presets, .toggle { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  .toggle { gap: 6px; margin: 0 0 8px; }
+  .presets button, .toggle button { padding: 6px 12px; font: inherit; font-size: 13px; border-radius: 999px; cursor: pointer;
                     border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
-  .presets button.on { border-color: var(--ink); font-weight: 600; }
+  .toggle button { padding: 4px 10px; font-size: 12px; }
+  .presets button.on, .toggle button.on { border-color: var(--ink); font-weight: 600; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
   .label { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
   canvas { width: 100%; display: block; touch-action: manipulation; }
   .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
   .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
   .sw.ring { background: transparent !important; border: 2px solid; width: 10px; height: 10px; }
-  .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin-top: 12px; }
+  .mk { width: 12px; height: 12px; margin-right: 5px; vertical-align: -1px; overflow: visible; }
+  .ln { display: inline-block; position: relative; width: 18px; height: 2px; margin-right: 6px; vertical-align: 3px; }
+  .ln.dot::after { content: ""; position: absolute; left: 5px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: inherit; }
+  .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin-top: 12px; }
   .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
   .stat .k { font-size: 12px; color: var(--muted); }
   .stat .v { font-size: 17px; font-variant-numeric: tabular-nums; }
+  .stat .s { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .explain { color: var(--muted); max-width: 72ch; margin-top: 18px; font-size: 14px; }
   .explain b { color: var(--ink); font-weight: 600; }
 
@@ -198,97 +205,185 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=07216382">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=07216382" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=07216382">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=f3d1c2f2">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=f3d1c2f2" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=f3d1c2f2">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
   <h1>Does a good score mean a right answer?</h1>
   <p class="lede">A PINN learns by pushing one number down. This page shows that the number can look great while the
-    answer is badly wrong, and that the PINN has no way to tell the difference.</p>
+    answer is badly wrong. The number it trains on can't tell the difference, but a second check, which needs no exact
+    answer, can.</p>
 
-  <h2 class="step"><span class="n">1</span>Two numbers: the score and the truth</h2>
-  <p class="prose">While a PINN trains, it grades itself with one number, called the <b>loss</b>: how badly its answer
-    breaks the equation at a set of check points. Lower is better, and training is just pushing this number down.</p>
-  <p class="prose">What we actually care about is the <b>error</b>: how far its answer is from the exact one. The PINN never
-    sees the exact answer, so it cannot measure its own error. We can, because for this fluid problem the exact answer
-    is known.</p>
-  <p class="prose">Think of checking a map only at the towns you visited. It can be perfect at every town and still draw
-    the roads between them wrong.</p>
+  <h2 class="step"><span class="n">1</span>Two numbers, and a second check</h2>
+  <p class="prose">While a PINN trains, it grades itself with one number, called the <b>loss</b> or score: how badly
+    its answer breaks the equation at a fixed set of 10,000 check points. Lower is better, and training is just pushing
+    this number down.</p>
+  <p class="prose">Training runs in two phases. Adam takes cautious steps to get roughly right; at step 2,000 we switch
+    to L-BFGS, which uses the curvature of the score to home in precisely. This is the standard recipe for PINNs.</p>
+  <p class="prose">What we actually care about is the <b>error</b>: how far its answer is from the exact one. The PINN
+    never sees the exact answer, so it cannot measure its own error. We can, because for this fluid problem the exact
+    answer is known.</p>
+  <p class="prose">Think of checking a map only at the towns you visited. It can be perfect at every town and still
+    draw the roads between them wrong. The way to catch that is to check it at towns you <i>didn't</i> visit. For a
+    PINN, that means computing the same score on <b>new points</b> it never trained on. This needs no exact answer.
+    It is the same idea as grading a model on data it hasn't seen (a "validation set") in data science.</p>
 
   <h2 class="step"><span class="n">2</span>See it for yourself</h2>
   <p class="prose">Each dot below is one PINN we trained on the fluid from the earlier pages. Tap a dot, or a button,
     to see how its score and its error changed during training.</p>
-  <p class="try">Click <b>The trap</b>. On the right chart, the score keeps falling after the training method switches,
-    while the orange error line stays flat near 35%. Then click <b>Same fluid, extra points at the jump</b> and compare.</p>
+  <p class="try">Click <b>The trap</b>. On the right, after the switch to L-BFGS, the score and the error first fall
+    together (the error goes from 46% to 38%). Then they split: the score keeps falling while the error stalls near
+    35%, and the score on new points (orange) shoots up. Then compare <b>Same fluid, extra points at the jump</b> and
+    <b>Same fluid, points that move to the trouble</b>.</p>
 
   <div class="presets" id="presets"></div>
 
   <div class="grid">
     <div class="card">
-      <p class="label">Every PINN we trained: final score (loss) vs. final error (tap a dot)</p>
-      <canvas id="scatter" height="300"></canvas>
+      <p class="label">Every PINN we trained: final score vs. final error (tap a dot)</p>
+      <div class="toggle" id="mode" role="group" aria-label="Which score to show">
+        <button type="button" data-mode="own" class="on" aria-pressed="true">Score on its own check points</button>
+        <button type="button" data-mode="new" aria-pressed="false">Score on new points</button>
+      </div>
+      <canvas id="scatter" height="300" role="img"
+              aria-label="Scatter plot of final score against final error, one dot per trained PINN"></canvas>
       <div class="legend">
         <span><span class="sw" style="background:var(--nu1)"></span>thick fluid (gentle jump)</span>
         <span><span class="sw" style="background:var(--nu2)"></span>medium fluid</span>
         <span><span class="sw" style="background:var(--nu3)"></span>thin fluid (sharp jump)</span>
-        <span><span class="sw ring" style="border-color:var(--muted)"></span>extra check points at the jump</span>
       </div>
-      <p class="notice">if a good score meant a right answer, the dots would rise in one line from bottom left to
-        top right. They don't: around a score of 10⁻⁵, some PINNs are about 1% off and others are 35% off.</p>
+      <div class="legend" id="shapeLegend"></div>
+      <p class="note">In "own check points" mode, the runs with extra points at the jump are graded on points packed
+        near the jump. "New points" mode grades every run on the same 200,000 points.</p>
+      <p class="notice">mostly, a lower score does mean a smaller error: the dots climb together. The exceptions are
+        the medium-fluid runs with evenly spread points: 35–62% wrong, and the best of them scores nearly as well as
+        runs that are about 1% off. Switch to "score on new points" and they jump far to the right: their scores only
+        looked good at the points they trained on. Most thin-fluid runs move right too, but their scores never looked
+        good. The medium-fluid diamonds, whose check points move to the trouble, stay with the good runs in both modes.</p>
     </div>
     <div class="card">
       <p class="label" id="traceLabel">The selected PINN during training</p>
-      <canvas id="trace" height="300"></canvas>
+      <canvas id="trace" height="380" role="img"
+              aria-label="Two panels over training steps: the score on its own and on new points, and the error"></canvas>
       <div class="legend">
-        <span><span class="sw" style="background:var(--loss)"></span>score (loss)</span>
-        <span><span class="sw" style="background:var(--err)"></span>error</span>
+        <span><span class="ln" style="background:var(--loss)"></span>score on its own 10,000 check points</span>
+        <span><span class="ln dot" style="background:var(--fresh)"></span>score on 200,000 new points</span>
       </div>
-      <p class="notice">in "The trap", the score line drops steeply after the switch but the error line barely moves.
-        A better score did not mean a better answer.</p>
+      <p class="notice">in "The trap", score and error first fall together after the switch. Then they split: the
+        score keeps falling while the error stalls at 35%, and the same score on new points shoots up. The PINN is
+        fitting its check points, not the equation.</p>
     </div>
   </div>
 
   <div class="readout">
-    <div class="stat"><div class="k">final score (loss)</div><div class="v" id="sLoss">–</div></div>
+    <div class="stat"><div class="k">final score on its own check points</div><div class="v" id="sLoss">–</div></div>
+    <div class="stat"><div class="k">final score on new points</div><div class="v" id="sFresh">–</div>
+      <div class="s" id="sFreshX"></div></div>
     <div class="stat"><div class="k">final error</div><div class="v" id="sErr">–</div></div>
-    <div class="stat"><div class="k">score improved after the switch (step 2000)</div><div class="v" id="sLossDrop">–</div></div>
-    <div class="stat"><div class="k">error improved after the switch (step 2000)</div><div class="v" id="sErrDrop">–</div></div>
+    <div class="stat"><div class="k" id="sAfterK">after the switch to L-BFGS</div><div class="v" id="sAfter">–</div>
+      <div class="s" id="sAfterErr"></div></div>
   </div>
 
   <h2 class="step"><span class="n">3</span>Why this happens</h2>
-  <p class="prose">The score only checks the equation at the check points. Near the jump the fluid's speed changes
-    very quickly, so a PINN can obey the equation well at every point it checks and still get the jump wrong in between,
-    like the map that is right at every town. Putting extra check points at the jump closes that gap, which is why the
-    second button reaches about 1% error at a similar score.</p>
+  <p class="prose">The score only checks the equation at its 10,000 check points, and those points never move. In
+    the trap runs, the PINN puts the jump in the wrong place. By the end (time t = 1) its jump sits at x ≈ 0.1 to 0.2,
+    while the real jump stays at x = 0. A misplaced jump breaks the equation badly, but only in a thin strip. Training,
+    and L-BFGS above all, then bends the answer to fit the check points around that strip, so the score keeps
+    falling while the strip stays wrong: the map that is right at every town and wrong between them. New points do land in the strip, which is why
+    the same PINN scores thousands of times worse on them.</p>
+  <p class="prose">Putting extra check points at the jump closes the gap: the second button reaches about 1% error,
+    and its score on new points is about the same as on its own. But we could only do that because we already knew
+    the jump forms at x = 0. In a real problem you don't know where the trouble is.</p>
+  <p class="prose">The general fix needs no such knowledge. Every so often, throw the check points away and draw new
+    ones, putting more of them wherever the equation is broken worst right now (Wu and others, 2023). Nobody tells
+    the PINN where the jump is: the broken equation points there by itself. Click <b>Same fluid, points that move to
+    the trouble</b>. It starts from the same network and the same check points as the trap, and ends 0.8% off
+    instead of 35%, with the jump in the right place. All three runs like it ended 0.7% to 1.4% off, as good as the
+    runs that were told where the jump is, and at the end their score on new points was no worse than on their own
+    points. Aiming matters: when we redrew the points evenly instead, without aiming them at the trouble, the PINN
+    often overfit each new set within its 1,000 steps, and the three runs ended 0.4%, 50% and 69% off. It is not a cure-all,
+    though: in the thin fluid, where the jump is sharpest, our one run with moving points still ended about 50% off,
+    no better than the others there. We did not try stronger settings (packing the points harder, or redrawing them
+    more often).</p>
+  <p class="prose">Is L-BFGS to blame? As a check, we trained the trap's three networks with Adam alone for 50,000
+    steps, about four times the work the trap's L-BFGS phase did. Click <b>Control: more Adam, no L-BFGS</b>. Adam
+    never got the answer right: after step 10,000 its error kept jumping between about 14% and more than 100%, and it
+    ended 45% to 85% off. And whenever its score dipped low, the gap between its score on its own points and on new
+    points opened up too, to as much as about 200 times. So L-BFGS is not the cause: with enough training, fixed check
+    points get overfit. L-BFGS pushes the score lowest, so its gap grows to thousands.</p>
 
   <h2 class="step"><span class="n">4</span>Key takeaways</h2>
   <div class="takeaways"><ul>
-    <li>The score (loss) measures how well the PINN obeys the equation at its check points, not how close it is to the truth.</li>
-    <li>Near a sharp jump the two can disagree completely: the score improved more than 200&times; while the answer stayed 35% off.</li>
-    <li>In this case, moving the check points to the jump fixed the error. More training did not.</li>
-    <li><span class="weak">The PINN weakness:</span> in a real problem nobody has the exact answer, so the score is the only
-      number you get, and it cannot tell you whether you landed in the trap or got a good run.</li>
+    <li>The score measures how well the PINN obeys the equation at its own check points, not how close it is to the
+      truth. Most of the time the two agree.</li>
+    <li>In the medium fluid with evenly spread points they came apart. In the trap run, the score improved about
+      20&times; in its last ~4,000 steps while the error only went from 38% to 35%. In the two other runs like it, the
+      score fell 12&times; and 25&times; after the switch while the error got worse. On new points, all three scored
+      thousands of times worse than on their own.</li>
+    <li>In the thin fluid the score stayed high, above every run that got the answer right and mostly by hundreds of
+      times, so there it honestly flagged the failure. The score only misled us in the medium case.</li>
+    <li>Extra check points at the jump fixed the error, but only because we knew where the jump would form. Check
+      points that keep moving to where the equation breaks fixed it just as well (0.7% to 1.4% error) without that
+      knowledge. Redrawing them evenly, without aiming, was hit or miss (0.4%, 50% and 69%). In the thin fluid, neither
+      fix worked.</li>
+    <li>It is not just L-BFGS. Adam alone, given about four times the work, never got the answer right (45% to 85%
+      off at the end), and whenever its score dipped, the same gap opened (up to about 200 times). With enough
+      training, fixed check points get overfit; L-BFGS just pushes hardest.</li>
+    <li><span class="weak">The PINN weakness:</span> the score a PINN trains on is a training score, and like any
+      training score it can overfit the points it is graded on. The PINN can't notice that by itself. Grading it on
+      points it never trained on catches the trap and needs no answer key, but a person has to think to ask for
+      it.</li>
   </ul></div>
 
   <details class="math"><summary>The math, for the curious</summary>
-    <p>The loss is the mean squared residual of Burgers' equation
-      \[u_t + u\,u_x - \nu\, u_{xx} = 0\]
-      at the collocation points, plus the initial-condition and boundary terms. The error is the relative \(L^2\) error against the
-      Cole–Hopf exact solution over the whole \((x, t)\) grid. Training runs Adam, then switches to L-BFGS at step 2000.
-      Thick, medium and thin fluid are \(\nu = 0.01/\pi\), \(0.003/\pi\) and \(0.001/\pi\); "extra check points at the jump" means
-      collocation points concentrated near the shock at \(x = 0\).</p>
+    <p>The score (loss) is
+      \[L = 0.1\,\overline{r^2} + 0.1\,L_{\text{IC}} + 0.1\,L_{\text{BC}}, \qquad r = u_t + u\,u_x - \nu\, u_{xx},\]
+      where \(\overline{r^2}\) is the mean squared residual of Burgers' equation over the 10,000 collocation points
+      (the check points), and \(L_{\text{IC}}\), \(L_{\text{BC}}\) are the mean squared misfits of the starting state
+      and of the two edges, \(x = -1\) and \(x = 1\). The score on new points is the same \(L\), with \(\overline{r^2}\) averaged over 200,000
+      new points drawn uniformly from \(x \in [-1, 1]\), \(t \in [0, 1]\) instead; it is the same set for every run, and
+      the start and end terms are unchanged. Because the score averages a <i>squared</i> residual, a 100&times; drop in
+      the score means the residual itself shrank only about 10&times;.</p>
+    <p>The error is the relative \(L^2\) error against the Cole–Hopf exact solution over a 256 &times; 100 grid in
+      \((x, t)\). Training runs Adam (learning rate \(10^{-3}\)) for 2,000 steps, then L-BFGS for up to 15,000 steps,
+      stopping after 1,000 steps without improvement. "Before the switch" in the readout is the median over Adam steps
+      1,500–2,000, because single Adam steps jump around. Thick, medium and thin fluid are \(\nu = 0.01/\pi\),
+      \(0.003/\pi\) and \(0.001/\pi\). "Extra check points at the jump" draws half of the 10,000 points with
+      \(x \sim \mathcal{N}(0,\, 0.05^2)\), which uses our prior knowledge that the jump forms at \(x = 0\). The jump
+      position quoted above is where the PINN's \(u(x, 1)\) falls fastest.</p>
+    <p>"Points that move to the trouble" is residual-based adaptive sampling (RAD) with \(k = c = 1\). Every 250 Adam
+      steps, and at the start of each of 15 rounds of 1,000 L-BFGS steps, the 10,000 check points are redrawn from
+      100,000 uniform candidates; each candidate is picked with probability proportional to
+      \(|r| / \overline{|r|} + 1\), so about half of the points go where the residual is large and half stay spread
+      out. Each round starts a new L-BFGS, because L-BFGS remembers the curvature of the old score, which changes when
+      the points do. Moving points are not a perfect guard. In the three medium-fluid runs, within the first L-BFGS
+      round, before the first redraw, the PDE term on new points still pulled 8 to 23 times ahead of the one on its
+      own points; after that it stayed between 0.5 and 3.4 times, and it ended at about 0.6 (below 1, because the
+      PINN's own points sit where the equation is hardest). In the thin-fluid run it ended about 2,000 times ahead:
+      each round was long enough to overfit the new points. "Evenly redrawn" uses the same schedule with uniform points.</p>
+    <p>The general fix that needs no such knowledge is residual-based adaptive sampling: Wu, Zhu, Tan, Kartha &amp; Lu,
+      "A comprehensive study of non-adaptive and residual-based adaptive sampling for physics-informed neural
+      networks", <i>Comput. Methods Appl. Mech. Engrg.</i> 403 (2023) 115671,
+      <a href="https://arxiv.org/abs/2207.10289">arXiv:2207.10289</a>.</p>
   </details>
 </main>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const FONT = "11px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
 const NU_COLOR = { 0.01: "--nu1", 0.003: "--nu2", 0.001: "--nu3" };
+const SWITCH = 2000;                               // Adam -> L-BFGS
 const PRESETS = [
   { label: "The trap: medium fluid, evenly spread points", name: "nu0.003_vanilla_s2" },
   { label: "Same fluid, extra points at the jump", name: "nu0.003_shock_s2" },
+  { label: "Same fluid, points that move to the trouble", name: "nu0.003_rad_s2" },
+  { label: "Control: more Adam, no L-BFGS", name: "nu0.003_adamonly_s2" },
   { label: "Works: thick fluid", name: "p1000_8x20_s1" },
   { label: "Fails: thin fluid", name: "nu0.001_vanilla_s0" },
 ];
+// A run is found by its name, or by its name plus the device it trained on (nu0.003_rad_s2_gpu).
+const findRun = (n) => runs.find((r) => r.name === n) || runs.find((r) => r.name.startsWith(n + "_"));
 let runs = [], selected = null, scatterPts = [];
+let mode = "own", modeFrom = "own", modeT = 1;     // scatter x: own-point or new-point score; modeT animates the switch
 
 async function load() {
   for (const p of ["../data/loss_truth/runs.json", "../../data/loss_truth/runs.json"]) {
@@ -308,8 +403,8 @@ function setupCanvas(c) {
   return { ctx, w, h };
 }
 
-function text(ctx, s, x, y, align, base, color) {
-  ctx.fillStyle = color || css("--muted"); ctx.font = "11px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+function text(ctx, s, x, y, align, base, color, weight) {
+  ctx.fillStyle = color || css("--muted"); ctx.font = (weight ? weight + " " : "") + FONT;
   ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(s, x, y);
 }
 
@@ -322,32 +417,78 @@ function logAxis(lo, hi, a, b) {
   return (v) => a + (Math.log10(v) - lo) / (hi - lo) * (b - a);
 }
 
-function gridY(ctx, Y, lo, hi, x0, x1, label = pow10) {
+function hline(ctx, y, x0, x1) {
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+}
+
+function gridY(ctx, Y, lo, hi, x0, x1, label = pow10, every = 1) {
   for (let p = lo; p <= hi; p++) {
     const y = Y(10 ** p);
-    ctx.strokeStyle = css("--line"); ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
-    text(ctx, label(p), x0 - 6, y, "right", "middle");
+    hline(ctx, y, x0, x1);
+    if ((p - lo) % every === 0 || p === hi) text(ctx, label(p), x0 - 6, y, "right", "middle");
   }
+}
+
+// ---------- left chart: one dot per run ----------
+const SX = { lo: -7, hi: 1 };                      // same x-range in both modes, so the trap dots visibly move
+const finalScore = (r, m) => (m === "own" ? r.loss : r.fresh.loss).at(-1);
+
+// Marker shape = how the check points were chosen; colour = which fluid.
+const KINDS = [
+  { id: "even",     shape: "circle", fill: true,  label: "evenly spread check points, fixed", trace: "evenly spread check points" },
+  { id: "shock",    shape: "circle", fill: false, label: "extra check points at the jump, fixed", trace: "extra check points at the jump" },
+  { id: "rad",      shape: "dia",    fill: true,  label: "check points moved to where the equation breaks", trace: "check points that move to the trouble" },
+  { id: "resample", shape: "square", fill: true,  label: "evenly spread check points, redrawn", trace: "evenly spread check points, redrawn" },
+  { id: "adam",     shape: "tri",    fill: true,  label: "evenly spread, fixed, Adam only (no L-BFGS)", trace: "evenly spread check points, Adam only" },
+];
+function kindOf(r) {
+  if (r.lbfgs === false) return KINDS[4];
+  return KINDS.find((k) => k.id === r.sampling) || KINDS[0];
+}
+function markerPath(ctx, shape, x, y, s) {
+  ctx.beginPath();
+  if (shape === "dia") {
+    const d = s * 1.3; ctx.moveTo(x, y - d); ctx.lineTo(x + d, y); ctx.lineTo(x, y + d); ctx.lineTo(x - d, y); ctx.closePath();
+  } else if (shape === "square") {
+    const d = s * 0.9; ctx.rect(x - d, y - d, 2 * d, 2 * d);
+  } else if (shape === "tri") {
+    const d = s * 1.3; ctx.moveTo(x, y - d); ctx.lineTo(x + d * 0.95, y + d * 0.65); ctx.lineTo(x - d * 0.95, y + d * 0.65); ctx.closePath();
+  } else ctx.arc(x, y, s, 0, 2 * Math.PI);
+}
+function markerSvg(k) {
+  const p = { circle: '<circle cx="6" cy="6" r="4.6"/>', dia: '<path d="M6 0.5 11.5 6 6 11.5 0.5 6Z"/>',
+              square: '<rect x="1.6" y="1.6" width="8.8" height="8.8"/>', tri: '<path d="M6 0.6 11.4 10.2H0.6Z"/>' }[k.shape];
+  const style = k.fill ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="2"';
+  return `<svg class="mk" viewBox="0 0 12 12" aria-hidden="true" ${style}>${p}</svg>`;
+}
+function buildShapeLegend() {
+  const present = new Set(runs.map((r) => kindOf(r).id));
+  $("shapeLegend").innerHTML = KINDS.filter((k) => present.has(k.id))
+    .map((k) => `<span>${markerSvg(k)}${k.label}</span>`).join("");
 }
 
 function drawScatter() {
   const { ctx, w, h } = setupCanvas($("scatter"));
-  const pad = { l: 40, r: 10, t: 22, b: 30 };
-  const X = logAxis(-7, -1, pad.l, w - pad.r);
+  const pad = { l: 40, r: 12, t: 22, b: 30 };
+  const X = logAxis(SX.lo, SX.hi, pad.l, w - pad.r);
   const Y = logAxis(-4, 0, h - pad.b, pad.t);
   gridY(ctx, Y, -4, 0, pad.l, w - pad.r, (p) => `${+(100 * 10 ** p).toPrecision(1)}%`);
-  for (let p = -7; p <= -1; p += (w < 420 ? 2 : 1)) text(ctx, pow10(p), X(10 ** p), h - pad.b + 6, "center", "top");
-  text(ctx, "final score (loss), lower is better →", w - pad.r, h - 2, "right", "bottom");
+  for (let p = SX.lo; p <= SX.hi; p += (w < 420 ? 2 : 1)) text(ctx, pow10(p), X(10 ** p), h - pad.b + 6, "center", "top");
+  text(ctx, (mode === "own" ? "final score on its own check points" : "final score on new points") + " →",
+       w - pad.r, h - 2, "right", "bottom");
   text(ctx, "↑ final error", pad.l, 2, "left", "top");
+  const e = modeT < 1 ? 0.5 - Math.cos(Math.PI * modeT) / 2 : 1;   // ease in-out
   scatterPts = [];
+  const surface = css("--panel");
   for (const r of runs) {
-    const x = X(r.loss.at(-1)), y = Y(r.err.at(-1)), c = css(NU_COLOR[r.nu_pi]);
+    const lx = (1 - e) * Math.log10(finalScore(r, modeFrom)) + e * Math.log10(finalScore(r, mode));
+    const x = X(10 ** lx), y = Y(r.err.at(-1)), c = css(NU_COLOR[r.nu_pi]);
     scatterPts.push({ x, y, r });
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(x, y, r === selected ? 8 : 6, 0, 2 * Math.PI);
-    if (r.sampling === "shock") { ctx.strokeStyle = c; ctx.stroke(); }
-    else { ctx.fillStyle = c; ctx.fill(); }
+    const k = kindOf(r);
+    markerPath(ctx, k.shape, x, y, r === selected ? 8 : 6);
+    if (!k.fill) { ctx.lineWidth = 2; ctx.strokeStyle = c; ctx.stroke(); }
+    else { ctx.fillStyle = c; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = surface; ctx.stroke(); }
     if (r === selected) {
       ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(x, y, 12, 0, 2 * Math.PI); ctx.stroke();
@@ -355,53 +496,127 @@ function drawScatter() {
   }
 }
 
+function setMode(m) {
+  if (m === mode) return;
+  modeFrom = mode; mode = m; modeT = 0;
+  for (const b of $("mode").children) {
+    b.classList.toggle("on", b.dataset.mode === m); b.setAttribute("aria-pressed", b.dataset.mode === m);
+  }
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const t0 = performance.now(), dur = reduce ? 0 : 600;
+  const tick = (now) => {
+    modeT = dur ? Math.min(1, (now - t0) / dur) : 1;
+    drawScatter();
+    if (modeT < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// ---------- right chart: two panels sharing the training-step axis ----------
 function drawTrace() {
   const { ctx, w, h } = setupCanvas($("trace"));
   if (!selected) return;
-  const pad = { l: 40, r: 10, t: 8, b: 30 };
-  const steps = selected.step, sMax = steps.at(-1);
-  const X = (s) => pad.l + s / sMax * (w - pad.l - pad.r);
-  const Y = logAxis(-7, 1, h - pad.b, pad.t);
-  gridY(ctx, Y, -7, 0, pad.l, w - pad.r);
-  for (const s of [0, Math.round(sMax / 2 / 1000) * 1000, sMax]) {
-    text(ctx, String(s), X(s), h - pad.b + 6, s === 0 ? "left" : s === sMax ? "right" : "center", "top");
-  }
-  text(ctx, "training step →", w - pad.r, h - 2, "right", "bottom");
-  // Adam -> L-BFGS switch at step 2000.
-  const xs = X(2000);
-  ctx.strokeStyle = css("--line"); ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(xs, pad.t); ctx.lineTo(xs, h - pad.b); ctx.stroke(); ctx.setLineDash([]);
-  text(ctx, "training method switches", xs + 4, pad.t + 2, "left", "top");
-  const line = (vals, color, width) => {
-    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath();
-    vals.forEach((v, i) => { const x = X(steps[i]), y = Y(Math.max(v, 1e-7)); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  const r = selected, steps = r.step, sMax = steps.at(-1);
+  const pad = { l: 40, r: 66, b: 34 };             // right margin holds the line labels
+  const top = { y0: 34, y1: Math.round(h * 0.56) };
+  const bot = { y0: top.y1 + 28, y1: h - pad.b };
+  const x0 = pad.l, x1 = w - pad.r;
+  const X = (s) => x0 + s / sMax * (x1 - x0);
+
+  // Adam phase shaded in both panels; phase names inside the top panel.
+  const sw = r.lbfgs === false ? sMax : (r.adam_steps || SWITCH);
+  ctx.fillStyle = css("--line"); ctx.globalAlpha = 0.55;
+  for (const p of [top, bot]) ctx.fillRect(x0, p.y0, X(sw) - x0, p.y1 - p.y0);
+  ctx.globalAlpha = 1;
+  // "Adam" centred in its band, or (long run, narrow screen) set against the switch line so it can't run into "L-BFGS".
+  const adamLabel = r.lbfgs === false ? "Adam only" : "Adam";
+  ctx.font = "600 " + FONT;
+  const tw = ctx.measureText(adamLabel).width;
+  const ax = X(sw) - x0 >= tw + 12 ? (x0 + X(sw)) / 2 : X(sw) - 4 - tw / 2;
+  text(ctx, adamLabel, ax, top.y0 + 4, "center", "top", css("--ink"), 600);
+  if (r.lbfgs !== false) text(ctx, "L-BFGS", X(sw) + 6, top.y0 + 4, "left", "top", css("--ink"), 600);
+
+  // Top panel: score, log scale.
+  const Ys = logAxis(-7, 1, top.y1, top.y0);
+  gridY(ctx, Ys, -7, 1, x0, x1, pow10, (top.y1 - top.y0) / 8 < 18 ? 2 : 1);
+  text(ctx, "↑ score (log scale), lower is better", x0, top.y0 - 8, "left", "bottom");
+  ctx.save(); ctx.beginPath(); ctx.rect(x0, top.y0, x1 - x0, top.y1 - top.y0); ctx.clip();
+  const path = (xs, vs, Y, color, width) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = "round"; ctx.beginPath();
+    vs.forEach((v, i) => { const x = X(xs[i]), y = Y(v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
     ctx.stroke();
   };
-  line(selected.loss, css("--loss"), 2);
-  line(selected.err, css("--err"), 2.5);
-  text(ctx, "score (loss)", X(sMax) - 2, Y(selected.loss.at(-1)) - 4, "right", "bottom", css("--loss"));
-  text(ctx, "error", X(sMax) - 2, Y(selected.err.at(-1)) - 4, "right", "bottom", css("--err"));
+  const clampS = (v) => Math.min(Math.max(v, 1e-8), 1e2);
+  path(steps, r.loss.map(clampS), Ys, css("--loss"), 1.75);
+  path(r.fresh.step, r.fresh.loss.map(clampS), Ys, css("--fresh"), 2);
+  const surface = css("--panel");
+  // Dots only while they stay apart (a 50,000-step run has 100 of them); the last one always.
+  const dotGap = r.fresh.step.length > 1 ? X(r.fresh.step[1]) - X(r.fresh.step[0]) : 99;
+  r.fresh.step.forEach((s, i) => {
+    if (dotGap < 6 && i < r.fresh.step.length - 1) return;
+    ctx.beginPath(); ctx.arc(X(s), Ys(clampS(r.fresh.loss[i])), 3.5, 0, 2 * Math.PI);
+    ctx.fillStyle = css("--fresh"); ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = surface; ctx.stroke();
+  });
+  ctx.restore();
+
+  // Line labels in the right margin, pushed apart if the two lines end close together.
+  let yo = Ys(clampS(r.loss.at(-1))), yn = Ys(clampS(r.fresh.loss.at(-1)));
+  const gap = 13;
+  if (Math.abs(yo - yn) < gap) { const m = (yo + yn) / 2, s = yn <= yo ? -1 : 1; yn = m + s * gap / 2; yo = m - s * gap / 2; }
+  text(ctx, "own points", x1 + 6, yo, "left", "middle", css("--ink"));
+  text(ctx, "new points", x1 + 6, yn, "left", "middle", css("--ink"));
+  ctx.fillStyle = css("--fresh");
+  ctx.beginPath(); ctx.arc(x1, Ys(clampS(r.fresh.loss.at(-1))), 3.5, 0, 2 * Math.PI); ctx.fill();
+
+  // Bottom panel: error against the exact answer, linear %, 0-100% (the untrained start can sit above 100%).
+  const Ye = (v) => bot.y1 - Math.min(v, 1.05) * (bot.y1 - bot.y0);
+  const ticks = (bot.y1 - bot.y0) < 90 ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1];
+  for (const v of ticks) { hline(ctx, Ye(v), x0, x1); text(ctx, `${v * 100}%`, x0 - 6, Ye(v), "right", "middle"); }
+  text(ctx, "↑ error vs. exact answer", x0, bot.y0 - 6, "left", "bottom");
+  ctx.save(); ctx.beginPath(); ctx.rect(x0, bot.y0, x1 - x0, bot.y1 - bot.y0); ctx.clip();
+  path(steps, r.err, Ye, css("--err"), 2.25);
+  ctx.restore();
+  text(ctx, fmt(r.err.at(-1)), x1 + 6, Ye(r.err.at(-1)), "left", "middle", css("--ink"));
+
+  // Shared x-axis.
+  const maxTicks = w < 420 ? 4 : 8;
+  const every = [2000, 4000, 5000, 10000, 20000, 25000, 50000].find((e) => sMax / e <= maxTicks) || 100000;
+  for (let s = 0; s <= sMax; s += every) {
+    ctx.strokeStyle = css("--muted"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X(s), bot.y1); ctx.lineTo(X(s), bot.y1 + 4); ctx.stroke();
+    text(ctx, s.toLocaleString("en-US"), X(s), bot.y1 + 6, s === 0 ? "left" : "center", "top");
+  }
+  text(ctx, "training step →", x1, h - 2, "right", "bottom");
 }
 
-function fmt(v) { return v >= 0.01 ? `${(v * 100).toFixed(1)}%` : `${(v * 100).toPrecision(2)}%`; }
+function fmt(v) { return v >= 0.01 ? `${(v * 100).toFixed(v >= 0.1 ? 0 : 1)}%` : `${(v * 100).toPrecision(2)}%`; }
 // Small numbers as "1.2 × 10⁻⁶".
-function sci(v) { const p = Math.floor(Math.log10(v)); return `${(v / 10 ** p).toFixed(1)} × ${pow10(p)}`; }
+function sci(v) {
+  if (v >= 0.1 && v < 100) return v.toPrecision(2);
+  const p = Math.floor(Math.log10(v)); return `${(v / 10 ** p).toFixed(1)} × ${pow10(p)}`;
+}
+function times(v) { return +v.toPrecision(2); }   // two significant figures: 1,740 -> 1,700
 
-function valueAt(r, key, step) {
-  const i = r.step.findIndex((s) => s >= step);
-  return r[key][i < 0 ? 0 : i];
+// "Before the switch" = median over Adam steps 1500-2000; one Adam step alone can sit on a spike.
+function before(r, key) {
+  const v = r.step.map((s, i) => [s, r[key][i]]).filter(([s]) => s >= SWITCH - 500 && s <= SWITCH).map(([, x]) => x)
+    .sort((a, b) => a - b);
+  return v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
 }
 
 function select(r) {
   selected = r;
   const fluid = { 0.01: "Thick", 0.003: "Medium", 0.001: "Thin" }[r.nu_pi] || `ν = ${r.nu_pi}/π`;
-  const how = r.sampling === "shock" ? "extra check points at the jump" : "evenly spread check points";
-  $("traceLabel").textContent = `${fluid} fluid, ${how} (seed ${r.seed}): score and error during training`;
-  $("sLoss").textContent = sci(r.loss.at(-1));
+  $("traceLabel").textContent = `${fluid} fluid, ${kindOf(r).trace} (seed ${r.seed}): score and error during training`;
+  const own = r.loss.at(-1), fresh = r.fresh.loss.at(-1), ratio = fresh / own;
+  $("sLoss").textContent = sci(own);
+  $("sFresh").textContent = sci(fresh);
+  $("sFreshX").textContent = ratio >= 1.5 ? `${times(ratio).toLocaleString("en-US")}× worse than on its own points`
+    : ratio <= 0.67 ? `${times(1 / ratio)}× better than on its own points` : "about the same as on its own points";
   $("sErr").textContent = fmt(r.err.at(-1));
-  const l0 = valueAt(r, "loss", 2000), e0 = valueAt(r, "err", 2000);
-  $("sLossDrop").textContent = `${(l0 / r.loss.at(-1)).toFixed(0)}×`;
-  $("sErrDrop").textContent = `${(e0 / r.err.at(-1)).toFixed(1)}×`;
+  $("sAfterK").textContent = r.lbfgs === false ? "after step 2,000 (more Adam, no switch)" : "after the switch to L-BFGS";
+  $("sAfter").textContent = `score fell ${times(before(r, "loss") / own).toLocaleString("en-US")}×`;
+  $("sAfterErr").textContent = `error went from ${fmt(before(r, "err"))} to ${fmt(r.err.at(-1))}`;
   for (const b of $("presets").children) b.classList.toggle("on", b.dataset.name === r.name);
   drawScatter(); drawTrace();
 }
@@ -413,18 +628,22 @@ $("scatter").addEventListener("click", (ev) => {
   for (const p of scatterPts) { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; best = p.r; } }
   if (best) select(best);
 });
+for (const b of $("mode").children) b.addEventListener("click", () => setMode(b.dataset.mode));
 window.addEventListener("resize", () => { drawScatter(); drawTrace(); });
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawScatter(); drawTrace(); });
 
 (async () => {
   runs = await load();
+  buildShapeLegend();
   for (const p of PRESETS) {
+    const r = findRun(p.name);
+    if (!r) continue;
     const b = document.createElement("button");
-    b.textContent = p.label; b.dataset.name = p.name;
-    b.onclick = () => select(runs.find((r) => r.name === p.name));
+    b.textContent = p.label; b.dataset.name = r.name;
+    b.onclick = () => select(r);
     $("presets").appendChild(b);
   }
-  select(runs.find((r) => r.name === PRESETS[0].name));
+  select(findRun(PRESETS[0].name));
 })();
 </script>
 <style>
@@ -436,6 +655,6 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 .rs-pager .rs-up{opacity:.6}
 .rs-pager .rs-next{font-weight:600;margin-left:auto}
 </style>
-<nav class="rs-pager" aria-label="Beat 1 pages"><a href="../viscosity/index.html?v=07216382">&larr; The breaking point</a><a class="rs-up" href="../beat1/index.html?v=07216382">Back to Beat 1</a><a class="rs-next" href="../race/index.html?v=07216382">Next: The race &rarr;</a></nav>
+<nav class="rs-pager" aria-label="Beat 1 pages"><a href="../viscosity/index.html?v=f3d1c2f2">&larr; The breaking point</a><a class="rs-up" href="../beat1/index.html?v=f3d1c2f2">Back to Beat 1</a><a class="rs-next" href="../race/index.html?v=f3d1c2f2">Next: The race &rarr;</a></nav>
 </body>
 </html>
