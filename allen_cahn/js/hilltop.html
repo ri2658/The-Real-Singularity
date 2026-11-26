@@ -35,7 +35,7 @@
   .controls input[type=range] { width: 220px; max-width: 60vw; }
   .eps { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 6ch; display: inline-block; }
   button { padding: 7px 14px; font: inherit; font-size: 14px; border-radius: 6px; cursor: pointer;
-           border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+           border: 1px solid var(--line); background: var(--c-card, transparent); color: var(--ink); }
   button.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
   button:disabled { opacity: .5; cursor: default; }
   .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
@@ -100,7 +100,7 @@
   <div class="controls">
     <label for="k">Nudge size: <span class="eps" id="epsVal"></span></label>
     <input id="k" type="range" min="2" max="11" step="1" value="6">
-    <button id="run">Run</button>
+    <button id="run" class="rs-play">Run</button>
     <button id="runAll" class="secondary">Run every size (fast)</button>
     <button id="clear" class="secondary">Clear points</button>
   </div>

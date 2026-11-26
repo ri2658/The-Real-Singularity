@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Beat 2: Balls in bowls, balls on hilltops</title>
+<title>Case 2: Balls in bowls, balls on hilltops</title>
 <meta name="description" content="A rod of tiny magnets: what a step-by-step simulation can find, what it can never find, and how a PINN fills the gap.">
 <style>
 :root{--bg:var(--c-bg,#fbfaf7);--fg:var(--c-fg,#1c2330);--mut:var(--c-mut,#5d6675);--grid:var(--c-line,#dcdfe5);--card:var(--c-card,#ffffff);--accent:var(--c-accent,#c2410c);--soon:var(--c-ghost,#8a8f99);--road:#3b4250;--line:var(--c-accent,#c2410c);--ref:var(--c-ghost,#9aa3b2)}
@@ -63,7 +63,7 @@ figure.photo figcaption{margin-top:0;font-size:.95rem}
 figure.photo figcaption .credit{display:block;font-size:.8rem;margin-top:10px}
 figure.photo figcaption a{color:inherit}
 @media (max-width:640px){figure.photo{grid-template-columns:1fr;gap:10px}figure.photo img{max-width:360px}}
-/* Beat 2 figures */
+/* Case 2 figures */
 .key{display:flex;flex-wrap:wrap;gap:4px 16px;font:.82rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin-top:6px}
 .key i{display:inline-block;width:20px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:6px}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -158,6 +158,26 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
   --c-accent:#fb923c;--c-pinn:#fb923c;--c-pinn-fill:rgba(251,146,60,.22);--c-solver:#5b9bea;--c-exact:#c3cad5;
   --c-ghost:#6b7380;--c-good:#4ade80;--c-bad:#f87171;--c-nu1:#2f5f99;--c-nu2:#5b9bea;--c-nu3:#c2dcf7}
 </style>
+<style>
+button.rs-play{display:inline-flex !important;align-items:center;justify-content:center;gap:7px;flex:0 0 auto !important;
+  border:1.5px solid var(--c-accent) !important;background:var(--c-card) !important;color:var(--c-fg) !important;
+  border-radius:999px !important;padding:6px 16px 6px 13px !important;font-weight:600 !important;line-height:1.3}
+button.rs-play:hover{background:var(--c-pinn-fill) !important}
+button.rs-play::before{content:"";flex:none;width:0;height:0;border-left:9px solid var(--c-accent);
+  border-top:5.5px solid transparent;border-bottom:5.5px solid transparent}
+button.rs-play.rs-on::before{width:3px;height:11px;border:0;border-left:3px solid var(--c-accent);
+  border-right:3px solid var(--c-accent);box-sizing:content-box}
+button.rs-play:disabled{opacity:.5;cursor:default}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("button.rs-play").forEach(function (b) {
+    function mark() { b.classList.toggle("rs-on", /^\s*pause/i.test(b.textContent)); }
+    mark();
+    new MutationObserver(mark).observe(b, { childList: true, characterData: true, subtree: true });
+  });
+});
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -203,9 +223,9 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=f3d1c2f2">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=f3d1c2f2">Beat 1</a><a href="../beat2/index.html?v=f3d1c2f2" class="on" aria-current="page">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=c4248d9d">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=c4248d9d">Case 1</a><a href="../beat2/index.html?v=c4248d9d" class="on" aria-current="page">Case 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
-  <p class="eyebrow">Beat 2</p>
+  <p class="eyebrow">Case 2</p>
   <h1>Balls in bowls, balls on hilltops</h1>
   <p class="lede">Some answers to an equation are stable, like a ball in a bowl. Others are unstable, like a ball on a hilltop:
     still, until the smallest nudge sends it rolling. Which tools can find each kind?</p>
@@ -230,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function () {
       graphics card, instead of weeks on a computing cluster.</p>
     <figure>
       <canvas id="pathProt" height="180"></canvas>
-      <div class="row"><button id="protPlay">Pause</button>
+      <div class="row"><button id="protPlay" class="rs-play">Pause</button>
         <input id="protPos" type="range" min="0" max="239" value="0" aria-label="Position along the switch"></div>
       <figcaption><b>A cartoon protein switching shape</b> (not a real one). Going from closed to open, it must strain through a
         half-open shape: its transition state, at the top of the energy pass. The glow and strain bar show how high it
@@ -285,7 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <div><p class="panel-t" id="pathName">The rod along the path</p><canvas id="pathU" height="210"></canvas></div>
         <div><p class="panel-t">Energy along the path</p><canvas id="pathE" height="210"></canvas></div>
       </div>
-      <div class="row"><button id="pathPlay">Pause</button>
+      <div class="row"><button id="pathPlay" class="rs-play">Pause</button>
         <input id="pathPos" type="range" min="0" max="239" value="0" aria-label="Position along the path"></div>
       <figcaption><b>The same switch, on our rod.</b> The lowest-energy path from the flipped hump to the hump peaks exactly at
         the S-shape, 2.05 above either hump: the barrier. Found by starting on the S and rolling downhill both ways; it
@@ -314,11 +334,11 @@ document.addEventListener("DOMContentLoaded", function () {
     <p class="eyebrow">Try it yourself</p>
     <h2>Three demos, in story order</h2>
     <div class="cards">
-      <a class="card" href="../allen-cahn/index.html?v=f3d1c2f2"><h3>The step-by-step simulator</h3><p>A traditional simulation
+      <a class="card" href="../allen-cahn/index.html?v=c4248d9d"><h3>The step-by-step simulator</h3><p>A traditional simulation
         always rolls downhill, so it can only ever settle into a stable state. Try the S-shape with a tiny nudge.</p></a>
-      <a class="card" href="../hilltop/index.html?v=f3d1c2f2"><h3>Falling off a hilltop</h3><p>Balance the rod on a hilltop,
+      <a class="card" href="../hilltop/index.html?v=c4248d9d"><h3>Falling off a hilltop</h3><p>Balance the rod on a hilltop,
         nudge it, and time the fall. A 10&times; smaller nudge only buys about 1.5 more time units.</p></a>
-      <a class="card" href="../correction/index.html?v=f3d1c2f2"><h3>Fixing the PINN's guesses</h3><p>We hand the PINN's rough
+      <a class="card" href="../correction/index.html?v=c4248d9d"><h3>Fixing the PINN's guesses</h3><p>We hand the PINN's rough
         answers to the simulator: the stable one settles into place, the unstable one falls off.</p></a>
     </div>
   </section>
@@ -329,7 +349,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <h2>From a steep wall to a blow-up</h2>
       <p>For the curious: the same bowl-and-hilltop idea sits at the centre of one of the biggest open questions in
         mathematics.</p>
-      <p>In Beat 1, the later drivers braked, the steeper the wall of brake lights. The thinner the fluid, the closer
+      <p>In Case 1, the later drivers braked, the steeper the wall of brake lights. The thinner the fluid, the closer
         that wall comes to vertical; with no thickness at all, its steepness becomes infinite. That is a
         <em>blow-up</em>, and it is where our PINN failed, about 40% off. No surprise: a PINN is built from smooth
         pieces, so it can never draw an infinite slope.</p>
@@ -344,7 +364,7 @@ document.addEventListener("DOMContentLoaded", function () {
           <span><i style="border-color:var(--fg)"></i>thin</span>
           <span><i style="border-color:var(--accent);border-top-style:dashed"></i>our PINN, thin fluid</span>
         </div>
-        <figcaption><b>The wall gets steeper; the PINN can't follow.</b> Exact answers at the end of Beat 1's run. Each 10&times;
+        <figcaption><b>The wall gets steeper; the PINN can't follow.</b> Exact answers at the end of Case 1's run. Each 10&times;
           thinner fluid makes the wall steeper (steepest slope 84, 279, 767); with no thickness it would be infinite. Our
           PINN puts the thin-fluid wall in the wrong place.</figcaption>
       </figure>
@@ -384,7 +404,7 @@ document.addEventListener("DOMContentLoaded", function () {
     </section>
   </details>
 
-  <div class="next"><a href="../beat1/index.html?v=f3d1c2f2">&larr; Beat 1: The wall of brake lights</a><a href="../index.html?v=f3d1c2f2">Home</a></div>
+  <div class="next"><a href="../beat1/index.html?v=c4248d9d">&larr; Case 1: The wall of brake lights</a><a href="../index.html?v=c4248d9d">Home</a></div>
 </main>
 <script>
 (() => {

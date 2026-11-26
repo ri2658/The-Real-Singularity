@@ -78,6 +78,26 @@
   --c-accent:#fb923c;--c-pinn:#fb923c;--c-pinn-fill:rgba(251,146,60,.22);--c-solver:#5b9bea;--c-exact:#c3cad5;
   --c-ghost:#6b7380;--c-good:#4ade80;--c-bad:#f87171;--c-nu1:#2f5f99;--c-nu2:#5b9bea;--c-nu3:#c2dcf7}
 </style>
+<style>
+button.rs-play{display:inline-flex !important;align-items:center;justify-content:center;gap:7px;flex:0 0 auto !important;
+  border:1.5px solid var(--c-accent) !important;background:var(--c-card) !important;color:var(--c-fg) !important;
+  border-radius:999px !important;padding:6px 16px 6px 13px !important;font-weight:600 !important;line-height:1.3}
+button.rs-play:hover{background:var(--c-pinn-fill) !important}
+button.rs-play::before{content:"";flex:none;width:0;height:0;border-left:9px solid var(--c-accent);
+  border-top:5.5px solid transparent;border-bottom:5.5px solid transparent}
+button.rs-play.rs-on::before{width:3px;height:11px;border:0;border-left:3px solid var(--c-accent);
+  border-right:3px solid var(--c-accent);box-sizing:content-box}
+button.rs-play:disabled{opacity:.5;cursor:default}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("button.rs-play").forEach(function (b) {
+    function mark() { b.classList.toggle("rs-on", /^\s*pause/i.test(b.textContent)); }
+    mark();
+    new MutationObserver(mark).observe(b, { childList: true, characterData: true, subtree: true });
+  });
+});
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -234,7 +254,7 @@ footer.band{border-top:1px solid var(--grid);padding:22px 20px 28px;font-size:.8
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="index.html?v=f3d1c2f2">The Real Singularity</a><div class="rs-links"><a href="beat1/index.html?v=f3d1c2f2">Beat 1</a><a href="beat2/index.html?v=f3d1c2f2">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="index.html?v=c4248d9d">The Real Singularity</a><div class="rs-links"><a href="beat1/index.html?v=c4248d9d">Case 1</a><a href="beat2/index.html?v=c4248d9d">Case 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <!-- /NAV -->
 <main>
   <header class="band band-hero">
@@ -380,7 +400,7 @@ class PINN(nn.Module):
     </div>
     <p class="small">This curve is \(L(\theta) = (\theta - 1)^2\), so each step multiplies the distance to the bottom
       by \(1 - 2\eta\). Below \(\eta = 0.5\) it walks straight in, between 0.5 and 1 it zig-zags in, and above 1 it
-      flies off. The step-by-step simulator in Beat 2 is gradient descent in disguise and has the same kind of speed
+      flies off. The step-by-step simulator in Case 2 is gradient descent in disguise and has the same kind of speed
       limit.</p>
       </div>
     </div>
@@ -390,7 +410,7 @@ class PINN(nn.Module):
     <p class="num">Step 2 · How a PINN learns physics</p>
     <h2>The score is the physics</h2>
     <h3>Our problem: Burgers' equation</h3>
-    <p>Beat 1 is built on <b>Burgers' equation</b>, the simplest cousin of Navier&ndash;Stokes: one dimension, no
+    <p>Case 1 is built on <b>Burgers' equation</b>, the simplest cousin of Navier&ndash;Stokes: one dimension, no
       pressure. It keeps the two ingredients that make fluids hard, a term that makes the flow steepen itself and a
       term that smooths it out:</p>
     <div class="eq">\[u_t + u\,u_x = \nu\,u_{xx}, \qquad x \in [-1, 1],\; t \in [0, 1],\]
@@ -402,7 +422,7 @@ class PINN(nn.Module):
       <li>\(\nu\,u_{xx}\): viscosity, which rounds the cliff off. We use \(\nu = 0.01/\pi\), \(0.003/\pi\) and
         \(0.001/\pi\); the smaller \(\nu\), the sharper the cliff.</li>
     </ul>
-    <p>Beat 2 uses a different equation, Allen&ndash;Cahn, \(u_t = u_{xx} + \mu\,(u - u^3)\), and the same recipe.</p>
+    <p>Case 2 uses a different equation, Allen&ndash;Cahn, \(u_t = u_{xx} + \mu\,(u - u^3)\), and the same recipe.</p>
 
     <h3>The PINN's score: how badly it breaks the rules</h3>
     <p>An ordinary network is scored with RMSE against answers someone already computed. A PINN has no answers to copy.
@@ -474,17 +494,17 @@ for step in range(2000):
     <div class="eq">\[\begin{aligned} \text{error} &= \frac{\lVert u_\theta - u \rVert_2}{\lVert u \rVert_2} \\
       &= \sqrt{\frac{\sum_{i}\big(u_\theta(x_i, t_i) - u(x_i, t_i)\big)^2}{\sum_{i} u(x_i, t_i)^2}}. \end{aligned}\]</div>
     <p>Notice what the loss measures: how well the answer follows the rule <i>at the points we checked</i>, not how
-      close it is to the truth. Most of the time the two agree. Our two beats show what happens when they don't, and in
+      close it is to the truth. Most of the time the two agree. Our two cases show what happens when they don't, and in
       a real problem there is no exact \(u\) to compare against.</p>
   </div></section>
 
   <section class="band"><div class="wrap">
     <p class="num">Step 3 · What we tested</p>
     <h2>Two problems, two kinds of failure</h2>
-    <p class="mut">Each beat opens with a short story, then lets you try the demos yourself. Start with Beat 1.</p>
+    <p class="mut">Each case opens with a short story, then lets you try the demos yourself. Start with Case 1.</p>
     <div class="beats">
-      <a class="beat" href="beat1/index.html?v=f3d1c2f2">
-        <p class="num">Beat 1</p>
+      <a class="beat" href="beat1/index.html?v=c4248d9d">
+        <p class="num">Case 1</p>
         <h2>The wall of brake lights</h2>
         <p class="beq">\(u_t + u\,u_x = \nu\,u_{xx}\)</p>
         <p>Freeway traffic slows into a sudden wall of brake lights. Can a PINN that only knows the rules of traffic
@@ -495,10 +515,10 @@ for step in range(2000):
           improving while the answer stayed 35% wrong.</div>
         <div class="row human"><b>Where a human stepped in</b>Grading it on points it never trained on exposed the trap.
           That needs no answer key, but someone had to think of it.</div>
-        <span class="go">Read Beat 1 &rarr;</span>
+        <span class="go">Read Case 1 &rarr;</span>
       </a>
-      <a class="beat" href="beat2/index.html?v=f3d1c2f2">
-        <p class="num">Beat 2</p>
+      <a class="beat" href="beat2/index.html?v=c4248d9d">
+        <p class="num">Case 2</p>
         <h2>Balls in bowls, balls on hilltops</h2>
         <p class="beq">\(u_t = u_{xx} + \mu\,(u - u^3)\)</p>
         <p>A rod of tiny magnets settles into resting shapes. Some are stable like a ball in a bowl; others balance on a
@@ -509,7 +529,7 @@ for step in range(2000):
           for a useless flat answer.</div>
         <div class="row human"><b>Where a human stepped in</b>We had to run its answers through a simulator to see which
           ones hold up.</div>
-        <span class="go">Read Beat 2 &rarr;</span>
+        <span class="go">Read Case 2 &rarr;</span>
       </a>
     </div>
   </div></section>
@@ -559,7 +579,7 @@ for step in range(2000):
       person: someone has to decide what to ask, check the AI's score against something independent, and interpret what
       the answer means. That is the real singularity we found: not the moment AI stops needing us, but the places where it
       clearly still does.</p>
-    <p class="cta"><a href="beat1/index.html?v=f3d1c2f2">Start with Beat 1: The wall of brake lights &rarr;</a></p>
+    <p class="cta"><a href="beat1/index.html?v=c4248d9d">Start with Case 1: The wall of brake lights &rarr;</a></p>
   </div></section>
 
   <section class="band sources"><div class="wrap">
