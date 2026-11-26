@@ -40,7 +40,7 @@
   .seg button { border: 0; border-radius: 0; background: transparent; color: var(--ink); }
   .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
   button { padding: 6px 12px; font: inherit; font-size: 14px; border-radius: 6px; cursor: pointer;
-           border: 1px solid var(--ink); background: var(--ink); color: var(--bg); }
+           border: 1px solid var(--line); background: var(--c-card, transparent); color: var(--ink); }
   input[type=range].time { flex: 1; min-width: 160px; }
   .tv { font-variant-numeric: tabular-nums; min-width: 5ch; }
   .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
@@ -90,7 +90,7 @@
     <label for="t">Time \(t =\) <span class="tv" id="tVal"></span></label>
     <div class="row">
       <input id="t" class="time" type="range" min="0" max="99" step="1" value="99">
-      <button id="play">Play</button>
+      <button id="play" class="rs-play">Play</button>
     </div>
   </div>
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Beat 1: The wall of brake lights</title>
+<title>Case 1: The wall of brake lights</title>
 <meta name="description" content="Can an AI that only knows the rules of traffic predict a sudden wall of brake lights? Where PINNs shine, where they break, and why their own score can't tell.">
 <style>
 :root{--bg:var(--c-bg,#fbfaf7);--fg:var(--c-fg,#1c2330);--mut:var(--c-mut,#5d6675);--grid:var(--c-line,#dcdfe5);--card:var(--c-card,#ffffff);--accent:var(--c-accent,#c2410c);--soon:var(--c-ghost,#8a8f99);--road:#3b4250;--line:var(--c-accent,#c2410c);--ref:var(--c-ghost,#9aa3b2)}
@@ -137,6 +137,26 @@ details a{color:var(--accent)}
   --c-accent:#fb923c;--c-pinn:#fb923c;--c-pinn-fill:rgba(251,146,60,.22);--c-solver:#5b9bea;--c-exact:#c3cad5;
   --c-ghost:#6b7380;--c-good:#4ade80;--c-bad:#f87171;--c-nu1:#2f5f99;--c-nu2:#5b9bea;--c-nu3:#c2dcf7}
 </style>
+<style>
+button.rs-play{display:inline-flex !important;align-items:center;justify-content:center;gap:7px;flex:0 0 auto !important;
+  border:1.5px solid var(--c-accent) !important;background:var(--c-card) !important;color:var(--c-fg) !important;
+  border-radius:999px !important;padding:6px 16px 6px 13px !important;font-weight:600 !important;line-height:1.3}
+button.rs-play:hover{background:var(--c-pinn-fill) !important}
+button.rs-play::before{content:"";flex:none;width:0;height:0;border-left:9px solid var(--c-accent);
+  border-top:5.5px solid transparent;border-bottom:5.5px solid transparent}
+button.rs-play.rs-on::before{width:3px;height:11px;border:0;border-left:3px solid var(--c-accent);
+  border-right:3px solid var(--c-accent);box-sizing:content-box}
+button.rs-play:disabled{opacity:.5;cursor:default}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("button.rs-play").forEach(function (b) {
+    function mark() { b.classList.toggle("rs-on", /^\s*pause/i.test(b.textContent)); }
+    mark();
+    new MutationObserver(mark).observe(b, { childList: true, characterData: true, subtree: true });
+  });
+});
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -182,9 +202,9 @@ document.addEventListener("DOMContentLoaded", function () {
 @media (min-width:1060px){.rs-nav button.rs-theme{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
 :root[data-theme="dark"]{color-scheme:dark}:root[data-theme="light"]{color-scheme:light}
 </style>
-<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=f3d1c2f2">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=f3d1c2f2" class="on" aria-current="page">Beat 1</a><a href="../beat2/index.html?v=f3d1c2f2">Beat 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
+<nav class="rs-nav" aria-label="Site"><div class="rs-in"><a class="rs-home" href="../index.html?v=c4248d9d">The Real Singularity</a><div class="rs-links"><a href="../beat1/index.html?v=c4248d9d" class="on" aria-current="page">Case 1</a><a href="../beat2/index.html?v=c4248d9d">Case 2</a></div><button class="rs-theme" type="button" onclick="rsToggleTheme()" aria-label="Switch theme"></button></div></nav>
 <main>
-  <p class="eyebrow">Beat 1</p>
+  <p class="eyebrow">Case 1</p>
   <h1>The wall of brake lights</h1>
   <p class="lede">You're on the freeway at full speed. Up ahead, traffic is crawling. At first the slowdown is gradual:
     cars ease off a little, then a little more. But as more cars arrive from behind, that gentle slowdown gets squeezed
@@ -200,7 +220,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <canvas id="speed" aria-label="Car speed along the road"></canvas>
       <canvas id="road" aria-label="Cars on the road"></canvas>
       <div class="row">
-        <button id="play">Play</button>
+        <button id="play" class="rs-play">Play</button>
         <span class="grow">time <input id="t" type="range" min="0" max="1" step="0.002" value="0" aria-label="time"></span>
         <label>drivers <select id="nu">
           <option value="0.01">ease off early</option>
@@ -216,7 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
     <h2>Traffic, treated like a fluid</h2>
     <p>Since the 1950s, traffic engineers have described traffic not car by car, but like a fluid flowing down the road.
       That math predicts exactly what you just saw: a smooth slowdown that sharpens into a wall. Written for the
-      computer, it is <b>Burgers' equation</b>, the same one we use on every page of this beat:</p>
+      computer, it is <b>Burgers' equation</b>, the same one we use on every page of this case:</p>
     <div class="eq">\[u_t + u\,u_x = \nu\,u_{xx}.\]</div>
     <ul class="terms">
       <li>\(u\) encodes how crowded the road is at position \(x\) and time \(t\): \(u = 1\) is an empty road,
@@ -260,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
   </section>
 
   <section class="numbers">
-    <p class="eyebrow">Beat 1 by the numbers</p>
+    <p class="eyebrow">Case 1 by the numbers</p>
     <div class="board">
       <div><p class="n pinn">0.05%</p><p class="l">PINN error when the slowdown is gentle</p></div>
       <div><p class="n pinn">~40%</p><p class="l">PINN error when the wall is sharp, with or without extra practice</p></div>
@@ -280,15 +300,15 @@ document.addEventListener("DOMContentLoaded", function () {
     <p class="eyebrow">Try it yourself</p>
     <h2>Five demos, in story order</h2>
     <div class="cards">
-      <a class="card" href="../shock/index.html?v=f3d1c2f2"><h3>How the wall forms</h3><p>The full animation, plus the paths that
+      <a class="card" href="../shock/index.html?v=c4248d9d"><h3>How the wall forms</h3><p>The full animation, plus the paths that
         "slow down" signals take along the road.</p></a>
-      <a class="card" href="../pinn/index.html?v=f3d1c2f2"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws
+      <a class="card" href="../pinn/index.html?v=c4248d9d"><h3>Our PINN, live</h3><p>Drag the sliders and our trained network draws
         its answer instantly.</p></a>
-      <a class="card" href="../viscosity/index.html?v=f3d1c2f2"><h3>The breaking point</h3><p>Slide from gentle to sharp and watch
+      <a class="card" href="../viscosity/index.html?v=c4248d9d"><h3>The breaking point</h3><p>Slide from gentle to sharp and watch
         where the PINN stops matching the exact answer.</p></a>
-      <a class="card" href="../loss-vs-truth/index.html?v=f3d1c2f2"><h3>The score that lies</h3><p>The PINN's own score and its real
+      <a class="card" href="../loss-vs-truth/index.html?v=c4248d9d"><h3>The score that lies</h3><p>The PINN's own score and its real
         error, side by side over training.</p></a>
-      <a class="card" href="../race/index.html?v=f3d1c2f2"><h3>The race</h3><p>The PINN against the traditional method, head to
+      <a class="card" href="../race/index.html?v=c4248d9d"><h3>The race</h3><p>The PINN against the traditional method, head to
         head.</p></a>
     </div>
     <p style="font:.88rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut)">The demos use the physics name for the same thing:
@@ -319,12 +339,13 @@ document.addEventListener("DOMContentLoaded", function () {
     </details>
   </section>
 
-  <div class="next"><a href="../index.html?v=f3d1c2f2">&larr; Home</a><a href="../beat2/index.html?v=f3d1c2f2">Beat 2: Balls in bowls &rarr;</a></div>
+  <div class="next"><a href="../index.html?v=c4248d9d">&larr; Home</a><a href="../beat2/index.html?v=c4248d9d">Case 2: Balls in bowls &rarr;</a></div>
 </main>
 <script>
 const PI = Math.PI, N_CARS = 44;
 const $ = id => document.getElementById(id);
 const tIn = $('t'), nuSel = $('nu');
+let tNow = +tIn.value;  // exact animation time; the slider only shows it
 const col = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const dark = () => matchMedia('(prefers-color-scheme: dark)').matches &&
   document.documentElement.dataset.theme !== 'light' || document.documentElement.dataset.theme === 'dark';
@@ -375,7 +396,7 @@ function setup(c) {
 const speedColor = v => `hsl(${Math.round(120 * Math.max(0, Math.min(1, v)))},${dark() ? 70 : 75}%,${dark() ? 55 : 42}%)`;
 
 function draw() {
-  const t = +tIn.value, nu = +nuSel.value / PI;
+  const t = tNow, nu = +nuSel.value / PI;
   advanceCars(t, nu);
 
   // speed chart
@@ -414,20 +435,22 @@ function draw() {
   }
 }
 
+// Keep the exact time in tNow: the slider rounds to its 0.002 step, so on a fast screen
+// (e.g. 240 Hz) adding one frame's worth of time to the slider value rounded back to zero.
 let raf = null, last = 0;
 $('play').onclick = () => {
   if (raf) { cancelAnimationFrame(raf); raf = null; $('play').textContent = 'Play'; return; }
-  if (+tIn.value >= 1) tIn.value = 0;
+  if (tNow >= 1) tNow = 0;
   $('play').textContent = 'Pause'; last = 0;
   const step = now => {
-    if (last) tIn.value = Math.min(1, +tIn.value + (now - last) / 6000);
-    last = now; draw();
-    if (+tIn.value >= 1) { raf = null; $('play').textContent = 'Play'; return; }
+    if (last) tNow = Math.min(1, tNow + (now - last) / 6000);
+    tIn.value = tNow; last = now; draw();
+    if (tNow >= 1) { raf = null; $('play').textContent = 'Play'; return; }
     raf = requestAnimationFrame(step);
   };
   raf = requestAnimationFrame(step);
 };
-tIn.oninput = draw;
+tIn.oninput = () => { tNow = +tIn.value; draw(); };
 nuSel.onchange = () => { cars = startCars(); carT = 0; draw(); };
 addEventListener('resize', draw);
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);

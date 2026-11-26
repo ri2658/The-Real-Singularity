@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Beat 2: Balls in bowls, balls on hilltops</title>
+<title>Case 2: Balls in bowls, balls on hilltops</title>
 <meta name="description" content="A rod of tiny magnets: what a step-by-step simulation can find, what it can never find, and how a PINN fills the gap.">
 <style>
 :root{--bg:var(--c-bg,#fbfaf7);--fg:var(--c-fg,#1c2330);--mut:var(--c-mut,#5d6675);--grid:var(--c-line,#dcdfe5);--card:var(--c-card,#ffffff);--accent:var(--c-accent,#c2410c);--soon:var(--c-ghost,#8a8f99);--road:#3b4250;--line:var(--c-accent,#c2410c);--ref:var(--c-ghost,#9aa3b2)}
@@ -63,7 +63,7 @@ figure.photo figcaption{margin-top:0;font-size:.95rem}
 figure.photo figcaption .credit{display:block;font-size:.8rem;margin-top:10px}
 figure.photo figcaption a{color:inherit}
 @media (max-width:640px){figure.photo{grid-template-columns:1fr;gap:10px}figure.photo img{max-width:360px}}
-/* Beat 2 figures */
+/* Case 2 figures */
 .key{display:flex;flex-wrap:wrap;gap:4px 16px;font:.82rem Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;color:var(--mut);margin-top:6px}
 .key i{display:inline-block;width:20px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:6px}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -89,7 +89,7 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
 </head>
 <body>
 <main>
-  <p class="eyebrow">Beat 2</p>
+  <p class="eyebrow">Case 2</p>
   <h1>Balls in bowls, balls on hilltops</h1>
   <p class="lede">Some answers to an equation are stable, like a ball in a bowl. Others are unstable, like a ball on a hilltop:
     still, until the smallest nudge sends it rolling. Which tools can find each kind?</p>
@@ -114,7 +114,7 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
       graphics card, instead of weeks on a computing cluster.</p>
     <figure>
       <canvas id="pathProt" height="180"></canvas>
-      <div class="row"><button id="protPlay">Pause</button>
+      <div class="row"><button id="protPlay" class="rs-play">Pause</button>
         <input id="protPos" type="range" min="0" max="239" value="0" aria-label="Position along the switch"></div>
       <figcaption><b>A cartoon protein switching shape</b> (not a real one). Going from closed to open, it must strain through a
         half-open shape: its transition state, at the top of the energy pass. The glow and strain bar show how high it
@@ -169,7 +169,7 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
         <div><p class="panel-t" id="pathName">The rod along the path</p><canvas id="pathU" height="210"></canvas></div>
         <div><p class="panel-t">Energy along the path</p><canvas id="pathE" height="210"></canvas></div>
       </div>
-      <div class="row"><button id="pathPlay">Pause</button>
+      <div class="row"><button id="pathPlay" class="rs-play">Pause</button>
         <input id="pathPos" type="range" min="0" max="239" value="0" aria-label="Position along the path"></div>
       <figcaption><b>The same switch, on our rod.</b> The lowest-energy path from the flipped hump to the hump peaks exactly at
         the S-shape, 2.05 above either hump: the barrier. Found by starting on the S and rolling downhill both ways; it
@@ -213,7 +213,7 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
       <h2>From a steep wall to a blow-up</h2>
       <p>For the curious: the same bowl-and-hilltop idea sits at the centre of one of the biggest open questions in
         mathematics.</p>
-      <p>In Beat 1, the later drivers braked, the steeper the wall of brake lights. The thinner the fluid, the closer
+      <p>In Case 1, the later drivers braked, the steeper the wall of brake lights. The thinner the fluid, the closer
         that wall comes to vertical; with no thickness at all, its steepness becomes infinite. That is a
         <em>blow-up</em>, and it is where our PINN failed, about 40% off. No surprise: a PINN is built from smooth
         pieces, so it can never draw an infinite slope.</p>
@@ -228,7 +228,7 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
           <span><i style="border-color:var(--fg)"></i>thin</span>
           <span><i style="border-color:var(--accent);border-top-style:dashed"></i>our PINN, thin fluid</span>
         </div>
-        <figcaption><b>The wall gets steeper; the PINN can't follow.</b> Exact answers at the end of Beat 1's run. Each 10&times;
+        <figcaption><b>The wall gets steeper; the PINN can't follow.</b> Exact answers at the end of Case 1's run. Each 10&times;
           thinner fluid makes the wall steeper (steepest slope 84, 279, 767); with no thickness it would be infinite. Our
           PINN puts the thin-fluid wall in the wrong place.</figcaption>
       </figure>
@@ -268,7 +268,7 @@ svg.bh{width:100%;height:auto;display:block;color:var(--fg)}
     </section>
   </details>
 
-  <div class="next"><a href="../beat1/index.html">&larr; Beat 1: The wall of brake lights</a><a href="../index.html">Home</a></div>
+  <div class="next"><a href="../beat1/index.html">&larr; Case 1: The wall of brake lights</a><a href="../index.html">Home</a></div>
 </main>
 <script>
 (() => {

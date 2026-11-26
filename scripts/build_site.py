@@ -19,7 +19,7 @@ current versions into one folder that publish_site.py uploads:
     site/data/viscosity/         PINN predictions for the viscosity page
     site/data/race_pinn/         one PINN per viscosity for the race (ONNX)
 
-Every copied page gets the site-wide navigation bar (home, Beat 1, Beat 2;
+Every copied page gets the site-wide navigation bar (home, Case 1, Case 2;
 see BEATS), and each demo page also gets a previous / next bar at the bottom
 that walks through its beat in story order. The landing page's bar is
 refreshed between its <!-- NAV --> markers. Every copied page also loads the
@@ -70,10 +70,10 @@ DATA = {
 # Site-wide navigation. The top bar shows only home and the beats; each beat's
 # story page links to its demos, and the demos are chained in story order.
 BEATS = [
-    ("beat1", "Beat 1", "The wall of brake lights", [
+    ("beat1", "Case 1", "The wall of brake lights", [
         ("shock", "How the wall forms"), ("pinn", "Our PINN, live"), ("viscosity", "The breaking point"),
         ("loss-vs-truth", "The score that lies"), ("race", "The race")]),
-    ("beat2", "Beat 2", "Balls in bowls", [
+    ("beat2", "Case 2", "Balls in bowls", [
         ("allen-cahn", "The step-by-step simulator"), ("hilltop", "Falling off a hilltop"),
         ("correction", "Fixing the PINN's guesses")]),
 ]
@@ -223,7 +223,30 @@ THEME = """<meta name="color-scheme" content="light dark">
   window.addEventListener("storage", function (e) { if (e.key === KEY) sync(); });
 })();
 </script>"""
-HEAD = THEME + "\n" + PALETTE + "\n" + FONT + "\n" + MATH
+# The main action on each demo (Play, Run) is one style everywhere: a rounded button with an
+# accent outline and a play triangle, which turns into pause bars while it runs (any label
+# that starts with "Pause"). Pages mark that button with class="rs-play".
+BUTTONS = """<style>
+button.rs-play{display:inline-flex !important;align-items:center;justify-content:center;gap:7px;flex:0 0 auto !important;
+  border:1.5px solid var(--c-accent) !important;background:var(--c-card) !important;color:var(--c-fg) !important;
+  border-radius:999px !important;padding:6px 16px 6px 13px !important;font-weight:600 !important;line-height:1.3}
+button.rs-play:hover{background:var(--c-pinn-fill) !important}
+button.rs-play::before{content:"";flex:none;width:0;height:0;border-left:9px solid var(--c-accent);
+  border-top:5.5px solid transparent;border-bottom:5.5px solid transparent}
+button.rs-play.rs-on::before{width:3px;height:11px;border:0;border-left:3px solid var(--c-accent);
+  border-right:3px solid var(--c-accent);box-sizing:content-box}
+button.rs-play:disabled{opacity:.5;cursor:default}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("button.rs-play").forEach(function (b) {
+    function mark() { b.classList.toggle("rs-on", /^\\s*pause/i.test(b.textContent)); }
+    mark();
+    new MutationObserver(mark).observe(b, { childList: true, characterData: true, subtree: true });
+  });
+});
+</script>"""
+HEAD = THEME + "\n" + PALETTE + "\n" + BUTTONS + "\n" + FONT + "\n" + MATH
 
 
 def add_math(html: str) -> str:
